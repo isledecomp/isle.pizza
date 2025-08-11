@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const afGroup = afSelect.closest('.form-group');
     const rendererSelect = document.getElementById('renderer-select');
     const hdTextures = document.getElementById('check-hd-textures');
+    const widescreenBgs = document.getElementById('check-widescreen-bgs');
 
     // --- Sound Toggle ---
     function updateSoundEmojiState() {
@@ -212,10 +213,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
-            if (hdTextures) {
+            if (hdTextures || widescreenBgs) {
                 iniContent += "[extensions]\n";
+            }
+
+            if (hdTextures) {
                 value = hdTextures.checked ? 'YES' : 'NO';
                 iniContent += `${hdTextures.name}=${value}\n`;
+            }
+
+            siFiles = getSiFiles();
+            if (siFiles.length > 0) {
+                iniContent += `SI Loader=YES\n`;
+                iniContent += "[si loader]\n";
+                iniContent += `files=${siFiles.join(',')}\n`;
             }
 
             const workerCode = `
@@ -292,6 +303,11 @@ document.addEventListener('DOMContentLoaded', function () {
         applyConfigToForm(config) {
             const elements = this.form.elements;
             for (const key in config) {
+                if (key == "files") {
+                    elements["Widescreen Backgrounds"].checked = config[key].includes("widescreen.si");
+                    continue;
+                }
+
                 const element = elements[key];
                 if (!element) continue;
 
@@ -473,6 +489,10 @@ document.addEventListener('DOMContentLoaded', function () {
         checkInitialCacheStatus();
     });
 
+    widescreenBgs.addEventListener('change', () => {
+        checkInitialCacheStatus();
+    });
+
     rendererSelect.addEventListener('change', () => {
         showOrHideGraphicsOptions();
     });
@@ -491,12 +511,21 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function getSiFiles() {
+        siFiles = [];
+        if (widescreenBgs && widescreenBgs.checked) {
+            siFiles.push('/LEGO/extra/widescreen.si');
+        }
+        return siFiles;
+    }
+
     function checkInitialCacheStatus() {
         if (navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({
                 action: 'check_cache_status',
                 language: languageSelect.value,
-                hdTextures: hdTextures.checked
+                hdTextures: hdTextures.checked,
+                siFiles: getSiFiles(),
             });
         }
     }

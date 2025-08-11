@@ -91,7 +91,7 @@ async function uninstallLanguagePack(language, client) {
     }
 }
 
-async function checkCacheStatus(language, hdTextures, client) {
+async function checkCacheStatus(language, hdTextures, siFiles, client) {
     const cacheName = getLanguageCacheName(language);
     const cache = await caches.open(cacheName);
     const requests = await cache.keys();
@@ -99,6 +99,9 @@ async function checkCacheStatus(language, hdTextures, client) {
     let requiredFiles = gameFiles;
     if (hdTextures) {
         requiredFiles = requiredFiles.concat(textureFiles);
+    }
+    if (siFiles.length > 0) {
+        requiredFiles = requiredFiles.concat(siFiles);
     }
     const missingFiles = requiredFiles.filter(file => !cachedUrls.includes(file));
 
@@ -131,7 +134,7 @@ self.addEventListener('message', (event) => {
                 uninstallLanguagePack(event.data.language, event.source);
                 break;
             case 'check_cache_status':
-                checkCacheStatus(event.data.language, event.data.hdTextures, event.source);
+                checkCacheStatus(event.data.language, event.data.hdTextures, event.data.siFiles, event.source);
                 break;
         }
     }
