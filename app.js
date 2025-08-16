@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const afGroup = afSelect.closest('.form-group');
     const rendererSelect = document.getElementById('renderer-select');
     const hdTextures = document.getElementById('check-hd-textures');
+    const hdMusic = document.getElementById('check-hd-music');
     const widescreenBgs = document.getElementById('check-widescreen-bgs');
 
     // --- Sound Toggle ---
@@ -213,9 +214,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
-            if (hdTextures || widescreenBgs) {
-                iniContent += "[extensions]\n";
-            }
+            iniContent += "[extensions]\n";
 
             if (hdTextures) {
                 value = hdTextures.checked ? 'YES' : 'NO';
@@ -304,6 +303,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const elements = this.form.elements;
             for (const key in config) {
                 if (key == "files") {
+                    elements["HD Music"].checked = config[key].includes("hdmusic.si");
                     elements["Widescreen Backgrounds"].checked = config[key].includes("widescreen.si");
                     continue;
                 }
@@ -489,6 +489,10 @@ document.addEventListener('DOMContentLoaded', function () {
         checkInitialCacheStatus();
     });
 
+    hdMusic.addEventListener('change', () => {
+        checkInitialCacheStatus();
+    });
+
     widescreenBgs.addEventListener('change', () => {
         checkInitialCacheStatus();
     });
@@ -513,6 +517,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function getSiFiles() {
         siFiles = [];
+        if (hdMusic && hdMusic.checked) {
+            siFiles.push('/LEGO/extra/hdmusic.si');
+        }
         if (widescreenBgs && widescreenBgs.checked) {
             siFiles.push('/LEGO/extra/widescreen.si');
         }
