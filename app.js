@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const hdTextures = document.getElementById('check-hd-textures');
     const hdMusic = document.getElementById('check-hd-music');
     const widescreenBgs = document.getElementById('check-widescreen-bgs');
+    const outroFmv = document.getElementById('check-outro');
 
     // --- Sound Toggle ---
     function updateSoundEmojiState() {
@@ -222,10 +223,28 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             siFiles = getSiFiles();
-            if (siFiles.length > 0) {
+            if (siFiles.length > 0 || outroFmv.checked) {
                 iniContent += `SI Loader=YES\n`;
                 iniContent += "[si loader]\n";
+            }
+
+            if (siFiles.length > 0) {
                 iniContent += `files=${siFiles.join(',')}\n`;
+            }
+
+            let directives = [];
+
+            if (outroFmv.checked) {
+                directives = directives.concat([
+                    "FullScreenMovie:\\lego\\scripts\\intro:3",
+                    "Disable3d:\\lego\\scripts\\credits:499",
+                    "Prepend:\\lego\\scripts\\intro:3:\\lego\\scripts\\credits:499",
+                    "RemoveWith:\\lego\\scripts\\credits:499:\\lego\\scripts\\intro:3"
+                ]);
+            }
+
+            if (directives.length > 0) {
+                iniContent += `directives=${directives.join(",\\\n")}\n`;
             }
 
             const workerCode = `
@@ -305,6 +324,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (key == "files") {
                     elements["HD Music"].checked = config[key].includes("hdmusic.si");
                     elements["Widescreen Backgrounds"].checked = config[key].includes("widescreen.si");
+                    continue;
+                }
+
+                if (key == "directives") {
+                    elements["Outro FMV"].checked = config[key].includes("intro:3");
                     continue;
                 }
 
