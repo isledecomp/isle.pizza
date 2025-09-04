@@ -265,6 +265,20 @@ body {
     margin: 4px 0;
 }
 
+.app-footer {
+    width: 100%;
+    text-align: center;
+    padding-top: 15px;
+    border-top: 1px solid #333;
+}
+
+.app-footer p {
+    margin: 0;
+    font-size: 0.8em;
+    color: #777;
+    font-family: 'Consolas', 'Menlo', monospace;
+}
+
 .page-content {
     display: none;
     flex-direction: column;
