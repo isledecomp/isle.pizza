@@ -436,10 +436,13 @@ document.addEventListener('DOMContentLoaded', function () {
             offOption.textContent = 'Off';
             afSelect.appendChild(offOption);
 
+            const defaultAniso = Math.min(maxAnisotropy, 16);
+
             for (let i = 2; i <= maxAnisotropy; i *= 2) {
                 const option = document.createElement('option');
                 option.value = i;
                 option.textContent = `${i}x`;
+                option.selected = defaultAniso == i;
                 afSelect.appendChild(option);
             }
         } else {
