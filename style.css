@@ -739,6 +739,80 @@ select {
     line-height: 1.5;
 }
 
+.changelog-section {
+    margin-top: 30px;
+    padding-top: 10px;
+    border-top: 1px solid #444;
+    width: 100%;
+    text-align: left;
+}
+
+.changelog-section h2 {
+    color: #FFD700;
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.changelog-section details {
+    background-color: #1c1c1c;
+    border: 1px solid #333;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.changelog-section details[open] {
+    background-color: #252525;
+}
+
+.changelog-section summary {
+    padding: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #e0e0e0;
+    font-size: 1.1em;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.changelog-section summary::-webkit-details-marker {
+    display: none;
+}
+
+.changelog-section summary::after {
+    content: '+';
+    font-size: 1.5em;
+    color: #FFD700;
+    transition: transform 0.2s ease-in-out;
+}
+
+.changelog-section details[open] summary::after {
+    transform: rotate(45deg);
+}
+
+.changelog-section details ul {
+    padding: 0 20px 20px 40px;
+    margin: 0;
+}
+
+.changelog-section details li {
+    color: #b0b0b0;
+    font-size: 0.9em;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.changelog-section details li:last-child {
+    margin-bottom: 0;
+}
+
+.changelog-section details li strong {
+    color: #FFD700;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     #install-video {

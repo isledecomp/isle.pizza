@@ -152,6 +152,103 @@
                                 rel="noopener noreferrer">available here</a>.</p>
                     </details>
                 </div>
+
+                <div class="changelog-section">
+                    <h2>Changelog</h2>
+                    <details>
+                        <summary>December 2025</summary>
+                        <ul>
+                            <li><strong>New:</strong> "Active in Background" option keeps the game running when the tab loses focus</li>
+                            <li><strong>New:</strong> WASD navigation controls as an alternative to arrow keys</li>
+                            <li><strong>Fixed:</strong> Act 3 helicopter ammo now correctly sticks to targets and finishes animations</li>
+                            <li><strong>Fixed:</strong> Pick/click distance calculation for more accurate object selection</li>
+                            <li><strong>Fixed:</strong> Maximum deltaTime capping prevents physics glitches in races</li>
+                            <li><strong>Fixed:</strong> Touch controls now properly support widescreen aspect ratios</li>
+                            <li><strong>Improved:</strong> Default anisotropic filtering increased to 16x for sharper textures</li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>November 2025</summary>
+                        <ul>
+                            <li><strong>Fixed:</strong> Dictionary loading failure no longer causes crashes</li>
+                            <li><strong>Fixed:</strong> INI configuration now properly applies defaults when values are missing</li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>September 2025</summary>
+                        <ul>
+                            <li><strong>New:</strong> Additional widescreen background images</li>
+                            <li><strong>Fixed:</strong> Jukebox state now correctly restored when using HD Music extension</li>
+                            <li><strong>Fixed:</strong> Background audio no longer gets stuck when starting audio fails</li>
+                            <li><strong>Improved:</strong> SI Loader actions now start at the correct time during world loading</li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>August 2025</summary>
+                        <ul>
+                            <li><strong>New:</strong> Extended Bad Ending FMV extension shows the uncut beta animation</li>
+                            <li><strong>New:</strong> HD Music extension with high-quality audio</li>
+                            <li><strong>New:</strong> Widescreen backgrounds extension eliminates 3D edges on wide displays</li>
+                            <li><strong>New:</strong> SI Loader extension system for community content and modifications</li>
+                            <li><strong>New:</strong> OpenGL ES 2.0/3.0 renderer for broader device compatibility</li>
+                            <li><strong>Fixed:</strong> Purple edges no longer appear on scaled transparent 2D elements</li>
+                            <li><strong>Fixed:</strong> Transparent pixels now render correctly with alpha channel support</li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>July 2025</summary>
+                        <ul>
+                            <li><strong>New:</strong> HD Textures extension with enhanced visuals</li>
+                            <li><strong>New:</strong> MSAA anti-aliasing support for smoother edges</li>
+                            <li><strong>New:</strong> Anisotropic filtering for sharper textures at angles</li>
+                            <li><strong>New:</strong> Haptic feedback (vibration) support for gamepads and mobile devices</li>
+                            <li><strong>New:</strong> Virtual Gamepad touch control scheme with sliding controls</li>
+                            <li><strong>New:</strong> Gamepad/controller support with analog sticks and D-pad</li>
+                            <li><strong>New:</strong> Full screen mode with in-game toggle</li>
+                            <li><strong>New:</strong> Maximum LOD and Maximum Actors configuration options</li>
+                            <li><strong>New:</strong> Configurable transition animations (Mosaic, Dissolve, Wipe, etc.)</li>
+                            <li><strong>New:</strong> Extensions system allowing community-created content</li>
+                            <li><strong>Fixed:</strong> WebGL driver compatibility issues resolved</li>
+                            <li><strong>Fixed:</strong> Firefox Private browsing mode now works correctly</li>
+                            <li><strong>Fixed:</strong> Virtual cursor transparency and positioning</li>
+                            <li><strong>Fixed:</strong> Touch coordinate translation for proper viewport mapping</li>
+                            <li><strong>Fixed:</strong> Memory leaks in ViewLODList</li>
+                            <li><strong>Fixed:</strong> Screen transitions on software renderer and 32-bit displays</li>
+                            <li><strong>Fixed:</strong> Tabbing in and out of fullscreen</li>
+                            <li><strong>Fixed:</strong> Click spam prevention on touch screens</li>
+                            <li><strong>Improved:</strong> Mosaic transition animation is faster and cleaner</li>
+                            <li><strong>Improved:</strong> Loading UX for HD Textures with progress indicators</li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>June 2025 — Initial Release</summary>
+                        <ul>
+                            <li><strong>New:</strong> Emscripten web port — play LEGO Island directly in your browser!</li>
+                            <li><strong>New:</strong> WebGL rendering for hardware-accelerated 3D graphics</li>
+                            <li><strong>New:</strong> Software renderer fallback for devices without WebGL</li>
+                            <li><strong>New:</strong> 32-bit color support for improved visual quality</li>
+                            <li><strong>New:</strong> Full screen support</li>
+                            <li><strong>New:</strong> Joystick/gamepad enabled by default</li>
+                            <li><strong>New:</strong> Option to skip the startup delay</li>
+                            <li><strong>New:</strong> Support for LEGO Island 1.0 version</li>
+                            <li><strong>New:</strong> FPS display option</li>
+                            <li><strong>New:</strong> Game runs without requiring an audio device</li>
+                            <li><strong>Fixed:</strong> Infocenter to Act 2/Act 3 transition issues</li>
+                            <li><strong>Fixed:</strong> Race initialization errors</li>
+                            <li><strong>Fixed:</strong> Jetski race startup issues</li>
+                            <li><strong>Fixed:</strong> Plant creation bug in LegoPlantManager</li>
+                            <li><strong>Fixed:</strong> Late-game "sawtooth" audio glitches</li>
+                            <li><strong>Fixed:</strong> Building variant switching (Pepper's buildings)</li>
+                            <li><strong>Fixed:</strong> OpenGL rendering issues</li>
+                            <li><strong>Fixed:</strong> Image serialization bugs</li>
+                            <li><strong>Improved:</strong> Transparent objects now render correctly (sorted last)</li>
+                            <li><strong>Improved:</strong> GPU mesh uploading via VBOs for better performance</li>
+                            <li><strong>Improved:</strong> Backface culling enabled for faster rendering</li>
+                            <li><strong>Improved:</strong> SIMD-optimized z-buffer clearing</li>
+                            <li><strong>Improved:</strong> Edge-walking triangle rasterization</li>
+                        </ul>
+                    </details>
+                </div>
             </div>
         </div>
 
@@ -630,7 +727,7 @@
         </div>
 
         <div class="app-footer">
-            <p>Last updated: <span id="app-version">2025-12-31 21:02:34 UTC</span></p>
+            <p>Last updated: <span id="app-version">2025-12-31 21:31:41 UTC</span></p>
         </div>
     </div>
 
