@@ -156,6 +156,12 @@
                 <div class="changelog-section">
                     <h2>Changelog</h2>
                     <details>
+                        <summary>January 2026</summary>
+                        <ul>
+                            <li><strong>New:</strong> Debug menu for developers and power users. Tap the LEGO Island logo 5 times to unlock OGEL mode and access debug features like teleporting to locations, switching acts, and playing animations</li>
+                        </ul>
+                    </details>
+                    <details>
                         <summary>December 2025</summary>
                         <ul>
                             <li><strong>New:</strong> "Active in Background" option keeps the game running when the tab loses focus</li>
@@ -727,7 +733,7 @@
         </div>
 
         <div class="app-footer">
-            <p>Last updated: <span id="app-version">2025-12-31 21:31:41 UTC</span></p>
+            <p>Last updated: <span id="app-version">2026-01-01 16:29:53 UTC</span></p>
         </div>
     </div>
 
@@ -750,6 +756,9 @@
         </div>
         <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
     </div>
+
+    <!-- Debug UI Panel (content loaded from debug.html when enabled) -->
+    <div id="debug-ui"></div>
 
     <script src="app.js" defer></script>
     <script src="isle.js" defer></script>

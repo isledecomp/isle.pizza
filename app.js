@@ -37,6 +37,78 @@ document.addEventListener('DOMContentLoaded', function () {
     const widescreenBgs = document.getElementById('check-widescreen-bgs');
     const outroFmv = document.getElementById('check-outro');
     const badEnding = document.getElementById('check-ending');
+    const logo = document.getElementById('island-logo-img');
+
+    // --- Debug Mode Activation (5 taps on logo) ---
+    let debugTapCount = 0;
+    let debugTapTimeout = null;
+    let debugEnabled = false;
+
+    // Pizza celebration animation for OGEL mode
+    function celebratePizza(originElement) {
+        const rect = originElement.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const sliceCount = 12;
+
+        for (let i = 0; i < sliceCount; i++) {
+            const slice = document.createElement('div');
+            slice.className = 'pizza-slice';
+            slice.textContent = '🍕';
+
+            // Calculate direction for this slice
+            const angle = (i / sliceCount) * Math.PI * 2;
+            const distance = 150 + Math.random() * 100;
+            const tx = Math.cos(angle) * distance;
+            const ty = Math.sin(angle) * distance;
+            const rotation = (Math.random() - 0.5) * 720;
+
+            slice.style.left = centerX + 'px';
+            slice.style.top = centerY + 'px';
+            slice.style.setProperty('--tx', tx + 'px');
+            slice.style.setProperty('--ty', ty + 'px');
+            slice.style.setProperty('--rot', rotation + 'deg');
+            slice.style.animationDelay = (Math.random() * 0.2) + 's';
+
+            document.body.appendChild(slice);
+
+            // Remove after animation completes
+            setTimeout(function() {
+                slice.remove();
+            }, 1700);
+        }
+    }
+
+    logo.addEventListener('click', function() {
+        if (debugEnabled) {
+            // Replay pizza animation on subsequent clicks
+            celebratePizza(logo);
+            return;
+        }
+
+        debugTapCount++;
+        clearTimeout(debugTapTimeout);
+
+        if (debugTapCount >= 5) {
+            // Enable debug mode
+            debugEnabled = true;
+            logo.src = 'ogel.webp';
+            logo.alt = 'OGEL Mode Enabled';
+
+            // Celebrate with pizza!
+            celebratePizza(logo);
+
+            // Dynamically load debug.js
+            const script = document.createElement('script');
+            script.src = 'debug.js';
+            document.body.appendChild(script);
+        } else {
+            // Reset tap count after 1 second of no taps
+            debugTapTimeout = setTimeout(function() {
+                debugTapCount = 0;
+            }, 1000);
+        }
+    });
 
     // --- Sound Toggle ---
     function updateSoundEmojiState() {
@@ -96,11 +168,24 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     let progressUpdates = 0;
+    const debugUI = document.getElementById('debug-ui');
+    let debugUIVisible = false;
+
+    // MutationObserver to prevent Emscripten from hiding the debug UI
+    const debugUIObserver = new MutationObserver(function(mutations) {
+        if (debugUIVisible && debugUI.style.display === 'none') {
+            debugUI.style.setProperty('display', 'block', 'important');
+        }
+    });
+    debugUIObserver.observe(debugUI, { attributes: true, attributeFilter: ['style'] });
+
     emscriptenCanvas.addEventListener('presenterProgress', function (event) {
         // Intro animation is ready
         if (event.detail.objectName == 'Lego_Smk' && event.detail.tickleState == 1) {
             loadingGifOverlay.style.display = 'none';
             emscriptenCanvas.style.setProperty('display', 'block', 'important');
+            debugUIVisible = true;
+            debugUI.style.setProperty('display', 'block', 'important');
         }
         else if (progressUpdates < 1003) {
             progressUpdates++;

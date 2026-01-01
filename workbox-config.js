@@ -7,7 +7,7 @@ module.exports = {
         'island.webp', 'isle.js', 'isle.wasm', 'poster.pdf', 'read_me_off.webp',
         'read_me_on.webp', 'run_game_off.webp', 'run_game_on.webp', 'shark.webp',
         'uninstall_off.webp', 'uninstall_on.webp', 'app.js', 'style.css', 'manifest.json',
-        'install.webp', 'install.mp3', 'downloader.js'
+        'install.webp', 'install.mp3', 'downloader.js', 'debug.js', 'debug.html', 'ogel.webp'
     ],
     swSrc: 'src/sw.js',
     swDest: 'sw.js',

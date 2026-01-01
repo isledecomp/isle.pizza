@@ -910,3 +910,230 @@ select {
         gap: 25px;
     }
 }
+
+/* Debug UI Panel */
+#debug-ui {
+    display: none;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+}
+
+#debug-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #FFD700;
+    color: #FFD700;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: auto;
+}
+
+#debug-toggle:hover {
+    background-color: rgba(255, 215, 0, 0.2);
+    transform: rotate(90deg);
+}
+
+#debug-toggle.active {
+    background-color: #FFD700;
+    color: #000;
+}
+
+#debug-panel {
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 280px;
+    max-height: calc(100dvh - 70px);
+    overflow-y: auto;
+    background-color: rgba(24, 24, 24, 0.95);
+    border: 1px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+#debug-panel.open {
+    display: block;
+}
+
+.debug-header {
+    padding: 12px 15px;
+    background-color: #FFD700;
+    color: #000;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 7px 7px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.debug-section {
+    padding: 10px 12px;
+    border-bottom: 1px solid #333;
+}
+
+.debug-section:last-child {
+    border-bottom: none;
+}
+
+.debug-section-title {
+    color: #FFD700;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+#debug-panel button {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 4px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+}
+
+#debug-panel button:last-child {
+    margin-bottom: 0;
+}
+
+#debug-panel button:hover {
+    background-color: #3a3a3a;
+    border-color: #FFD700;
+}
+
+#debug-panel button:active {
+    background-color: #FFD700;
+    color: #000;
+}
+
+#debug-panel button.debug-password {
+    background-color: #3d2a00;
+    border-color: #FFD700;
+    color: #FFD700;
+}
+
+#debug-panel button.debug-password:hover {
+    background-color: #FFD700;
+    color: #000;
+}
+
+#debug-panel button.debug-password.active {
+    background-color: #00aa00;
+    border-color: #00ff00;
+    color: #fff;
+}
+
+#debug-panel button.requires-debug {
+    opacity: 0.5;
+}
+
+#debug-panel button.requires-debug.enabled {
+    opacity: 1;
+}
+
+.debug-location-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+}
+
+.debug-location-grid button {
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 11px;
+    font-family: 'Consolas', 'Menlo', monospace;
+}
+
+/* Scrollbar styling for debug panel */
+#debug-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+#debug-panel::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+#debug-panel::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 3px;
+}
+
+#debug-panel::-webkit-scrollbar-thumb:hover {
+    background: #FFD700;
+}
+
+#debug-animation-select,
+#debug-location-select {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+#debug-animation-select:hover,
+#debug-location-select:hover {
+    border-color: #FFD700;
+}
+
+#debug-animation-select:focus,
+#debug-location-select:focus {
+    outline: none;
+    border-color: #FFD700;
+}
+
+#debug-animation-select optgroup,
+#debug-location-select optgroup {
+    background-color: #1a1a1a;
+    color: #FFD700;
+    font-weight: bold;
+}
+
+#debug-animation-select option,
+#debug-location-select option {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    padding: 4px;
+}
+
+/* Pizza celebration animation for OGEL mode */
+.pizza-slice {
+    position: fixed;
+    font-size: 32px;
+    pointer-events: none;
+    z-index: 10000;
+    animation: pizza-fly 1.5s ease-out forwards;
+}
+
+@keyframes pizza-fly {
+    0% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.5);
+    }
+}
