@@ -553,6 +553,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            checkInitialCacheStatus();
+        });
     }
     else {
         configManager.init().then(() => {
