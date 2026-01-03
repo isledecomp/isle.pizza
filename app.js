@@ -541,6 +541,35 @@ document.addEventListener('DOMContentLoaded', function () {
     let downloaderWorker = null;
     let missingGameFiles = [];
 
+    // Update popup elements
+    const updatePopup = document.getElementById('update-popup');
+    const updateReloadBtn = document.getElementById('update-reload-btn');
+    const updateDismissBtn = document.getElementById('update-dismiss-btn');
+
+    function showUpdatePopup() {
+        if (updatePopup) {
+            updatePopup.style.display = 'flex';
+        }
+    }
+
+    function hideUpdatePopup() {
+        if (updatePopup) {
+            updatePopup.style.display = 'none';
+        }
+    }
+
+    if (updateReloadBtn) {
+        updateReloadBtn.addEventListener('click', () => {
+            window.location.reload();
+        });
+    }
+
+    if (updateDismissBtn) {
+        updateDismissBtn.addEventListener('click', () => {
+            hideUpdatePopup();
+        });
+    }
+
     if ('serviceWorker' in navigator) {
         Promise.all([
             configManager.init(),
@@ -548,6 +577,25 @@ document.addEventListener('DOMContentLoaded', function () {
         ]).then(([configResult, swRegistration]) => {
             checkInitialCacheStatus();
             showOrHideGraphicsOptions();
+
+            // Check if there's already a waiting service worker (update ready)
+            if (swRegistration.waiting) {
+                showUpdatePopup();
+            }
+
+            // Listen for new service worker updates
+            swRegistration.addEventListener('updatefound', () => {
+                const newWorker = swRegistration.installing;
+                if (newWorker) {
+                    newWorker.addEventListener('statechange', () => {
+                        // When the new worker is installed and waiting, show the update popup
+                        // Only show if there's an existing controller (this is an update, not first install)
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showUpdatePopup();
+                        }
+                    });
+                }
+            });
         }).catch(error => {
             console.error('Initialization failed:', error);
         });

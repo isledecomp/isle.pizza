@@ -1137,3 +1137,165 @@ select {
         transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.5);
     }
 }
+
+/* Update notification popup */
+.update-popup {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10001;
+    display: flex;
+    align-items: flex-end;
+    gap: 0;
+    animation: popup-bounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes popup-bounce {
+    0% {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.update-popup-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.update-speech-bubble {
+    position: relative;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 2px solid #FFD700;
+    border-radius: 12px;
+    padding: 15px 18px;
+    margin-bottom: 10px;
+    margin-right: -20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    max-width: 200px;
+}
+
+.update-speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    right: 30px;
+    border-width: 12px 10px 0 10px;
+    border-style: solid;
+    border-color: #FFD700 transparent transparent transparent;
+}
+
+.update-speech-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    right: 32px;
+    border-width: 10px 8px 0 8px;
+    border-style: solid;
+    border-color: #1a1a1a transparent transparent transparent;
+    z-index: 1;
+}
+
+.update-message {
+    color: #f0f0f0;
+    font-size: 0.95em;
+    font-weight: 500;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+}
+
+.update-reload-btn {
+    width: 100%;
+    padding: 10px 16px;
+    background-color: #FFD700;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.update-reload-btn:hover {
+    background-color: #fff;
+    transform: scale(1.03);
+}
+
+.update-dismiss-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: #333;
+    color: #888;
+    border: 2px solid #555;
+    border-radius: 50%;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.update-dismiss-btn:hover {
+    color: #fff;
+    border-color: #FFD700;
+    background: #444;
+}
+
+.update-character {
+    width: 120px;
+    height: auto;
+    border-radius: 12px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+    animation: character-wave 2s ease-in-out infinite;
+    animation-delay: 0.5s;
+}
+
+@keyframes character-wave {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(2deg);
+    }
+    75% {
+        transform: rotate(-2deg);
+    }
+}
+
+@media (max-width: 480px) {
+    .update-popup {
+        bottom: 10px;
+        right: 10px;
+    }
+
+    .update-speech-bubble {
+        max-width: 160px;
+        margin-right: -15px;
+    }
+
+    .update-character {
+        width: 90px;
+    }
+
+    .update-message {
+        font-size: 0.85em;
+    }
+
+    .update-reload-btn {
+        font-size: 0.85em;
+        padding: 8px 12px;
+    }
+}
