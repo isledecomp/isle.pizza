@@ -12,6 +12,7 @@
     <link rel="preload" href="isle.wasm" as="fetch" crossorigin>
     <link rel="preload" href="install.webp" as="image">
     <link rel="preload" href="island.webp" as="image">
+    <link rel="preload" href="bonus.webp" as="image">
 
     <meta name="description"
         content="Play the classic 1997 PC game LEGO® Island directly in your web browser! This fan-made web port, built with Emscripten from the isledecomp project, brings the beloved adventure back to life.">
@@ -39,6 +40,18 @@
 </head>
 
 <body>
+    <!-- Update notification popup -->
+    <div id="update-popup" class="update-popup" style="display: none;">
+        <div class="update-popup-content">
+            <button id="update-dismiss-btn" class="update-dismiss-btn" aria-label="Dismiss">×</button>
+            <div class="update-speech-bubble">
+                <p class="update-message">A new version just arrived!</p>
+                <button id="update-reload-btn" class="update-reload-btn">Reload Now</button>
+            </div>
+        </div>
+        <img src="bonus.webp" alt="Pepper" class="update-character" width="150" height="187">
+    </div>
+
     <div id="main-container">
         <div id="top-content">
             <div class="video-container">
@@ -733,7 +746,7 @@
         </div>
 
         <div class="app-footer">
-            <p>Last updated: <span id="app-version">2026-01-01 16:29:53 UTC</span></p>
+            <p>Last updated: <span id="app-version">2026-01-03 22:09:49 UTC</span></p>
         </div>
     </div>
 
