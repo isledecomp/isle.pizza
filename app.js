@@ -271,6 +271,113 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // --- Configure Tabs ---
+    const configTabButtons = document.querySelectorAll('.config-tab-btn');
+    const configTabPanels = document.querySelectorAll('.config-tab-panel');
+
+    configTabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.dataset.configTab;
+            configTabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            configTabPanels.forEach(panel => {
+                panel.classList.remove('active');
+                if (panel.id === 'config-tab-' + targetTab) {
+                    panel.classList.add('active');
+                    // Open first section, close others
+                    const sections = panel.querySelectorAll('.config-section-card');
+                    sections.forEach((section, index) => {
+                        section.open = (index === 0);
+                    });
+                }
+            });
+        });
+    });
+
+    // --- Accordion behavior for config sections ---
+    const configSections = document.querySelectorAll('.config-section-card');
+    configSections.forEach(section => {
+        const summary = section.querySelector('summary');
+        if (summary) {
+            summary.addEventListener('click', (e) => {
+                // If this section is closed and about to open, close others first
+                if (!section.open) {
+                    configSections.forEach(other => {
+                        if (other !== section && other.open) {
+                            other.open = false;
+                        }
+                    });
+                }
+            });
+        }
+    });
+
+    // --- Preset Buttons ---
+    const presetClassic = document.getElementById('preset-classic');
+    const presetModern = document.getElementById('preset-modern');
+
+    function applyPreset(preset) {
+        if (preset === 'classic') {
+            // Game section defaults
+            document.getElementById('language-select').value = 'en';
+            document.getElementById('window-windowed').checked = true;
+            document.getElementById('aspect-original').checked = true;
+            document.getElementById('resolution-original').checked = true;
+            // Detail section defaults
+            document.getElementById('gfx-high').checked = true;
+            document.getElementById('tex-high').checked = true;
+            document.getElementById('max-lod').value = '3.6';
+            document.getElementById('max-allowed-extras').value = '20';
+            // Disable all extensions
+            document.getElementById('check-hd-textures').checked = false;
+            document.getElementById('check-hd-music').checked = false;
+            document.getElementById('check-widescreen-bgs').checked = false;
+            document.getElementById('check-outro').checked = false;
+            document.getElementById('check-ending').checked = false;
+        } else if (preset === 'modern') {
+            document.getElementById('aspect-wide').checked = true;
+            document.getElementById('resolution-wide').checked = true;
+            document.getElementById('gfx-high').checked = true;
+            document.getElementById('tex-high').checked = true;
+            document.getElementById('max-lod').value = '6';
+            document.getElementById('max-allowed-extras').value = '40';
+            // Enable HD extensions
+            document.getElementById('check-hd-textures').checked = true;
+            document.getElementById('check-hd-music').checked = true;
+            document.getElementById('check-widescreen-bgs').checked = true;
+        }
+        // Trigger change event to save config
+        const configForm = document.getElementById('config-form');
+        if (configForm) {
+            configForm.dispatchEvent(new Event('change'));
+        }
+        // Refresh Offline Play button state
+        if (typeof checkInitialCacheStatus === 'function') {
+            checkInitialCacheStatus();
+        }
+    }
+
+    if (presetClassic) {
+        presetClassic.addEventListener('click', () => applyPreset('classic'));
+    }
+    if (presetModern) {
+        presetModern.addEventListener('click', () => applyPreset('modern'));
+    }
+
+    // --- Config Toast ---
+    const configToast = document.getElementById('config-toast');
+    let toastTimeout = null;
+
+    function showConfigToast() {
+        if (configToast) {
+            configToast.classList.add('show');
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                configToast.classList.remove('show');
+            }, 2000);
+        }
+    }
+
     window.addEventListener('popstate', (e) => {
         if (e.state && e.state.page && e.state.page !== 'main') {
             showPage(e.state.page, false);
@@ -402,6 +509,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log(e.data.message);
                 URL.revokeObjectURL(workerUrl); // Clean up the temporary URL
                 worker.terminate();
+                if (e.data.status === 'success') {
+                    showConfigToast();
+                }
             };
 
             worker.onerror = (e) => {

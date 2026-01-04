@@ -424,364 +424,311 @@
                 <p>OPFS is disabled in this browser. Default configuration will apply. If you are using a Firefox
                     Private window, please change to a regular window instead to change configuration.</p>
             </blockquote>
-            <div class="page-inner-content">
+            <div class="page-inner-content config-layout">
                 <div class="config-art-panel">
                     <img src="shark.webp" alt="LEGO Island Shark and Brickster">
                 </div>
-                <form id="config-form" class="config-form">
-                    <div class="config-section">
-                        <h3 class="config-legend">Game</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-group-label">Version</label>
-                                <div class="select-wrapper">
-                                    <select id="language-select" name="Language">
-                                        <option value="da">Danish</option>
-                                        <option value="el">English (1.0)</option>
-                                        <option value="en" selected>English (1.1)</option>
-                                        <option value="fr">French</option>
-                                        <option value="de">German</option>
-                                        <option value="it">Italian</option>
-                                        <option value="jp">Japanese</option>
-                                        <option value="ko">Korean</option>
-                                        <option value="pt">Portuguese</option>
-                                        <option value="ru">Russian</option>
-                                        <option value="es">Spanish</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group" id="window-form">
-                                <label class="form-group-label">Window</label>
-                                <div class="radio-group option-list">
-                                    <div class="option-item">
-                                        <input type="radio" id="window-windowed" name="window" data-not-ini="true"
-                                            checked>
-                                        <label for="window-windowed">Windowed</label>
-                                    </div>
-                                    <div class="option-item">
-                                        <input type="radio" id="window-fullscreen" name="window" data-not-ini="true">
-                                        <label for="window-fullscreen">Full Screen</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-group-label">
-                                    Aspect Ratio
-                                    <span class="tooltip-trigger">?
-                                        <span class="tooltip-content">Choose Original (4:3) to preserve the classic
-                                            aspect ratio with black bars, or select Widescreen to stretch the image to
-                                            fit your display.</span>
-                                </label>
-                                <div class="radio-group option-list">
-                                    <div class="option-item">
-                                        <input type="radio" id="aspect-original" value="1" name="Original Aspect Ratio"
-                                            checked>
-                                        <label for="aspect-original">Original (4:3)</label>
-                                    </div>
-                                    <div class="option-item">
-                                        <input type="radio" id="aspect-wide" value="0" name="Original Aspect Ratio">
-                                        <label for="aspect-wide">Widescreen</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-group-label">
-                                    Resolution
-                                    <span class="tooltip-trigger">?
-                                        <span class="tooltip-content">Choose Original (640 x 480) to preserve the
-                                            classic resolution, or select Maximum to render in the highest
-                                            quality.</span>
-                                </label>
-                                <div class="radio-group option-list">
-                                    <div class="option-item">
-                                        <input type="radio" id="resolution-original" value="1"
-                                            name="Original Resolution" checked>
-                                        <label for="resolution-original">Original (640 x 480)</label>
-                                    </div>
-                                    <div class="option-item">
-                                        <input type="radio" id="resolution-wide" value="0" name="Original Resolution">
-                                        <label for="resolution-wide">Maximum</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="config-main">
+                    <div class="config-presets">
+                        <button type="button" class="preset-btn" id="preset-classic">Classic Mode</button>
+                        <button type="button" class="preset-btn" id="preset-modern">Modern Mode</button>
                     </div>
-                    <div class="config-section">
-                        <h3 class="config-legend">Input</h3>
-                        <div class="form-grid">
-                            <div class="form-group" id="touch-section">
-                                <label class="form-group-label">
-                                    Touch Control Scheme
-                                    <span class="tooltip-trigger">?
-                                        <span class="tooltip-content">
-                                            <div><strong>Virtual Gamepad (Recommended):</strong> Slide your finger to
-                                                move and turn.</div><br>
-                                            <div><strong>Virtual Arrow Keys:</strong> Tap screen areas to move. The top
-                                                moves forward, the bottom turns or moves back.</div><br>
-                                            <div><strong>Virtual Mouse:</strong> Emulates classic mouse controls with
-                                                touch.</div>
-                                        </span>
-                                </label>
-                                <div class="select-wrapper">
-                                    <select id="touch-type-select" name="Touch Scheme">
-                                        <option value="0">Virtual Mouse</option>
-                                        <option value="1">Virtual Arrow Keys</option>
-                                        <option value="2" selected>Virtual Gamepad</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-group-label">
-                                    Options
-                                    <span class="tooltip-trigger">?
-                                        <span class="tooltip-content">
-                                            <div><strong>Haptic feedback:</strong> On supported devices and browsers,
-                                                this provides physical feedback, like a vibration, while you play the
-                                                game.</div><br>
-                                            <div><strong>Use WASD for navigation:</strong> Use the WASD keys instead
-                                                of the arrow keys to control the game, much akin to a modern PC game.
-                                                </div><br>
-                                            <div><strong>Active in background:</strong> Keeps the game running even
-                                                when it's in the background.
+                    <div class="config-tabs">
+                        <div class="config-tab-buttons">
+                            <button class="config-tab-btn active" data-config-tab="display">Display</button>
+                            <button class="config-tab-btn" data-config-tab="controls">Controls</button>
+                            <button class="config-tab-btn" data-config-tab="audio">Audio</button>
+                            <button class="config-tab-btn" data-config-tab="extras">Extras</button>
+                        </div>
+                        <form id="config-form" class="config-form">
+                            <div class="config-tab-panel active" id="config-tab-display">
+                                <details class="config-section-card" open>
+                                    <summary class="config-card-header">Game</summary>
+                                    <div class="config-card-content">
+                                        <div class="form-grid">
+                                            <div class="form-group">
+                                                <label class="form-group-label">Version</label>
+                                                <div class="select-wrapper">
+                                                    <select id="language-select" name="Language">
+                                                        <option value="da">Danish</option>
+                                                        <option value="el">English (1.0)</option>
+                                                        <option value="en" selected>English (1.1)</option>
+                                                        <option value="fr">French</option>
+                                                        <option value="de">German</option>
+                                                        <option value="it">Italian</option>
+                                                        <option value="jp">Japanese</option>
+                                                        <option value="ko">Korean</option>
+                                                        <option value="pt">Portuguese</option>
+                                                        <option value="ru">Russian</option>
+                                                        <option value="es">Spanish</option>
+                                                    </select>
                                                 </div>
-                                        </span>
-                                </label>
-                                <div class="checkbox-group option-list">
-                                    <div class="option-item">
-                                        <input type="checkbox" id="check-haptic" name="Haptic" checked>
-                                        <label for="check-haptic">Haptic feedback</label>
+                                            </div>
+                                            <div class="form-group" id="window-form">
+                                                <label class="form-group-label">Window</label>
+                                                <div class="radio-group option-list">
+                                                    <div class="option-item">
+                                                        <input type="radio" id="window-windowed" name="window" data-not-ini="true" checked>
+                                                        <label for="window-windowed">Windowed</label>
+                                                    </div>
+                                                    <div class="option-item">
+                                                        <input type="radio" id="window-fullscreen" name="window" data-not-ini="true">
+                                                        <label for="window-fullscreen">Full Screen</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-group-label">
+                                                    Aspect Ratio
+                                                    <span class="tooltip-trigger">?
+                                                        <span class="tooltip-content">Choose Original (4:3) to preserve the classic aspect ratio with black bars, or select Widescreen to stretch the image to fit your display.</span>
+                                                    </span>
+                                                </label>
+                                                <div class="radio-group option-list">
+                                                    <div class="option-item">
+                                                        <input type="radio" id="aspect-original" value="1" name="Original Aspect Ratio" checked>
+                                                        <label for="aspect-original">Original (4:3)</label>
+                                                    </div>
+                                                    <div class="option-item">
+                                                        <input type="radio" id="aspect-wide" value="0" name="Original Aspect Ratio">
+                                                        <label for="aspect-wide">Widescreen</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-group-label">
+                                                    Resolution
+                                                    <span class="tooltip-trigger">?
+                                                        <span class="tooltip-content">Choose Original (640 x 480) to preserve the classic resolution, or select Maximum to render in the highest quality.</span>
+                                                    </span>
+                                                </label>
+                                                <div class="radio-group option-list">
+                                                    <div class="option-item">
+                                                        <input type="radio" id="resolution-original" value="1" name="Original Resolution" checked>
+                                                        <label for="resolution-original">Original (640 x 480)</label>
+                                                    </div>
+                                                    <div class="option-item">
+                                                        <input type="radio" id="resolution-wide" value="0" name="Original Resolution">
+                                                        <label for="resolution-wide">Maximum</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="option-item">
-                                        <input type="checkbox" id="check-wasd" name="WASD">
-                                        <label for="check-wasd">Use WASD for navigation</label>
+                                </details>
+                                <details class="config-section-card">
+                                    <summary class="config-card-header">Detail</summary>
+                                    <div class="config-card-content">
+                                        <div class="form-grid">
+                                            <div class="form-group">
+                                                <label class="form-group-label">
+                                                    Island Model Quality
+                                                    <span class="tooltip-trigger">?
+                                                        <span class="tooltip-content">Note: using the "Low" setting will cause the island to disappear. This is not a bug, but the same behavior as present in the original game.</span>
+                                                    </span>
+                                                </label>
+                                                <div class="radio-group option-list">
+                                                    <div class="option-item">
+                                                        <input type="radio" id="gfx-low" name="Island Quality" value="0">
+                                                        <label for="gfx-low">Low</label>
+                                                    </div>
+                                                    <div class="option-item">
+                                                        <input type="radio" id="gfx-med" name="Island Quality" value="1">
+                                                        <label for="gfx-med">Medium</label>
+                                                    </div>
+                                                    <div class="option-item">
+                                                        <input type="radio" id="gfx-high" name="Island Quality" value="2" checked>
+                                                        <label for="gfx-high">High</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-group-label">Island Texture Quality</label>
+                                                <div class="radio-group option-list">
+                                                    <div class="option-item">
+                                                        <input type="radio" id="tex-low" name="Island Texture" value="0">
+                                                        <label for="tex-low">Low</label>
+                                                    </div>
+                                                    <div class="option-item">
+                                                        <input type="radio" id="tex-high" name="Island Texture" value="1" checked>
+                                                        <label for="tex-high">High</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-group-label" for="max-lod">
+                                                    Maximum LOD
+                                                    <span class="tooltip-trigger">?
+                                                        <span class="tooltip-content">Maximum Level of Detail (LOD). A higher setting will cause higher quality textures to be drawn regardless of distance.</span>
+                                                    </span>
+                                                </label>
+                                                <input type="range" id="max-lod" name="Max LOD" min="0" max="6" step="0.1" value="3.6">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-group-label" for="max-allowed-extras">
+                                                    Maximum actors (5..40)
+                                                    <span class="tooltip-trigger">?
+                                                        <span class="tooltip-content">Maximum number of LEGO actors to exist in the world at a time. The game will gradually increase the number of actors until this maximum is reached and while performance is acceptable.</span>
+                                                    </span>
+                                                </label>
+                                                <input type="range" id="max-allowed-extras" name="Max Allowed Extras" min="5" max="40" value="20">
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="option-item">
-                                        <input type="checkbox" id="check-active-in-bg" name="Active in Background">
-                                        <label for="check-active-in-bg">Active in background</label>
+                                </details>
+                                <details class="config-section-card">
+                                    <summary class="config-card-header">Graphics</summary>
+                                    <div class="config-card-content">
+                                        <div class="form-grid">
+                                            <div class="form-group">
+                                                <label class="form-group-label">Renderer</label>
+                                                <div class="select-wrapper">
+                                                    <select id="renderer-select" name="3D Device ID">
+                                                        <option value="0 0x682656f3 0x0 0x0 0x2000000">Software</option>
+                                                        <option value="0 0x682656f3 0x0 0x0 0x4000000" selected>WebGL</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-group-label">Transition Type</label>
+                                                <div class="select-wrapper">
+                                                    <select id="transition-type-select" name="Transition Type">
+                                                        <option value="1">No Animation</option>
+                                                        <option value="2">Dissolve</option>
+                                                        <option value="3" selected>Mosaic</option>
+                                                        <option value="4">Wipe Down</option>
+                                                        <option value="5">Windows</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-group-label">Anti-aliasing</label>
+                                                <div class="select-wrapper">
+                                                    <select id="msaa-select" name="MSAA"></select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-group-label">Anisotropic filtering</label>
+                                                <div class="select-wrapper">
+                                                    <select id="anisotropic-select" name="Anisotropic"></select>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                </details>
                             </div>
-                        </div>
+                            <div class="config-tab-panel" id="config-tab-controls">
+                                <details class="config-section-card" open>
+                                    <summary class="config-card-header">Input</summary>
+                                    <div class="config-card-content">
+                                        <div class="form-grid">
+                                            <div class="form-group" id="touch-section">
+                                                <label class="form-group-label">
+                                                    Touch Control Scheme
+                                                    <span class="tooltip-trigger">?
+                                                        <span class="tooltip-content">
+                                                            <div><strong>Virtual Gamepad (Recommended):</strong> Slide your finger to move and turn.</div><br>
+                                                            <div><strong>Virtual Arrow Keys:</strong> Tap screen areas to move. The top moves forward, the bottom turns or moves back.</div><br>
+                                                            <div><strong>Virtual Mouse:</strong> Emulates classic mouse controls with touch.</div>
+                                                        </span>
+                                                    </span>
+                                                </label>
+                                                <div class="select-wrapper">
+                                                    <select id="touch-type-select" name="Touch Scheme">
+                                                        <option value="0">Virtual Mouse</option>
+                                                        <option value="1">Virtual Arrow Keys</option>
+                                                        <option value="2" selected>Virtual Gamepad</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="toggle-group">
+                                                    <div class="toggle-switch">
+                                                        <label><input type="checkbox" id="check-haptic" name="Haptic" checked><span class="toggle-slider"></span><span class="toggle-label">Haptic feedback</span></label>
+                                                        <span class="tooltip-trigger">?<span class="tooltip-content">On supported devices and browsers, this provides physical feedback, like a vibration, while you play the game.</span></span>
+                                                    </div>
+                                                    <div class="toggle-switch">
+                                                        <label><input type="checkbox" id="check-wasd" name="WASD"><span class="toggle-slider"></span><span class="toggle-label">Use WASD for navigation</span></label>
+                                                        <span class="tooltip-trigger">?<span class="tooltip-content">Use the WASD keys instead of the arrow keys to control the game, much akin to a modern PC game.</span></span>
+                                                    </div>
+                                                    <div class="toggle-switch">
+                                                        <label><input type="checkbox" id="check-active-in-bg" name="Active in Background"><span class="toggle-slider"></span><span class="toggle-label">Active in background</span></label>
+                                                        <span class="tooltip-trigger">?<span class="tooltip-content">Keeps the game running even when it's in the background.</span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </details>
+                            </div>
+                            <div class="config-tab-panel" id="config-tab-audio">
+                                <details class="config-section-card" open>
+                                    <summary class="config-card-header">Sound</summary>
+                                    <div class="config-card-content">
+                                        <div class="toggle-group">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="check-music" name="Music" checked>
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-label">Music</span>
+                                            </label>
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="check-3d-sound" name="3DSound" checked>
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-label">3D Sound</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </details>
+                            </div>
+                            <div class="config-tab-panel" id="config-tab-extras">
+                                <details class="config-section-card" open>
+                                    <summary class="config-card-header">Extensions</summary>
+                                    <div class="config-card-content">
+                                        <div class="toggle-group">
+                                            <div class="toggle-switch">
+                                                <label><input type="checkbox" id="check-hd-textures" name="Texture Loader" data-not-ini="true"><span class="toggle-slider"></span><span class="toggle-label">HD Textures <span class="toggle-badge">+25MB</span></span></label>
+                                                <span class="tooltip-trigger">?<span class="tooltip-content">Enhance the game's visuals with high-definition textures.</span></span>
+                                            </div>
+                                            <div class="toggle-switch">
+                                                <label><input type="checkbox" id="check-hd-music" name="HD Music" data-not-ini="true"><span class="toggle-slider"></span><span class="toggle-label">HD Music <span class="toggle-badge">+450MB</span></span></label>
+                                                <span class="tooltip-trigger">?<span class="tooltip-content">Improve the game's music with high-definition audio.</span></span>
+                                            </div>
+                                            <div class="toggle-switch">
+                                                <label><input type="checkbox" id="check-widescreen-bgs" name="Widescreen Backgrounds" data-not-ini="true"><span class="toggle-slider"></span><span class="toggle-label">Widescreen Backgrounds <span class="toggle-badge">WIP</span></span></label>
+                                                <span class="tooltip-trigger">?<span class="tooltip-content">Adapts the game's background art for modern widescreen monitors, eliminating unwanted 3D backgrounds on the sides of the screen.</span></span>
+                                            </div>
+                                            <div class="toggle-switch">
+                                                <label><input type="checkbox" id="check-outro" name="Outro FMV" data-not-ini="true"><span class="toggle-slider"></span><span class="toggle-label">Outro FMV</span></label>
+                                                <span class="tooltip-trigger">?<span class="tooltip-content">Plays the unused Outro animation upon exiting the game.</span></span>
+                                            </div>
+                                            <div class="toggle-switch">
+                                                <label><input type="checkbox" id="check-ending" name="Extended Bad Ending FMV" data-not-ini="true"><span class="toggle-slider"></span><span class="toggle-label">Extended Bad Ending FMV <span class="toggle-badge">+20MB</span></span></label>
+                                                <span class="tooltip-trigger">?<span class="tooltip-content">Plays the extended / "uncut" Bad Ending animation as found in beta versions of the game upon failing to catch the Brickster.</span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </details>
+                                <details class="config-section-card">
+                                    <summary class="config-card-header">Offline Play</summary>
+                                    <div class="config-card-content">
+                                        <div class="offline-play-grid">
+                                            <div class="offline-play-text">
+                                                <p>Install the game for offline access. This will download all necessary files to your device (about 550MB).</p>
+                                                <p class="offline-note">Note: browsers enforce strict storage quotas, especially in private/incognito windows.</p>
+                                            </div>
+                                            <div class="offline-play-controls">
+                                                <img class="control-img" id="install-btn" src="install_off.webp" alt="Install Game" data-off="install_off.webp" data-on="install_on.webp" style="display: block;">
+                                                <img class="control-img" id="uninstall-btn" src="uninstall_off.webp" alt="Uninstall Game" data-off="uninstall_off.webp" data-on="uninstall_on.webp" style="display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </details>
+                            </div>
+                        </form>
                     </div>
-                    <div class="config-section">
-                        <h3 class="config-legend">Detail</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-group-label">
-                                    Island Model Quality
-                                    <span class="tooltip-trigger">?
-                                        <span class="tooltip-content">Note: using the "Low" setting will cause the
-                                            island to disappear. This is not a bug, but the same behavior as present in
-                                            the original game.</span>
-                                    </span>
-                                </label>
-                                <div class="radio-group option-list">
-                                    <div class="option-item">
-                                        <input type="radio" id="gfx-low" name="Island Quality" value="0">
-                                        <label for="gfx-low">Low</label>
-                                    </div>
-                                    <div class="option-item">
-                                        <input type="radio" id="gfx-med" name="Island Quality" value="1">
-                                        <label for="gfx-med">Medium</label>
-                                    </div>
-                                    <div class="option-item">
-                                        <input type="radio" id="gfx-high" name="Island Quality" value="2" checked>
-                                        <label for="gfx-high">High</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-group-label">Island Texture Quality</label>
-                                <div class="radio-group option-list">
-                                    <div class="option-item">
-                                        <input type="radio" id="tex-low" name="Island Texture" value="0">
-                                        <label for="tex-low">Low</label>
-                                    </div>
-                                    <div class="option-item">
-                                        <input type="radio" id="tex-high" name="Island Texture" value="1" checked>
-                                        <label for="tex-high">High</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-group-label" for="max-lod">
-                                    Maximum LOD
-                                    <span class="tooltip-trigger">?
-                                        <span class="tooltip-content">Maximum Level of Detail (LOD). A higher setting
-                                            will cause higher quality textures to be drawn regardless of
-                                            distance.</span>
-                                    </span>
-                                </label>
-                                <input type="range" id="max-lod" name="Max LOD" min="0" max="6" step="0.1" value="3.6">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-group-label" for="max-allowed-extras">
-                                    Maximum actors (5..40)
-                                    <span class="tooltip-trigger">?
-                                        <span class="tooltip-content">Maximum number of LEGO actors to exist in the
-                                            world at a time. The game will gradually increase the number of actors until
-                                            this maximum is reached and while performance is acceptable.</span>
-                                    </span>
-                                </label>
-                                <input type="range" id="max-allowed-extras" name="Max Allowed Extras" min="5" max="40"
-                                    value="20">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="config-section">
-                        <h3 class="config-legend">Graphics</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-group-label">Renderer</label>
-                                <div class="select-wrapper">
-                                    <select id="renderer-select" name="3D Device ID">
-                                        <option value="0 0x682656f3 0x0 0x0 0x2000000">Software</option>
-                                        <option value="0 0x682656f3 0x0 0x0 0x4000000" selected>WebGL</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-group-label">Transition Type</label>
-                                <div class="select-wrapper">
-                                    <select id="transition-type-select" name="Transition Type">
-                                        <option value="1">No Animation</option>
-                                        <option value="2">Dissolve</option>
-                                        <option value="3" selected>Mosaic</option>
-                                        <option value="4">Wipe Down</option>
-                                        <option value="5">Windows</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-group-label">Anti-aliasing</label>
-                                <div class="select-wrapper">
-                                    <select id="msaa-select" name="MSAA">
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-group-label">Anisotropic filtering</label>
-                                <div class="select-wrapper">
-                                    <select id="anisotropic-select" name="Anisotropic">
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="config-section">
-                        <h3 class="config-legend">Sound</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-group-label">Options</label>
-                                <div class="checkbox-group option-list">
-                                    <div class="option-item">
-                                        <input type="checkbox" id="check-music" name="Music" checked>
-                                        <label for="check-music">Music</label>
-                                    </div>
-                                    <div class="option-item">
-                                        <input type="checkbox" id="check-3d-sound" name="3DSound" checked>
-                                        <label for="check-3d-sound">3D Sound</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="config-section">
-                        <h3 class="config-legend">
-                            Extensions
-                            <span class="tooltip-trigger">?
-                                <span class="tooltip-content">
-                                    Expands the game with new content and modifications created by the community.
-                                </span>
-                            </span>
-                        </h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-group-label">
-                                    Options
-                                    <span class="tooltip-trigger">?
-                                        <span class="tooltip-content">
-                                            <strong>HD Textures:</strong> Enhance the game's visuals with
-                                            high-definition textures. An extra 25MB download is
-                                            required when this is enabled.<br><br>
-                                            <strong>HD Music:</strong> Improve the game's music with
-                                            high-definition audio. An extra 450MB download is
-                                            required when this is enabled.<br><br>
-                                            <strong>Widescreen Backgrounds (work-in-progress):</strong> Adapts the game's background art
-                                            for modern widescreen monitors, eliminating unwanted 3D backgrounds on the
-                                            sides of the screen. An extra 5MB download is
-                                            required when this is enabled.<br><br>
-                                            <strong>Outro FMV:</strong> Plays the unused Outro animation upon exiting the game.<br><br>
-                                            <strong>Extended Bad Ending FMV:</strong> Plays the extended / "uncut" Bad Ending animation
-                                            as found in beta versions of the game upon failing to catch the Brickster. An extra 20MB download is
-                                            required when this is enabled.
-                                        </span>
-                                    </span>
-                                </label>
-                                <div class="checkbox-group option-list">
-                                    <div class="option-item">
-                                        <input type="checkbox" id="check-hd-textures" name="Texture Loader"
-                                            data-not-ini="true">
-                                        <label for="check-hd-textures">
-                                            HD Textures
-                                        </label>
-                                    </div>
-                                    <div class="option-item">
-                                        <input type="checkbox" id="check-hd-music" name="HD Music"
-                                            data-not-ini="true">
-                                        <label for="check-hd-music">
-                                            HD Music
-                                        </label>
-                                    </div>
-                                    <div class="option-item">
-                                        <input type="checkbox" id="check-widescreen-bgs" name="Widescreen Backgrounds"
-                                            data-not-ini="true">
-                                        <label for="check-widescreen-bgs">
-                                            Widescreen Backgrounds
-                                        </label>
-                                    </div>
-                                    <div class="option-item">
-                                        <input type="checkbox" id="check-outro" name="Outro FMV"
-                                            data-not-ini="true">
-                                        <label for="check-outro">
-                                            Outro FMV
-                                        </label>
-                                    </div>
-                                    <div class="option-item">
-                                        <input type="checkbox" id="check-ending" name="Extended Bad Ending FMV"
-                                            data-not-ini="true">
-                                        <label for="check-ending">
-                                            Extended Bad Ending FMV
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="config-section">
-                        <h3 class="config-legend">Offline Play</h3>
-                        <div class="offline-play-grid">
-                            <div class="offline-play-text">
-                                <h4>Install for Offline Access</h4>
-                                <p>By installing, the game will be available to play even when you are not connected to
-                                    the internet. This will download all necessary files to your device (about 550MB in
-                                    size).</p>
-                                <p style="font-size:0.7em;">Note: browsers enforce strict storage and memory quotas,
-                                    especially when using private/incognito windows. If you encounter an error during
-                                    installation, please use a regular window and make sure you have enough disk space
-                                    available on your device.</p>
-                            </div>
-                            <div class="offline-play-controls">
-                                <img class="control-img" id="install-btn" src="install_off.webp" alt="Install Game"
-                                    data-off="install_off.webp" data-on="install_on.webp" style="display: block;">
-                                <img class="control-img" id="uninstall-btn" src="uninstall_off.webp"
-                                    alt="Uninstall Game" data-off="uninstall_off.webp" data-on="uninstall_on.webp"
-                                    style="display: none;">
-                            </div>
-                        </div>
-                    </div>
-                </form>
+                </div>
             </div>
+            <div id="config-toast" class="config-toast">Settings saved</div>
         </div>
 
         <div id="free-stuff-page" class="page-content">
@@ -898,7 +845,7 @@
         </div>
 
         <div class="app-footer">
-            <p>Last updated: <span id="app-version">2026-01-04 21:38:40 UTC</span></p>
+            <p>Last updated: <span id="app-version">2026-01-04 22:31:11 UTC</span></p>
         </div>
     </div>
 

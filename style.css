@@ -338,7 +338,7 @@ body {
     text-decoration: underline;
 }
 
-#configure-page .page-inner-content {
+#configure-page .page-inner-content.config-layout {
     display: flex;
     background-color: #181818;
     border: 1px solid #303030;
@@ -346,8 +346,9 @@ body {
 }
 
 .config-art-panel {
-    flex: 0 0 180px;
+    flex: 0 0 200px;
     border-radius: 8px 0 0 8px;
+    min-height: 420px;
 }
 
 .config-art-panel img {
@@ -358,26 +359,258 @@ body {
     border-radius: 8px 0 0 8px;
 }
 
+.config-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    min-width: 0;
+}
+
 .config-form {
     flex-grow: 1;
-    padding: 25px;
 }
 
-.config-section {
-    margin-bottom: 25px;
+/* Preset buttons */
+.config-presets {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
 }
 
-.config-section:last-child {
+.preset-btn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #c0c0c0;
+    font-size: 0.85em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+    border-color: #FFD700;
+    color: #FFD700;
+    background: linear-gradient(135deg, #333 0%, #222 100%);
+}
+
+.preset-btn:active {
+    transform: scale(0.98);
+}
+
+/* Config tabs */
+.config-tabs {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.config-tab-buttons {
+    display: flex;
+    gap: 5px;
+    border-bottom: 1px solid #333;
+    margin-bottom: 15px;
+}
+
+.config-tab-btn {
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #888;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.config-tab-btn:hover {
+    color: #c0c0c0;
+}
+
+.config-tab-btn.active {
+    color: #FFD700;
+    border-bottom-color: #FFD700;
+}
+
+.config-tab-panel {
+    display: none;
+}
+
+.config-tab-panel.active {
+    display: block;
+}
+
+/* Collapsible section cards */
+.config-section-card {
+    background: linear-gradient(135deg, #1e1e1e 0%, #161616 100%);
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.config-section-card:last-child {
     margin-bottom: 0;
 }
 
-.config-legend {
+.config-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
     color: #FFD700;
-    font-size: 1.1em;
+    font-size: 1em;
     font-weight: bold;
-    margin: 0 0 15px 0;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #444;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+}
+
+.config-card-header::-webkit-details-marker {
+    display: none;
+}
+
+.config-card-header::after {
+    content: '+';
+    font-size: 1.2em;
+    color: #666;
+    transition: transform 0.2s ease;
+    margin-left: auto;
+}
+
+.config-section-card[open] .config-card-header::after {
+    content: '−';
+}
+
+.config-card-content {
+    padding: 0 16px 16px 16px;
+}
+
+/* Toggle switches */
+.toggle-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    user-select: none;
+    min-width: 0;
+}
+
+.toggle-switch label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background-color: #333;
+    border-radius: 24px;
+    margin-right: 12px;
+    transition: background-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.toggle-slider::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background-color: #888;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #3a5f3a;
+}
+
+.toggle-switch input:checked + .toggle-slider::after {
+    left: 23px;
+    background-color: #FFD700;
+}
+
+.toggle-label {
+    color: #c0c0c0;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .toggle-label {
+        white-space: normal;
+    }
+}
+
+.toggle-switch .tooltip-trigger {
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.toggle-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    margin-left: 8px;
+    background-color: #333;
+    border-radius: 4px;
+    font-size: 0.75em;
+    color: #888;
+}
+
+@media (max-width: 768px) {
+    .toggle-badge {
+        display: none;
+    }
+}
+
+/* Config toast notification */
+.config-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 1px solid #FFD700;
+    border-radius: 8px;
+    padding: 12px 24px;
+    color: #f0f0f0;
+    font-size: 0.9em;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 10000;
+}
+
+.config-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Offline play adjustments */
+.offline-note {
+    font-size: 0.75em;
+    color: #666;
+    margin-top: 8px;
 }
 
 .form-grid {
@@ -428,7 +661,7 @@ body {
     line-height: 1.4;
     text-align: left;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-    z-index: 20;
+    z-index: 10000;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.2s, visibility 0.2s;
@@ -1020,16 +1253,42 @@ select {
         display: none;
     }
 
-    #configure-page .page-inner-content {
+    #configure-page .page-inner-content.config-layout {
         background-color: transparent;
         border: none;
         padding: 0;
     }
 
-    .config-form {
+    .config-main {
         background-color: #181818;
         border: 1px solid #303030;
         border-radius: 8px;
+        padding: 15px;
+    }
+
+    .config-presets {
+        flex-wrap: wrap;
+    }
+
+    .preset-btn {
+        flex: 1;
+        text-align: center;
+    }
+
+    .config-tab-buttons {
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .config-tab-btn {
+        flex: 1 1 auto;
+        padding: 8px 12px;
+        font-size: 0.8em;
+        text-align: center;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
     }
 
     .offline-play-grid {
