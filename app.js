@@ -407,6 +407,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('config-form').querySelectorAll('input, select').forEach(element => {
                     element.disabled = true;
                 });
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.disabled = true;
+                });
                 return null;
             }
         },
@@ -688,9 +691,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const updateReloadBtn = document.getElementById('update-reload-btn');
     const updateDismissBtn = document.getElementById('update-dismiss-btn');
 
-    function showUpdatePopup() {
+    let waitingServiceWorker = null;
+
+    function showUpdatePopup(waitingSW) {
         if (updatePopup) {
             updatePopup.style.display = 'flex';
+            waitingServiceWorker = waitingSW;
         }
     }
 
@@ -702,6 +708,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (updateReloadBtn) {
         updateReloadBtn.addEventListener('click', () => {
+            if (waitingServiceWorker) {
+                waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
             window.location.reload();
         });
     }
@@ -782,7 +791,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Check if there's already a waiting service worker (update ready)
             if (swRegistration.waiting) {
-                showUpdatePopup();
+                showUpdatePopup(swRegistration.waiting);
             }
 
             // Listen for new service worker updates
@@ -793,7 +802,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // When the new worker is installed and waiting, show the update popup
                         // Only show if there's an existing controller (this is an update, not first install)
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            showUpdatePopup();
+                            showUpdatePopup(newWorker);
                         }
                     });
                 }

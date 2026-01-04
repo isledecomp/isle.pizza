@@ -400,6 +400,12 @@ body {
     transform: scale(0.98);
 }
 
+.preset-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 /* Config tabs */
 .config-tabs {
     flex-grow: 1;
@@ -1035,30 +1041,35 @@ select {
     color: #FFD700;
 }
 
-/* Manual PDF Section */
+/* Manual Section */
 .manual-container {
-    width: 100%;
-    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
-.manual-pdf {
-    width: 100%;
-    height: 600px;
-    border: 1px solid #333;
+.manual-description {
+    color: #888;
+    font-size: 0.95em;
+    margin: 0;
+}
+
+.manual-open-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 1px solid #FFD700;
     border-radius: 8px;
-    background-color: #1c1c1c;
+    color: #FFD700;
+    font-size: 1em;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.2s ease;
 }
 
-@media (max-width: 768px) {
-    .manual-pdf {
-        height: 450px;
-    }
-}
-
-@media (max-width: 480px) {
-    .manual-pdf {
-        height: 350px;
-    }
+.manual-open-btn:hover {
+    background: linear-gradient(135deg, #333 0%, #222 100%);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
 /* Voices Section */
