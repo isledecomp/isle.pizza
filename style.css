@@ -850,6 +850,26 @@ select {
     content: '— ';
 }
 
+/* Quote with companion image */
+.quote-with-image {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.quote-with-image .voice-card {
+    flex: 1;
+    margin: 0;
+}
+
+.quote-companion-img {
+    width: 140px;
+    height: auto;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     #install-video {
@@ -930,6 +950,15 @@ select {
 
     .voices-grid {
         grid-template-columns: 1fr;
+    }
+
+    .quote-with-image {
+        flex-direction: column;
+    }
+
+    .quote-companion-img {
+        width: 160px;
+        order: -1;
     }
 }
 
