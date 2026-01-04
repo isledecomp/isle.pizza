@@ -850,24 +850,58 @@ select {
     content: '— ';
 }
 
-/* Quote with companion image */
-.quote-with-image {
+/* Quote panel with side art */
+.quote-panel {
     display: flex;
-    align-items: center;
-    gap: 20px;
+    background-color: #1c1c1c;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
     margin-bottom: 15px;
 }
 
-.quote-with-image .voice-card {
-    flex: 1;
-    margin: 0;
+.quote-panel-art {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: #111;
 }
 
-.quote-companion-img {
-    width: 140px;
+.quote-panel-art img {
+    width: auto;
     height: auto;
-    border-radius: 8px;
-    flex-shrink: 0;
+    max-width: 180px;
+    border-radius: 4px;
+    display: block;
+}
+
+.quote-panel-content {
+    flex: 1;
+    padding: 20px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.quote-panel-content p {
+    color: #c0c0c0;
+    font-size: 0.95em;
+    line-height: 1.6;
+    margin: 0 0 12px 0;
+    font-style: italic;
+}
+
+.quote-panel-content footer {
+    color: #FFD700;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-align: right;
+}
+
+.quote-panel-content footer::before {
+    content: '— ';
 }
 
 /* Responsive adjustments */
@@ -952,13 +986,8 @@ select {
         grid-template-columns: 1fr;
     }
 
-    .quote-with-image {
-        flex-direction: column;
-    }
-
-    .quote-companion-img {
-        width: 160px;
-        order: -1;
+    .quote-panel-art {
+        display: none;
     }
 }
 
