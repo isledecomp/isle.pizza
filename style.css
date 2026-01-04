@@ -585,28 +585,6 @@ select {
     line-height: 1.5;
 }
 
-.page-quote {
-    padding: 15px 20px;
-    margin-bottom: 25px;
-    border-left: 3px solid #FFD700;
-    background-color: #1c1c1c;
-    border-radius: 0 8px 8px 0;
-}
-
-.page-quote p {
-    font-style: italic;
-    color: #e0e0e0;
-    margin: 0;
-    font-size: 1em;
-}
-
-.page-quote footer {
-    text-align: right;
-    margin-top: 10px;
-    font-size: 0.9em;
-    color: #888;
-}
-
 .error-box {
     padding: 15px 20px;
     margin-bottom: 25px;
@@ -823,6 +801,55 @@ select {
     color: #FFD700;
 }
 
+/* Voices Section */
+.voices-intro {
+    color: #888;
+    font-size: 0.95em;
+    font-style: italic;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.voices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+}
+
+.voice-card {
+    background-color: #1c1c1c;
+    border: 1px solid #333;
+    border-left: 3px solid #FFD700;
+    border-radius: 0 8px 8px 0;
+    padding: 18px 20px;
+    margin: 0;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.voice-card:hover {
+    background-color: #252525;
+    transform: translateY(-2px);
+}
+
+.voice-card p {
+    color: #c0c0c0;
+    font-size: 0.95em;
+    line-height: 1.6;
+    margin: 0 0 12px 0;
+    font-style: italic;
+}
+
+.voice-card footer {
+    color: #FFD700;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-align: right;
+}
+
+.voice-card footer::before {
+    content: '— ';
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     #install-video {
@@ -890,6 +917,20 @@ select {
         width: 42px;
         height: 42px;
     }
+
+    .tab-buttons {
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        flex: 1 1 calc(50% - 5px);
+        min-width: 0;
+        justify-content: center;
+    }
+
+    .voices-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 480px) {
@@ -941,8 +982,14 @@ select {
     }
 
     .tab-icon {
-        width: 36px;
-        height: 36px;
+        width: 28px;
+        height: 28px;
+    }
+
+    .tab-btn {
+        padding: 8px 12px;
+        font-size: 0.75em;
+        gap: 6px;
     }
 }
 
