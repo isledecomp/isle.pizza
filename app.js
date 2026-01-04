@@ -295,18 +295,25 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // --- Accordion behavior for config sections ---
+    // Note: We prevent default and manually toggle to avoid Safari's scroll jump bug
     const configSections = document.querySelectorAll('.config-section-card');
     configSections.forEach(section => {
         const summary = section.querySelector('summary');
         if (summary) {
             summary.addEventListener('click', (e) => {
-                // If this section is closed and about to open, close others first
-                if (!section.open) {
+                e.preventDefault();
+
+                if (section.open) {
+                    // Closing this section
+                    section.open = false;
+                } else {
+                    // Opening this section - close others first
                     configSections.forEach(other => {
                         if (other !== section && other.open) {
                             other.open = false;
                         }
                     });
+                    section.open = true;
                 }
             });
         }
