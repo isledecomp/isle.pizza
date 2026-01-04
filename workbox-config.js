@@ -9,9 +9,9 @@ module.exports = {
         'uninstall_off.webp', 'uninstall_on.webp', 'app.js', 'style.css', 'manifest.json',
         'install.webp', 'install.mp3', 'downloader.js', 'debug.js', 'debug.html', 'ogel.webp',
         'bonus.webp', 'callfail.webp', 'getinfo.webp', 'sysinfo.webp', 'send.webp', 'congrats.webp',
-        'register.webp'
+        'register.webp', 'later.webp', 'comic.pdf'
     ],
     swSrc: 'src/sw.js',
     swDest: 'sw.js',
-    maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+    maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
 };

@@ -101,7 +101,11 @@
                             <img src="callfail.webp" alt="" class="tab-icon">
                             <span>Changelog</span>
                         </button>
-                        <button class="tab-btn" data-tab="voices">
+                        <button class="tab-btn" data-tab="manual">
+                            <img src="bonus.webp" alt="" class="tab-icon">
+                            <span>Manual</span>
+                        </button>
+                        <button class="tab-btn" data-tab="voices" style="display: none;">
                             <img src="send.webp" alt="" class="tab-icon">
                             <span>Voices</span>
                         </button>
@@ -347,6 +351,12 @@
                             <li><strong>Improved:</strong> Edge-walking triangle rasterization</li>
                             </ul>
                         </details>
+                    </div>
+
+                    <div class="tab-panel" id="tab-manual">
+                        <div class="manual-container">
+                            <iframe src="comic.pdf" class="manual-pdf" title="LEGO Island Instruction Manual"></iframe>
+                        </div>
                     </div>
 
                     <div class="tab-panel" id="tab-voices">
@@ -875,7 +885,7 @@
         </div>
 
         <div class="app-footer">
-            <p>Last updated: <span id="app-version">2026-01-04 21:11:32 UTC</span></p>
+            <p>Last updated: <span id="app-version">2026-01-04 21:23:56 UTC</span></p>
         </div>
     </div>
 
