@@ -82,21 +82,48 @@
             <span class="page-back-button" role="button" aria-label="Go back to main menu">← Back</span>
             <div class="page-inner-content">
                 <h1>Read Me</h1>
-                <p>Welcome to the LEGO Island web port project! This is a recreation of the classic 1997 PC game,
-                    rebuilt to run in modern web browsers using Emscripten.</p>
-                <p>This incredible project stands on the shoulders of giants. It was made possible by the original <a
-                        href="https://github.com/isledecomp/isle" target="_blank"
-                        rel="noopener noreferrer">decompilation project</a>, which was then adapted into a <a
-                        href="https://github.com/isledecomp/isle-portable" target="_blank"
-                        rel="noopener noreferrer">portable version</a>. This represents a year-long effort, involving
-                    thousands of hours of work from many awesome contributors dedicated to preserving this piece of
-                    gaming history.</p>
-                <p>Our goal is to make this classic accessible to everyone. The project is still in development, so you
-                    may encounter bugs. Your patience and feedback are greatly appreciated!</p>
 
-                <div class="faq-section">
-                    <h2>Frequently Asked Questions</h2>
-                    <details>
+                <div class="readme-tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-tab="about">
+                            <img src="sysinfo.webp" alt="" class="tab-icon">
+                            <span>About</span>
+                        </button>
+                        <button class="tab-btn" data-tab="faq">
+                            <img src="getinfo.webp" alt="" class="tab-icon">
+                            <span>FAQ</span>
+                        </button>
+                        <button class="tab-btn" data-tab="changelog">
+                            <img src="callfail.webp" alt="" class="tab-icon">
+                            <span>Changelog</span>
+                        </button>
+                    </div>
+
+                    <div class="tab-panel active" id="tab-about">
+                        <p>Welcome to the LEGO Island web port project! This is a recreation of the classic 1997 PC game,
+                            rebuilt to run in modern web browsers using Emscripten and WebAssembly.</p>
+                        <p>This incredible project stands on the shoulders of giants. It was made possible by the original <a
+                                href="https://github.com/isledecomp/isle" target="_blank"
+                                rel="noopener noreferrer">decompilation project</a>, which achieved 100% decompilation of the
+                            original game. This was then adapted into a <a
+                                href="https://github.com/isledecomp/isle-portable" target="_blank"
+                                rel="noopener noreferrer">portable version</a> that eliminated all Windows dependencies and
+                            replaced them with modern, cross-platform alternatives.</p>
+                        <p>The technical work involved replacing Windows-specific systems with SDL for window management and input,
+                            migrating audio from DirectSound to the miniaudio library, converting Windows Registry configuration
+                            to INI files, and creating a modular graphics layer supporting multiple rendering backends including
+                            WebGL. This represents years of effort from many awesome contributors dedicated to preserving this
+                            piece of gaming history.</p>
+                        <p>Thanks to this work, LEGO Island now runs on over 10 platforms including Windows, Linux, macOS, iOS,
+                            Android, Nintendo Switch, PlayStation Vita, and of course, web browsers. The web version uses the
+                            original, unmodified Interleaf streaming code, enabling progressive content loading just like the
+                            original CD-ROM.</p>
+                        <p>Our goal is to make this classic accessible to everyone. The project is still in development, so you
+                            may encounter bugs. Your patience and feedback are greatly appreciated!</p>
+                    </div>
+
+                    <div class="tab-panel" id="tab-faq">
+                        <details>
                         <summary>Is this the full, original game?</summary>
                         <p>This is a complete port of the original 1997 PC game. You can select from multiple languages,
                             including both the 1.0 and 1.1 versions of English, from the "Configure" menu before
@@ -162,13 +189,12 @@
                                 rel="noopener noreferrer">LEGO Island (portable)</a> project, and the code for this
                             website is also <a href="https://github.com/isledecomp/isle.pizza" target="_blank"
                                 rel="noopener noreferrer">available here</a>.</p>
-                    </details>
-                </div>
+                        </details>
+                    </div>
 
-                <div class="changelog-section">
-                    <h2>Changelog</h2>
-                    <details>
-                        <summary>January 2026</summary>
+                    <div class="tab-panel" id="tab-changelog">
+                        <details>
+                            <summary>January 2026</summary>
                         <ul>
                             <li><strong>New:</strong> Debug menu for developers and power users. Tap the LEGO Island logo 5 times to unlock OGEL mode and access debug features like teleporting to locations, switching acts, and playing animations</li>
                         </ul>
@@ -264,8 +290,9 @@
                             <li><strong>Improved:</strong> Backface culling enabled for faster rendering</li>
                             <li><strong>Improved:</strong> SIMD-optimized z-buffer clearing</li>
                             <li><strong>Improved:</strong> Edge-walking triangle rasterization</li>
-                        </ul>
-                    </details>
+                            </ul>
+                        </details>
+                    </div>
                 </div>
             </div>
         </div>
@@ -745,7 +772,7 @@
         </div>
 
         <div class="app-footer">
-            <p>Last updated: <span id="app-version">2026-01-03 22:40:06 UTC</span></p>
+            <p>Last updated: <span id="app-version">2026-01-04 16:41:50 UTC</span></p>
         </div>
     </div>
 

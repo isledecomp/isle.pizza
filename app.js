@@ -211,6 +211,16 @@ document.addEventListener('DOMContentLoaded', function () {
         page.style.display = 'flex';
         window.scroll(0, 0);
 
+        // Reset Read Me tabs to About when entering
+        if (pageId === '#read-me-page') {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === 'about');
+            });
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === 'tab-about');
+            });
+        }
+
         if (pushState) {
             const newPath = pageId.replace('-page', '');
             history.pushState({ page: pageId }, '', newPath);
@@ -236,6 +246,28 @@ document.addEventListener('DOMContentLoaded', function () {
     backButtons.forEach(button => {
         button.addEventListener('click', () => {
             history.back();
+        });
+    });
+
+    // --- Read Me Tabs ---
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.dataset.tab;
+
+            // Update button states
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            // Update panel visibility
+            tabPanels.forEach(panel => {
+                panel.classList.remove('active');
+                if (panel.id === 'tab-' + targetTab) {
+                    panel.classList.add('active');
+                }
+            });
         });
     });
 
