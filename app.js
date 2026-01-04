@@ -731,12 +731,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const updateReloadBtn = document.getElementById('update-reload-btn');
     const updateDismissBtn = document.getElementById('update-dismiss-btn');
 
-    let waitingServiceWorker = null;
-
-    function showUpdatePopup(waitingSW) {
+    function showUpdatePopup() {
         if (updatePopup) {
             updatePopup.style.display = 'flex';
-            waitingServiceWorker = waitingSW;
         }
     }
 
@@ -748,9 +745,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (updateReloadBtn) {
         updateReloadBtn.addEventListener('click', () => {
-            if (waitingServiceWorker) {
-                waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
-            }
             window.location.reload();
         });
     }
@@ -831,7 +825,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Check if there's already a waiting service worker (update ready)
             if (swRegistration.waiting) {
-                showUpdatePopup(swRegistration.waiting);
+                showUpdatePopup();
             }
 
             // Listen for new service worker updates
