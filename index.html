@@ -86,8 +86,12 @@
                 <div class="readme-tabs">
                     <div class="tab-buttons">
                         <button class="tab-btn active" data-tab="about">
-                            <img src="sysinfo.webp" alt="" class="tab-icon">
+                            <img src="register.webp" alt="" class="tab-icon">
                             <span>About</span>
+                        </button>
+                        <button class="tab-btn" data-tab="system">
+                            <img src="sysinfo.webp" alt="" class="tab-icon">
+                            <span>System</span>
                         </button>
                         <button class="tab-btn" data-tab="faq">
                             <img src="getinfo.webp" alt="" class="tab-icon">
@@ -124,6 +128,53 @@
                             original CD-ROM.</p>
                         <p>Our goal is to make this classic accessible to everyone. The project is still in development, so you
                             may encounter bugs. Your patience and feedback are greatly appreciated!</p>
+                    </div>
+
+                    <div class="tab-panel" id="tab-system">
+                        <div class="requirements-section">
+                            <h3>Supported Browsers</h3>
+                            <p>This game requires a modern browser with WebAssembly multi-threading support. The following browsers are supported:</p>
+                            <ul class="requirements-list">
+                                <li><strong>Chrome</strong> — version 95 or newer</li>
+                                <li><strong>Firefox</strong> — version 92 or newer</li>
+                                <li><strong>Edge</strong> — version 95 or newer</li>
+                                <li><strong>Safari</strong> — version 15.4 or newer (iOS 18+ recommended)</li>
+                            </ul>
+                            <p class="requirements-note">For the best experience, keep your browser updated to the latest version.</p>
+                        </div>
+
+                        <div class="requirements-section">
+                            <h3>Input Methods</h3>
+                            <p>The game supports multiple ways to play. Visit the Configure page to adjust your control preferences.</p>
+                            <ul class="requirements-list">
+                                <li><strong>Keyboard &amp; Mouse</strong> — Traditional desktop controls using arrow keys or WASD</li>
+                                <li><strong>Gamepad</strong> — Controller support with analog sticks and D-pad</li>
+                                <li><strong>Touch Screen</strong> — Mobile-friendly controls with configurable schemes</li>
+                            </ul>
+                        </div>
+
+                        <div class="requirements-section">
+                            <h3>Audio</h3>
+                            <p>Audio hardware is recommended for the full experience. If the game is silent, click the mute icon
+                                (🔇) on the animated intro to enable sound. Modern browsers require user interaction before playing audio.</p>
+                        </div>
+
+                        <div class="requirements-section">
+                            <h3>Storage &amp; Network</h3>
+                            <p>The game streams approximately <strong>25MB</strong> of data on first load (more with extensions enabled).
+                                For offline play, you can install the full game (about <strong>550MB</strong>) via the Configure menu.
+                                A stable internet connection is recommended for initial loading.</p>
+                        </div>
+
+                        <div class="requirements-section">
+                            <h3>Performance Tips</h3>
+                            <ul class="requirements-list">
+                                <li>Close other browser tabs to free up memory</li>
+                                <li>Use hardware acceleration (enabled by default in most browsers)</li>
+                                <li>On mobile, ensure your device isn't in low-power mode</li>
+                                <li>If experiencing lag, try reducing the resolution in Configure</li>
+                            </ul>
+                        </div>
                     </div>
 
                     <div class="tab-panel" id="tab-faq">
@@ -824,7 +875,7 @@
         </div>
 
         <div class="app-footer">
-            <p>Last updated: <span id="app-version">2026-01-04 17:48:49 UTC</span></p>
+            <p>Last updated: <span id="app-version">2026-01-04 21:11:32 UTC</span></p>
         </div>
     </div>
 

@@ -665,6 +665,7 @@ select {
 
 .tab-buttons {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
     margin-bottom: 20px;
@@ -848,6 +849,58 @@ select {
 
 .voice-card footer::before {
     content: '— ';
+}
+
+/* Requirements Section */
+.requirements-section {
+    background-color: #1c1c1c;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.requirements-section h3 {
+    color: #FFD700;
+    font-size: 1.1em;
+    margin: 0 0 12px 0;
+}
+
+.requirements-section p {
+    color: #c0c0c0;
+    font-size: 0.95em;
+    line-height: 1.6;
+    margin: 0 0 12px 0;
+}
+
+.requirements-section p:last-child {
+    margin-bottom: 0;
+}
+
+.requirements-list {
+    margin: 0;
+    padding-left: 20px;
+    color: #c0c0c0;
+}
+
+.requirements-list li {
+    font-size: 0.95em;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.requirements-list li:last-child {
+    margin-bottom: 0;
+}
+
+.requirements-list li strong {
+    color: #e0e0e0;
+}
+
+.requirements-note {
+    font-size: 0.85em !important;
+    color: #888 !important;
+    font-style: italic;
 }
 
 /* Quote panel with side art */

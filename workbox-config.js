@@ -8,7 +8,8 @@ module.exports = {
         'read_me_on.webp', 'run_game_off.webp', 'run_game_on.webp', 'shark.webp',
         'uninstall_off.webp', 'uninstall_on.webp', 'app.js', 'style.css', 'manifest.json',
         'install.webp', 'install.mp3', 'downloader.js', 'debug.js', 'debug.html', 'ogel.webp',
-        'bonus.webp', 'callfail.webp', 'getinfo.webp', 'sysinfo.webp', 'send.webp', 'congrats.webp'
+        'bonus.webp', 'callfail.webp', 'getinfo.webp', 'sysinfo.webp', 'send.webp', 'congrats.webp',
+        'register.webp'
     ],
     swSrc: 'src/sw.js',
     swDest: 'sw.js',
