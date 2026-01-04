@@ -319,6 +319,39 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // --- Tooltip handling for touch devices only ---
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+    if (isTouchDevice) {
+        const tooltipTriggers = document.querySelectorAll('.tooltip-trigger');
+        tooltipTriggers.forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const wasActive = trigger.classList.contains('active');
+
+                // Close all other tooltips
+                tooltipTriggers.forEach(other => {
+                    other.classList.remove('active');
+                });
+
+                // Toggle this tooltip
+                if (!wasActive) {
+                    trigger.classList.add('active');
+                }
+            });
+        });
+
+        // Close tooltips when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.tooltip-trigger')) {
+                tooltipTriggers.forEach(trigger => {
+                    trigger.classList.remove('active');
+                });
+            }
+        });
+    }
+
     // --- Preset Buttons ---
     const presetClassic = document.getElementById('preset-classic');
     const presetModern = document.getElementById('preset-modern');
