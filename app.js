@@ -602,6 +602,66 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Goodbye popup elements
+    const goodbyePopup = document.getElementById('goodbye-popup');
+    const goodbyeCancelBtn = document.getElementById('goodbye-cancel-btn');
+    const goodbyeProgressBar = document.querySelector('.goodbye-progress-bar');
+    const cancelBtn = document.getElementById('cancel-btn');
+    let goodbyeTimeout = null;
+    let goodbyeInterval = null;
+
+    function showGoodbyePopup() {
+        if (goodbyePopup && goodbyePopup.style.display !== 'flex') {
+            goodbyePopup.style.display = 'flex';
+            if (goodbyeProgressBar) {
+                goodbyeProgressBar.style.width = '0%';
+            }
+            startGoodbyeCountdown();
+        }
+    }
+
+    function hideGoodbyePopup() {
+        if (goodbyePopup) {
+            goodbyePopup.style.display = 'none';
+        }
+        if (goodbyeTimeout) {
+            clearTimeout(goodbyeTimeout);
+            goodbyeTimeout = null;
+        }
+        if (goodbyeInterval) {
+            clearInterval(goodbyeInterval);
+            goodbyeInterval = null;
+        }
+    }
+
+    function startGoodbyeCountdown() {
+        const duration = 4000;
+        const startTime = Date.now();
+
+        goodbyeInterval = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            if (goodbyeProgressBar) {
+                goodbyeProgressBar.style.width = (progress * 100) + '%';
+            }
+            if (progress >= 1) {
+                clearInterval(goodbyeInterval);
+            }
+        }, 50);
+
+        goodbyeTimeout = setTimeout(() => {
+            window.location.href = 'https://legoisland.org';
+        }, duration);
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', showGoodbyePopup);
+    }
+
+    if (goodbyeCancelBtn) {
+        goodbyeCancelBtn.addEventListener('click', hideGoodbyePopup);
+    }
+
     if ('serviceWorker' in navigator) {
         Promise.all([
             configManager.init(),

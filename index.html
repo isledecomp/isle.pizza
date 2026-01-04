@@ -40,8 +40,21 @@
 </head>
 
 <body>
-    <div id="update-popup" class="update-popup" style="display: none;">
-        <div class="update-popup-content">
+    <div id="goodbye-popup" class="notification-popup" style="display: none;">
+        <div class="notification-popup-content">
+            <button id="goodbye-cancel-btn" class="update-dismiss-btn" aria-label="Cancel">×</button>
+            <div class="update-speech-bubble">
+                <p class="update-message">See you later, Brickulator!</p>
+                <div class="goodbye-progress">
+                    <div class="goodbye-progress-bar"></div>
+                </div>
+            </div>
+        </div>
+        <img src="later.webp" alt="Goodbye" class="update-character" width="150" height="187">
+    </div>
+
+    <div id="update-popup" class="notification-popup" style="display: none;">
+        <div class="notification-popup-content">
             <button id="update-dismiss-btn" class="update-dismiss-btn" aria-label="Dismiss">×</button>
             <div class="update-speech-bubble">
                 <p class="update-message">A new version just arrived!</p>
@@ -75,7 +88,7 @@
             <img class="control-img" width="134" height="149" id="read-me-btn" src="read_me_off.webp" alt="Read Me"
                 data-off="read_me_off.webp" data-on="read_me_on.webp" data-target="#read-me-page">
             <img class="control-img" width="93" height="145" id="cancel-btn" src="cancel_off.webp" alt="Cancel"
-                data-off="cancel_off.webp" data-on="cancel_on.webp" onclick="location.href = 'https://legoisland.org';">
+                data-off="cancel_off.webp" data-on="cancel_on.webp">
         </div>
 
         <div id="read-me-page" class="page-content">
@@ -885,7 +898,7 @@
         </div>
 
         <div class="app-footer">
-            <p>Last updated: <span id="app-version">2026-01-04 21:23:56 UTC</span></p>
+            <p>Last updated: <span id="app-version">2026-01-04 21:38:40 UTC</span></p>
         </div>
     </div>
 
