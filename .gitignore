@@ -1,3 +1,5 @@
+node_modules
+dist
 isle.wasm
 isle.wasm.map
 isle.js
