@@ -2,6 +2,8 @@
 
 A custom web frontend for the Emscripten port of [isle-portable](https://github.com/isledecomp/isle-portable), allowing LEGO Island to run directly in modern web browsers.
 
+<img width="1209" height="792" alt="image" src="https://github.com/user-attachments/assets/b98f8fef-8f30-49be-b424-99c27ea552f3" />
+
 ## Requirements
 
 - [Node.js](https://nodejs.org/)
@@ -52,7 +54,7 @@ isle.pizza/
 ├── index.html             # HTML entry point
 ├── isle.js                # Emscripten JS (not in repo, build from isle-portable)
 ├── isle.wasm              # Emscripten WASM (not in repo, build from isle-portable)
-└── LEGO/                  # Game data directory
+└── LEGO/                  # Game data directory (not in repo)
 ```
 
 ## Building the Game Files
