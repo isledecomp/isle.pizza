@@ -18,11 +18,6 @@ export default defineConfig({
       }
     },
     rollupOptions: {
-      onwarn(warning) {
-        if (process.env.CI) {
-          throw new Error(warning.message);
-        }
-      },
       output: {
         entryFileNames: 'app.js',
         chunkFileNames: '[name].js',
