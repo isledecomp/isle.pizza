@@ -1,7 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import { currentPage, debugEnabled } from './stores.js';
-    import { registerServiceWorker, checkCacheStatus } from './core/serviceWorker.js';
+    import { registerServiceWorker, checkCacheStatus } from './core/service-worker.js';
     import { setupCanvasEvents } from './core/emscripten.js';
     import TopContent from './lib/TopContent.svelte';
     import Controls from './lib/Controls.svelte';

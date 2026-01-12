@@ -8,7 +8,7 @@
     import ExtrasTab from './config/ExtrasTab.svelte';
     import { installState, currentPage } from '../stores.js';
     import { loadConfig, saveConfig, getFileHandle } from '../core/opfs.js';
-    import { checkCacheStatus, startInstall, startUninstall, getSiFilesForCache } from '../core/serviceWorker.js';
+    import { checkCacheStatus, startInstall, startUninstall, getSiFilesForCache } from '../core/service-worker.js';
     import { getMsaaSamples, getMaxAnisotropy, populateMsaaSelect, populateAfSelect } from '../core/webgl.js';
 
     let activeTab = 'display';
