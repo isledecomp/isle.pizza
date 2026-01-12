@@ -1,6 +1,6 @@
 <script>
     import ImageButton from '../ImageButton.svelte';
-    import { installState } from '../../stores.js';
+    import { installState, swRegistration } from '../../stores.js';
 
     export let opfsDisabled;
     export let openSection;
@@ -49,7 +49,9 @@
                     <p class="offline-note">Note: browsers enforce strict storage quotas, especially in private/incognito windows.</p>
                 </div>
                 <div class="offline-play-controls">
-                    {#if $installState.installing}
+                    {#if !$swRegistration}
+                        <p class="offline-error">Not available in development mode.</p>
+                    {:else if $installState.installing}
                         <div class="progress-circular" style="background: radial-gradient(var(--color-bg-input) 60%, transparent 61%), conic-gradient(var(--color-primary) {progressAngle}deg, var(--color-border-dark) {progressAngle}deg);">
                             {Math.round($installState.progress)}%
                         </div>

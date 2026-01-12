@@ -83,7 +83,11 @@
     </div>
 
     <div class="app-footer">
-        <p>Last updated: {__BUILD_TIME__}</p>
+        {#if __BUILD_TIME__}
+            <p>Last updated: {__BUILD_TIME__}</p>
+        {:else}
+            <p><strong>DEVELOPMENT MODE</strong></p>
+        {/if}
     </div>
 </div>
 

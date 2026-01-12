@@ -3,10 +3,10 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 
 const buildTime = new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [svelte()],
   define: {
-    __BUILD_TIME__: JSON.stringify(buildTime)
+    __BUILD_TIME__: mode === 'development' ? null : JSON.stringify(buildTime)
   },
   build: {
     outDir: 'dist',
@@ -31,4 +31,4 @@ export default defineConfig({
       'Cross-Origin-Embedder-Policy': 'require-corp'
     }
   }
-});
+}));

@@ -704,6 +704,12 @@ body {
     margin-top: 8px;
 }
 
+.offline-play-controls .offline-error {
+    color: var(--color-primary);
+    font-style: italic;
+    font-size: 0.9em;
+}
+
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
