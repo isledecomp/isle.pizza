@@ -4,7 +4,7 @@ import { showUpdatePopup, installState, swRegistration } from '../stores.js';
 let downloaderWorker = null;
 
 export async function registerServiceWorker() {
-    if (!('serviceWorker' in navigator)) {
+    if (import.meta.env.DEV || !('serviceWorker' in navigator)) {
         return null;
     }
 
