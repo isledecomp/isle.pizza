@@ -563,6 +563,27 @@ body {
     content: '−';
 }
 
+.config-card-header.nav-link {
+    text-decoration: none;
+    display: flex;
+    box-sizing: border-box;
+}
+
+.config-card-header.nav-link:hover,
+.config-card-header.nav-link:focus,
+.config-card-header.nav-link:active {
+    text-decoration: none;
+}
+
+.config-card-header.nav-link::after {
+    content: '→';
+    transition: color 0.2s ease;
+}
+
+.config-card-header.nav-link:hover::after {
+    color: var(--color-text-light);
+}
+
 .config-card-content {
     display: grid;
     grid-template-rows: 0fr;
