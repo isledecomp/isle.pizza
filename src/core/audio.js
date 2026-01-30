@@ -17,8 +17,14 @@ export function playInstallAudio() {
     const audio = getInstallAudio();
     if (audio) {
         audio.currentTime = 0;
-        audio.play();
-        soundEnabled.set(true);
+        audio.load();
+        audio.play()
+            .then(() => {
+                soundEnabled.set(true);
+            })
+            .catch(() => {
+                soundEnabled.set(false);
+            });
     }
 }
 
