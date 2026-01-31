@@ -151,7 +151,9 @@
     ></canvas>
 
     {#if loading}
-        <div class="overlay">Loading score cube...</div>
+        <div class="overlay">
+            <div class="spinner"></div>
+        </div>
     {:else if error}
         <div class="overlay error">Error: {error}</div>
     {/if}
@@ -191,15 +193,31 @@
         justify-content: center;
         width: 200px;
         height: 200px;
-        border-radius: 8px;
-        background: var(--color-bg-secondary, #1a1a2e);
+        padding-top: 20px;
         color: var(--color-text-muted, #888);
         font-size: 0.9em;
     }
 
     .overlay.error {
+        background: var(--color-bg-secondary, #1a1a2e);
+        border-radius: 8px;
         color: var(--color-error, #e74c3c);
         padding: 16px;
         text-align: center;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background:
+            radial-gradient(transparent 55%, transparent 56%),
+            conic-gradient(var(--color-primary, #FFD700) 0deg 90deg, var(--color-border-dark, #333) 90deg 360deg);
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 </style>
