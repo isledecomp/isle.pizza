@@ -1,4 +1,5 @@
 <script>
+    import { currentPage } from '../../stores.js';
     import ScoreCube from './ScoreCube.svelte';
 
     export let slot;
@@ -13,10 +14,12 @@
 </script>
 
 <div class="scores-editor">
-    <ScoreCube
-        missions={missionData}
-        onUpdate={handleCubeUpdate}
-    />
+    {#if $currentPage === 'save-editor'}
+        <ScoreCube
+            missions={missionData}
+            onUpdate={handleCubeUpdate}
+        />
+    {/if}
 </div>
 
 <style>
