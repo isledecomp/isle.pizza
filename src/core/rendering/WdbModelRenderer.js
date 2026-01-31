@@ -18,7 +18,7 @@ export class WdbModelRenderer {
         this.scene = new THREE.Scene();
 
         this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-        this.camera.position.set(0, 0, 7);
+        this.camera.position.set(0, 0.2, 7);
 
         this.renderer = new THREE.WebGLRenderer({
             canvas,
@@ -35,16 +35,14 @@ export class WdbModelRenderer {
      * Setup scene lighting - override to customize
      */
     setupLighting() {
-        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+        // Flat, even lighting similar to in-game
+        const ambient = new THREE.AmbientLight(0xffffff, 1.5);
         this.scene.add(ambient);
 
-        const directional = new THREE.DirectionalLight(0xffffff, 0.5);
-        directional.position.set(5, 5, 5);
-        this.scene.add(directional);
-
-        const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
-        backLight.position.set(-5, -3, -5);
-        this.scene.add(backLight);
+        // Soft front light
+        const frontLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        frontLight.position.set(0, 0, 5);
+        this.scene.add(frontLight);
     }
 
     /**
