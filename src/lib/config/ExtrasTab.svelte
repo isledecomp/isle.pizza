@@ -1,6 +1,6 @@
 <script>
     import ImageButton from '../ImageButton.svelte';
-    import { installState, swRegistration } from '../../stores.js';
+    import { installState, swRegistration, currentPage } from '../../stores.js';
 
     export let opfsDisabled;
     export let openSection;
@@ -10,6 +10,12 @@
     export let handleUninstall;
 
     $: progressAngle = ($installState.progress / 100) * 360;
+
+    function navigateToSaveEditor(e) {
+        e.preventDefault();
+        history.pushState({ page: 'save-editor' }, '', '#save-editor');
+        currentPage.set('save-editor');
+    }
 </script>
 
 <div class="config-tab-panel active" id="config-tab-extras">
@@ -75,5 +81,8 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="config-section-card">
+        <a href="#save-editor" class="config-card-header nav-link" onclick={navigateToSaveEditor}>Save Editor</a>
     </div>
 </div>

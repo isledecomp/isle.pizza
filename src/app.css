@@ -412,7 +412,8 @@ body {
     text-decoration: underline;
 }
 
-#configure-page .page-inner-content.config-layout {
+#configure-page .page-inner-content.config-layout,
+#save-editor .page-inner-content.config-layout {
     display: flex;
     background-color: var(--color-bg-input);
     border: 1px solid #303030;
@@ -561,6 +562,27 @@ body {
 
 .config-section-card:has(.config-card-content.open) .config-card-header::after {
     content: '−';
+}
+
+.config-card-header.nav-link {
+    text-decoration: none;
+    display: flex;
+    box-sizing: border-box;
+}
+
+.config-card-header.nav-link:hover,
+.config-card-header.nav-link:focus,
+.config-card-header.nav-link:active {
+    text-decoration: none;
+}
+
+.config-card-header.nav-link::after {
+    content: '→';
+    transition: color 0.2s ease;
+}
+
+.config-card-header.nav-link:hover::after {
+    color: var(--color-text-light);
 }
 
 .config-card-content {
@@ -1388,7 +1410,8 @@ select:focus {
         display: none;
     }
 
-    #configure-page .page-inner-content.config-layout {
+    #configure-page .page-inner-content.config-layout,
+    #save-editor .page-inner-content.config-layout {
         background-color: transparent;
         border: none;
         padding: 0;

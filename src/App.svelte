@@ -8,6 +8,7 @@
     import ReadMePage from './lib/ReadMePage.svelte';
     import ConfigurePage from './lib/ConfigurePage.svelte';
     import FreeStuffPage from './lib/FreeStuffPage.svelte';
+    import SaveEditorPage from './lib/SaveEditorPage.svelte';
     import UpdatePopup from './lib/UpdatePopup.svelte';
     import GoodbyePopup from './lib/GoodbyePopup.svelte';
     import ConfigToast from './lib/ConfigToast.svelte';
@@ -75,6 +76,9 @@
     </div>
     <div class="page-wrapper" class:active={$currentPage === 'free-stuff'}>
         <FreeStuffPage />
+    </div>
+    <div class="page-wrapper" class:active={$currentPage === 'save-editor'}>
+        <SaveEditorPage />
     </div>
 
     <div class="footer-disclaimer">

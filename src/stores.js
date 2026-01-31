@@ -7,7 +7,8 @@ function getInitialPage() {
     const pageMap = {
         '#read-me': 'read-me',
         '#configure': 'configure',
-        '#free-stuff': 'free-stuff'
+        '#free-stuff': 'free-stuff',
+        '#save-editor': 'save-editor'
     };
     return pageMap[hash] || 'main';
 }
@@ -35,6 +36,7 @@ export const installState = writable({
 
 // Config toast
 export const configToastVisible = writable(false);
+export const configToastMessage = writable('Settings saved');
 
 // Debug UI visible (set when game reaches intro animation)
 export const debugUIVisible = writable(false);
@@ -44,3 +46,11 @@ export const gameRunning = writable(false);
 
 // Service worker registration
 export const swRegistration = writable(null);
+
+// Save editor state
+export const saveEditorState = writable({
+    slots: [],           // Array of SaveSlot objects
+    selectedSlot: null,  // Currently selected slot number
+    loading: true,
+    error: null
+});
