@@ -26,5 +26,6 @@
     .scores-editor {
         display: flex;
         justify-content: center;
+        max-width: 100%;
     }
 </style>

@@ -165,6 +165,7 @@
         flex-direction: column;
         align-items: center;
         position: relative;
+        min-width: 0;
     }
 
     .score-cube-header {
@@ -176,6 +177,7 @@
         cursor: pointer;
         border-radius: 8px;
         margin-bottom: 12px;
+        max-width: 100%;
     }
 
     canvas.hidden {
@@ -193,6 +195,7 @@
         justify-content: center;
         width: 200px;
         height: 200px;
+        max-width: 100%;
         padding-top: 20px;
         color: var(--color-text-muted, #888);
         font-size: 0.9em;
