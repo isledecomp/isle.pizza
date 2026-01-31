@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import BackButton from './BackButton.svelte';
+    import Carousel from './Carousel.svelte';
     import MissionScoresEditor from './save-editor/MissionScoresEditor.svelte';
     import { saveEditorState, currentPage } from '../stores.js';
     import { listSaveSlots, updateSaveSlot, updatePlayerName } from '../core/savegame/index.js';
@@ -20,8 +21,9 @@
         { id: 'scores', label: 'Scores', firstSection: null }
     ];
 
-    // Reset to default tab/section when navigating to this page
+    // Reset state when navigating to this page
     $: if ($currentPage === 'save-editor') {
+        selectedSlot = null;
         activeTab = 'player';
         openSection = 'name';
     }
@@ -43,6 +45,9 @@
         [Actor.LAURA]: { normal: 'laura.webp', selected: 'laura-selected.webp' }
     };
 
+    // Carousel state (bound from Carousel component)
+    let carouselHasDragged = false;
+
     onMount(async () => {
         await loadSlots();
     });
@@ -63,6 +68,7 @@
     }
 
     function handleSlotSelect(slotNumber) {
+        if (carouselHasDragged) return;
         selectedSlot = slotNumber;
         saveEditorState.update(s => ({ ...s, selectedSlot: slotNumber }));
     }
@@ -227,31 +233,50 @@
             <img src="save.webp" alt="LEGO Island Save Editor">
         </div>
         <div class="config-main">
-            <div class="config-presets">
-                {#if loading}
-                    <span class="save-status-text">Loading save files...</span>
-                {:else if error}
-                    <span class="save-status-text error">{error}</span>
-                {:else if existingSlots.length === 0}
-                    <span class="save-status-text">No save files found</span>
-                {:else}
-                    {#each existingSlots as slot}
-                        <button
-                            type="button"
-                            class="save-slot-card"
-                            class:selected={selectedSlot === slot.slotNumber}
-                            onclick={() => handleSlotSelect(slot.slotNumber)}
-                        >
-                            <img
-                                src={characterIcons[slot.header?.actorId]?.selected || 'pepper-selected.webp'}
-                                alt={ActorNames[slot.header?.actorId] || 'Character'}
-                                class="slot-character-icon"
-                            />
-                            <span class="slot-name">{slot.playerName}</span>
-                        </button>
-                    {/each}
-                {/if}
-            </div>
+            {#if loading || error || existingSlots.length > 0}
+                <Carousel bind:hasDragged={carouselHasDragged}>
+                    {#if loading}
+                        <span class="save-status-text">Loading save files...</span>
+                    {:else if error}
+                        <span class="save-status-text error">{error}</span>
+                    {:else}
+                        {#each existingSlots as slot}
+                            <button
+                                type="button"
+                                class="save-slot-card"
+                                class:selected={selectedSlot === slot.slotNumber}
+                                onclick={() => handleSlotSelect(slot.slotNumber)}
+                            >
+                                <img
+                                    src={characterIcons[slot.header?.actorId]?.selected || 'pepper-selected.webp'}
+                                    alt={ActorNames[slot.header?.actorId] || 'Character'}
+                                    class="slot-character-icon"
+                                    draggable="false"
+                                />
+                                <span class="slot-name">{slot.playerName}</span>
+                            </button>
+                        {/each}
+                    {/if}
+                </Carousel>
+            {/if}
+
+            {#if !loading && !error && existingSlots.length === 0}
+                <div class="no-saves-state">
+                    <img src="callfail.webp" alt="" class="no-saves-image" />
+                    <span class="no-saves-title">No save files found</span>
+                    <p class="no-saves-description">
+                        Start playing LEGO Island and your save will appear here automatically.
+                    </p>
+                </div>
+            {:else if !loading && !error && existingSlots.length > 0 && !currentSlot}
+                <div class="no-saves-state">
+                    <img src="register.webp" alt="" class="no-saves-image" />
+                    <span class="no-saves-title">Select a save file above</span>
+                    <p class="no-saves-description">
+                        Choose a save slot to view and edit your player name, character, and high scores.
+                    </p>
+                </div>
+            {/if}
 
             {#if currentSlot && currentSlot.exists}
                 <div class="config-tabs">
@@ -336,6 +361,10 @@
 </div>
 
 <style>
+    :global(#save-editor > .page-inner-content > .config-main > .carousel) {
+        margin-bottom: 15px;
+    }
+
     .save-status-text {
         color: var(--color-text-muted);
         font-size: 0.9em;
@@ -344,6 +373,39 @@
 
     .save-status-text.error {
         color: #ff6b6b;
+    }
+
+    .no-saves-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 48px 24px;
+        flex: 1;
+    }
+
+    .no-saves-image {
+        width: 100px;
+        height: auto;
+        image-rendering: pixelated;
+        margin-bottom: 16px;
+        border-radius: 8px;
+    }
+
+    .no-saves-title {
+        color: var(--color-text-light);
+        font-size: 1.1em;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .no-saves-description {
+        color: var(--color-text-muted);
+        font-size: 0.9em;
+        line-height: 1.5;
+        max-width: 280px;
+        margin: 0;
     }
 
     .save-slot-card {
