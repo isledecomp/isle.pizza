@@ -10,6 +10,9 @@
     "preview": "vite preview",
     "prepare:assets": "node scripts/prepare.js"
   },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "svelte": "^5.0.0",
