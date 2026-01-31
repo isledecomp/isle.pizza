@@ -6,11 +6,11 @@
     export let onUpdate = () => {};
 
     const missions = [
-        { key: 'pizza', name: MissionNames.pizza },
-        { key: 'carRace', name: MissionNames.carRace },
-        { key: 'jetskiRace', name: MissionNames.jetskiRace },
-        { key: 'towTrack', name: MissionNames.towTrack },
-        { key: 'ambulance', name: MissionNames.ambulance }
+        { key: 'pizza', name: MissionNames.pizza, icon: 'pizza.webp' },
+        { key: 'carRace', name: MissionNames.carRace, icon: 'race.webp' },
+        { key: 'jetskiRace', name: MissionNames.jetskiRace, icon: 'boat.webp' },
+        { key: 'towTrack', name: MissionNames.towTrack, icon: 'gas.webp' },
+        { key: 'ambulance', name: MissionNames.ambulance, icon: 'med.webp' }
     ];
 
     const actors = [
@@ -45,75 +45,60 @@
     }
 </script>
 
-<div class="mission-scores-editor">
-    <h3 class="section-title">Mission Scores</h3>
-
-    <div class="scores-table-wrapper">
-        {#key missionData}
-        <div class="scores-table">
-            <div class="scores-header">
-                <div class="mission-col"></div>
-                {#each actors as actor}
-                    <div class="actor-col">{actor.name}</div>
-                {/each}
-            </div>
-
-            {#each missions as mission}
-                <div class="scores-row">
-                    <div class="mission-col">{mission.name}</div>
-                    {#each actors as actor}
-                        <div class="actor-col">
-                            <ScoreColorButton
-                                color={getScore(mission.key, actor.id, 'score')}
-                                onChange={(c) => handleScoreChange(mission.key, actor.id, 'score', c)}
-                                title="Score"
-                            />
-                            <ScoreColorButton
-                                color={getScore(mission.key, actor.id, 'highScore')}
-                                onChange={(c) => handleScoreChange(mission.key, actor.id, 'highScore', c)}
-                                title="High Score"
-                                isHighScore={true}
-                            />
-                        </div>
-                    {/each}
-                </div>
+<div class="scores-table-wrapper">
+    {#key missionData}
+    <div class="scores-table">
+        <div class="scores-header">
+            <div class="mission-col"></div>
+            {#each actors as actor}
+                <div class="actor-col">{actor.name}</div>
             {/each}
         </div>
-        {/key}
-    </div>
 
-    <div class="scores-legend">
-        <span class="legend-item">
-            <span class="legend-color grey"></span> Grey
-        </span>
-        <span class="legend-item">
-            <span class="legend-color yellow"></span> Yellow
-        </span>
-        <span class="legend-item">
-            <span class="legend-color blue"></span> Blue
-        </span>
-        <span class="legend-item">
-            <span class="legend-color red"></span> Red
-        </span>
-        <span class="legend-divider">|</span>
-        <span class="legend-note">H = High Score</span>
+        {#each missions as mission}
+            <div class="scores-row">
+                <div class="mission-col">
+                    <img src={mission.icon} alt={mission.name} class="mission-icon" title={mission.name} />
+                </div>
+                {#each actors as actor}
+                    <div class="actor-col">
+                        <ScoreColorButton
+                            color={getScore(mission.key, actor.id, 'score')}
+                            onChange={(c) => handleScoreChange(mission.key, actor.id, 'score', c)}
+                            title="Score"
+                        />
+                        <ScoreColorButton
+                            color={getScore(mission.key, actor.id, 'highScore')}
+                            onChange={(c) => handleScoreChange(mission.key, actor.id, 'highScore', c)}
+                            title="High Score"
+                            isHighScore={true}
+                        />
+                    </div>
+                {/each}
+            </div>
+        {/each}
     </div>
+    {/key}
+</div>
+
+<div class="scores-legend">
+    <span class="legend-item">
+        <span class="legend-color grey"></span> Grey
+    </span>
+    <span class="legend-item">
+        <span class="legend-color yellow"></span> Yellow
+    </span>
+    <span class="legend-item">
+        <span class="legend-color blue"></span> Blue
+    </span>
+    <span class="legend-item">
+        <span class="legend-color red"></span> Red
+    </span>
+    <span class="legend-divider">|</span>
+    <span class="legend-note">H = High Score</span>
 </div>
 
 <style>
-    .mission-scores-editor {
-        background: var(--gradient-panel);
-        border: 1px solid var(--color-border-dark);
-        border-radius: 8px;
-        padding: 16px;
-    }
-
-    .section-title {
-        color: var(--color-primary);
-        font-size: 1.1em;
-        margin: 0 0 16px 0;
-    }
-
     .scores-table-wrapper {
         overflow-x: auto;
     }
@@ -128,7 +113,7 @@
     .scores-header,
     .scores-row {
         display: grid;
-        grid-template-columns: 120px repeat(5, 1fr);
+        grid-template-columns: 50px repeat(5, 1fr);
         gap: 8px;
         align-items: center;
     }
@@ -142,9 +127,15 @@
     }
 
     .mission-col {
-        color: var(--color-text-medium);
-        font-size: 0.85em;
-        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mission-icon {
+        width: 32px;
+        height: 32px;
+        image-rendering: pixelated;
     }
 
     .actor-col {
@@ -201,15 +192,16 @@
     @media (max-width: 600px) {
         .scores-header,
         .scores-row {
-            grid-template-columns: 90px repeat(5, 1fr);
+            grid-template-columns: 40px repeat(5, 1fr);
         }
 
         .scores-header .actor-col {
             font-size: 0.65em;
         }
 
-        .mission-col {
-            font-size: 0.75em;
+        .mission-icon {
+            width: 28px;
+            height: 28px;
         }
     }
 </style>

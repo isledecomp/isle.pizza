@@ -1,16 +1,47 @@
 <script>
     import { onMount } from 'svelte';
     import BackButton from './BackButton.svelte';
-    import SaveSlotList from './save-editor/SaveSlotList.svelte';
-    import PlayerInfoEditor from './save-editor/PlayerInfoEditor.svelte';
     import MissionScoresEditor from './save-editor/MissionScoresEditor.svelte';
-    import { saveEditorState, configToastVisible } from '../stores.js';
-    import { listSaveSlots, updateSaveSlot } from '../core/savegame/index.js';
+    import { saveEditorState, currentPage } from '../stores.js';
+    import { listSaveSlots, updateSaveSlot, updatePlayerName } from '../core/savegame/index.js';
+    import { Actor, ActorNames } from '../core/savegame/constants.js';
 
     let loading = true;
     let error = null;
     let slots = [];
     let selectedSlot = null;
+
+    // Tab state
+    let activeTab = 'player';
+    let openSection = 'name';
+
+    const saveTabs = [
+        { id: 'player', label: 'Player', firstSection: 'name' },
+        { id: 'scores', label: 'Scores', firstSection: null }
+    ];
+
+    // Reset to default tab/section when navigating to this page
+    $: if ($currentPage === 'save-editor') {
+        activeTab = 'player';
+        openSection = 'name';
+    }
+
+    // Name editing state (7 characters)
+    let nameSlots = ['', '', '', '', '', '', ''];
+    let slotRefs = [];
+
+    // Character/Act state
+    let currentAct = 0;
+    let actorId = 1;
+
+    // Character icons mapping
+    const characterIcons = {
+        [Actor.PEPPER]: { normal: 'pepper.webp', selected: 'pepper-selected.webp' },
+        [Actor.MAMA]: { normal: 'mama.webp', selected: 'mama-selected.webp' },
+        [Actor.PAPA]: { normal: 'papa.webp', selected: 'papa-selected.webp' },
+        [Actor.NICK]: { normal: 'nick.webp', selected: 'nick-selected.webp' },
+        [Actor.LAURA]: { normal: 'laura.webp', selected: 'laura-selected.webp' }
+    };
 
     onMount(async () => {
         await loadSlots();
@@ -42,7 +73,6 @@
         try {
             const updated = await updateSaveSlot(selectedSlot, { header: updates });
             if (updated) {
-                // Update the slot in our list
                 slots = slots.map(s =>
                     s.slotNumber === selectedSlot
                         ? { ...s, header: updated.header }
@@ -60,7 +90,6 @@
         try {
             const updated = await updateSaveSlot(selectedSlot, { missionScore: missionUpdate });
             if (updated) {
-                // Update the slot in our list
                 slots = slots.map(s =>
                     s.slotNumber === selectedSlot
                         ? { ...s, missions: updated.missions }
@@ -72,97 +101,400 @@
         }
     }
 
-    function handleNameUpdate(newName) {
-        // Update the slot's playerName in our list
-        slots = slots.map(s =>
-            s.slotNumber === selectedSlot
-                ? { ...s, playerName: newName }
-                : s
-        );
+    // Tab/section functions
+    function switchTab(tab) {
+        activeTab = tab.id;
+        openSection = tab.firstSection;
     }
+
+    function toggleSection(sectionId) {
+        openSection = openSection === sectionId ? null : sectionId;
+    }
+
+    // Name editing functions
+    async function saveNameFromSlots() {
+        const newName = nameSlots.join('').replace(/[^A-Z]/g, '');
+        if (newName.length === 0) return;
+
+        const success = await updatePlayerName(currentSlot.slotNumber, newName);
+        if (success) {
+            slots = slots.map(s =>
+                s.slotNumber === selectedSlot
+                    ? { ...s, playerName: newName }
+                    : s
+            );
+        }
+    }
+
+    function handleSlotBeforeInput(index, e) {
+        if (!e.data) return;
+
+        const char = e.data.toUpperCase();
+        if (!/^[A-Z]$/.test(char)) {
+            e.preventDefault();
+            return;
+        }
+
+        e.preventDefault();
+        nameSlots[index] = char;
+        nameSlots = [...nameSlots];
+        saveNameFromSlots();
+
+        if (index < 6) {
+            slotRefs[index + 1]?.focus();
+        }
+    }
+
+    function getFilledCount() {
+        return nameSlots.filter(c => c !== '').length;
+    }
+
+    function handleSlotKeydown(index, e) {
+        if (e.key === 'Backspace') {
+            if (nameSlots[index] === '' && index > 0) {
+                if (getFilledCount() > 1 || nameSlots[index - 1] === '') {
+                    slotRefs[index - 1]?.focus();
+                    if (nameSlots[index - 1] !== '' && getFilledCount() > 1) {
+                        nameSlots[index - 1] = '';
+                        nameSlots = [...nameSlots];
+                        saveNameFromSlots();
+                    }
+                }
+                e.preventDefault();
+            } else if (nameSlots[index] !== '') {
+                if (getFilledCount() > 1) {
+                    nameSlots[index] = '';
+                    nameSlots = [...nameSlots];
+                    saveNameFromSlots();
+                }
+                e.preventDefault();
+            }
+        } else if (e.key === 'ArrowLeft' && index > 0) {
+            slotRefs[index - 1]?.focus();
+            e.preventDefault();
+        } else if (e.key === 'ArrowRight' && index < 6) {
+            slotRefs[index + 1]?.focus();
+            e.preventDefault();
+        } else if (e.key === 'Delete') {
+            if (getFilledCount() > 1 && nameSlots[index] !== '') {
+                nameSlots[index] = '';
+                nameSlots = [...nameSlots];
+                saveNameFromSlots();
+            }
+            e.preventDefault();
+        }
+    }
+
+    function handleSlotFocus(e) {
+        e.target.select();
+    }
+
+    // Character/Act handlers
+    function handleActChange(e) {
+        currentAct = parseInt(e.target.value);
+        handleHeaderUpdate({ currentAct });
+    }
+
+    function handleActorSelect(id) {
+        actorId = id;
+        handleHeaderUpdate({ actorId: id });
+    }
+
+    // Actor options (ordered: Mama, Papa, Pepper, Nick, Laura)
+    const actorOptions = [
+        { id: Actor.MAMA, name: ActorNames[Actor.MAMA] },
+        { id: Actor.PAPA, name: ActorNames[Actor.PAPA] },
+        { id: Actor.PEPPER, name: ActorNames[Actor.PEPPER] },
+        { id: Actor.NICK, name: ActorNames[Actor.NICK] },
+        { id: Actor.LAURA, name: ActorNames[Actor.LAURA] }
+    ];
 
     $: existingSlots = slots.filter(s => s.exists);
     $: currentSlot = slots.find(s => s.slotNumber === selectedSlot);
+
+    // Update local state when currentSlot changes
+    $: if (currentSlot?.header) {
+        currentAct = currentSlot.header.currentAct;
+        actorId = currentSlot.header.actorId;
+    }
+
+    // Update name slots when player name changes
+    $: if (currentSlot?.playerName) {
+        const name = currentSlot.playerName.toUpperCase();
+        nameSlots = Array.from({ length: 7 }, (_, i) => name[i] || '');
+    }
 </script>
 
-<div id="save-editor-page" class="page-content">
+<div id="save-editor" class="page-content">
     <BackButton />
-    <div class="page-inner-content save-editor-layout">
-        <h1>Save Editor</h1>
+    <div class="page-inner-content config-layout">
+        <div class="config-art-panel">
+            <img src="save.webp" alt="LEGO Island Save Editor">
+        </div>
+        <div class="config-main">
+            <div class="config-presets">
+                {#if loading}
+                    <span class="save-status-text">Loading save files...</span>
+                {:else if error}
+                    <span class="save-status-text error">{error}</span>
+                {:else if existingSlots.length === 0}
+                    <span class="save-status-text">No save files found</span>
+                {:else}
+                    {#each existingSlots as slot}
+                        <button
+                            type="button"
+                            class="save-slot-card"
+                            class:selected={selectedSlot === slot.slotNumber}
+                            onclick={() => handleSlotSelect(slot.slotNumber)}
+                        >
+                            <img
+                                src={characterIcons[slot.header?.actorId]?.selected || 'pepper-selected.webp'}
+                                alt={ActorNames[slot.header?.actorId] || 'Character'}
+                                class="slot-character-icon"
+                            />
+                            <span class="slot-name">{slot.playerName}</span>
+                        </button>
+                    {/each}
+                {/if}
+            </div>
 
-        {#if loading}
-            <div class="save-editor-status">
-                <p>Loading save files...</p>
-            </div>
-        {:else if error}
-            <div class="save-editor-status error">
-                <p>Error: {error}</p>
-            </div>
-        {:else if existingSlots.length === 0}
-            <div class="save-editor-status">
-                <p>No save files found. Start a new game to create a save file.</p>
-            </div>
-        {:else}
-            <div class="save-editor-content">
-                <SaveSlotList
-                    {slots}
-                    {selectedSlot}
-                    onSelect={handleSlotSelect}
-                />
+            {#if currentSlot && currentSlot.exists}
+                <div class="config-tabs">
+                    <div class="config-tab-buttons">
+                        {#each saveTabs as tab}
+                            <button
+                                class="config-tab-btn"
+                                class:active={activeTab === tab.id}
+                                onclick={() => switchTab(tab)}
+                            >
+                                {tab.label}
+                            </button>
+                        {/each}
+                    </div>
 
-                {#if currentSlot && currentSlot.exists}
-                    <div class="save-editor-details">
-                        <PlayerInfoEditor
-                            slot={currentSlot}
-                            onUpdate={handleHeaderUpdate}
-                            onNameUpdate={handleNameUpdate}
-                        />
+                    <!-- Player Tab -->
+                    <div class:hidden={activeTab !== 'player'}>
+                        <div class="config-section-card">
+                            <button type="button" class="config-card-header" onclick={() => toggleSection('name')}>
+                                Name
+                            </button>
+                            <div class="config-card-content" class:open={openSection === 'name'}>
+                                <div class="section-inner">
+                                    <div class="name-slots">
+                                        {#each nameSlots as char, i}
+                                            <input
+                                                type="text"
+                                                class="name-slot"
+                                                value={char}
+                                                maxlength="1"
+                                                onbeforeinput={(e) => handleSlotBeforeInput(i, e)}
+                                                onkeydown={(e) => handleSlotKeydown(i, e)}
+                                                onfocus={handleSlotFocus}
+                                                bind:this={slotRefs[i]}
+                                            />
+                                        {/each}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-section-card">
+                            <button type="button" class="config-card-header" onclick={() => toggleSection('character')}>
+                                Character / Act
+                            </button>
+                            <div class="config-card-content" class:open={openSection === 'character'}>
+                                <div class="section-inner">
+                                    <div class="character-act-row">
+                                        <div class="character-selection">
+                                            <label class="form-group-label">Character</label>
+                                            <div class="character-icons">
+                                                {#each actorOptions as actor}
+                                                    <button
+                                                        type="button"
+                                                        class="character-icon-btn"
+                                                        class:selected={actorId === actor.id}
+                                                        onclick={() => handleActorSelect(actor.id)}
+                                                        title={actor.name}
+                                                    >
+                                                        <img
+                                                            src={actorId === actor.id
+                                                                ? characterIcons[actor.id].selected
+                                                                : characterIcons[actor.id].normal}
+                                                            alt={actor.name}
+                                                        />
+                                                    </button>
+                                                {/each}
+                                            </div>
+                                        </div>
+                                        <div class="act-selection">
+                                            <label class="form-group-label" for="act-select">Act</label>
+                                            <div class="select-wrapper">
+                                                <select id="act-select" value={currentAct} onchange={handleActChange}>
+                                                    <option value={0}>Act 1</option>
+                                                    <option value={1}>Act 2</option>
+                                                    <option value={2}>Act 3</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scores Tab -->
+                    <div class:hidden={activeTab !== 'scores'}>
                         <MissionScoresEditor
                             slot={currentSlot}
                             onUpdate={handleMissionUpdate}
                         />
                     </div>
-                {/if}
-            </div>
-        {/if}
+                </div>
+            {/if}
+        </div>
     </div>
 </div>
 
 <style>
-    .save-editor-layout {
-        max-width: 900px;
-    }
-
-    .save-editor-layout h1 {
-        color: var(--color-primary);
-        font-size: 2em;
-        margin-bottom: 24px;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    }
-
-    .save-editor-status {
-        text-align: center;
-        padding: 40px;
+    .save-status-text {
         color: var(--color-text-muted);
-        background: var(--gradient-panel);
-        border: 1px solid var(--color-border-dark);
-        border-radius: 8px;
+        font-size: 0.9em;
+        padding: 8px 0;
     }
 
-    .save-editor-status.error {
+    .save-status-text.error {
         color: #ff6b6b;
-        border-color: #ff6b6b;
     }
 
-    .save-editor-content {
+    .save-slot-card {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        background: var(--gradient-panel);
+        border: 2px solid var(--color-border-medium);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
 
-    .save-editor-details {
+    .save-slot-card:hover {
+        border-color: var(--color-border-light);
+        background: var(--gradient-hover);
+    }
+
+    .save-slot-card.selected {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 8px var(--color-primary-glow);
+    }
+
+    .slot-character-icon {
+        width: 40px;
+        height: 46px;
+        image-rendering: pixelated;
+    }
+
+    .slot-name {
+        color: var(--color-text-light);
+        font-size: 0.85em;
+        font-weight: bold;
+    }
+
+    .section-inner {
+        padding-top: 4px;
+    }
+
+    .name-slots {
+        display: flex;
+        gap: 4px;
+    }
+
+    .name-slot {
+        width: 36px;
+        height: 36px;
+        text-align: center;
+        font-size: 1em;
+        font-weight: bold;
+        font-family: inherit;
+        text-transform: uppercase;
+        background: var(--color-bg-input);
+        border: 1px solid var(--color-border-medium);
+        border-radius: 4px;
+        color: var(--color-text-light);
+        padding: 0;
+        flex-shrink: 0;
+    }
+
+    .name-slot:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.2);
+    }
+
+    .name-slot:hover {
+        border-color: var(--color-border-light);
+    }
+
+    .character-act-row {
+        display: flex;
+        gap: 30px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .character-selection,
+    .act-selection {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 8px;
+    }
+
+    .character-icons {
+        display: flex;
+        gap: 4px;
+    }
+
+    .character-icon-btn {
+        padding: 4px;
+        background: var(--color-bg-input);
+        border: 2px solid var(--color-border-medium);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .character-icon-btn:hover {
+        border-color: var(--color-border-light);
+    }
+
+    .character-icon-btn.selected {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 6px var(--color-primary-glow);
+    }
+
+    .character-icon-btn img {
+        width: 40px;
+        height: 46px;
+        display: block;
+        image-rendering: pixelated;
+    }
+
+    @media (max-width: 400px) {
+        .name-slot {
+            width: 32px;
+            height: 32px;
+            font-size: 0.9em;
+        }
+
+        .character-icon-btn img {
+            width: 32px;
+            height: 37px;
+        }
+
+        .slot-character-icon {
+            width: 32px;
+            height: 37px;
+        }
     }
 </style>
