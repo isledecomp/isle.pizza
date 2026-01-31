@@ -7,7 +7,8 @@
     "build": "vite build && cp isle.js isle.wasm dist/ && node scripts/workbox-inject.js",
     "build:ci": "vite build && node scripts/workbox-inject.js",
     "check": "svelte-check --fail-on-warnings",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare:assets": "node scripts/prepare.js"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
