@@ -173,6 +173,7 @@
     canvas {
         cursor: pointer;
         border-radius: 8px;
+        margin-bottom: 12px;
     }
 
     canvas.hidden {
