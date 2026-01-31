@@ -2,7 +2,7 @@
  * Parser for Players.gsi file - player profile names
  */
 import { BinaryReader } from './BinaryReader.js';
-import { LetterIndex } from './constants.js';
+import { LetterIndex } from '../savegame/constants.js';
 
 /**
  * @typedef {Object} PlayerEntry

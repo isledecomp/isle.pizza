@@ -1,4 +1,4 @@
-import { BinaryReader } from '../savegame/BinaryReader.js';
+import { BinaryReader } from './BinaryReader.js';
 
 /**
  * Parser for LEGO Island WORLD.WDB files

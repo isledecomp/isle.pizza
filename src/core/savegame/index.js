@@ -4,21 +4,17 @@
  * High-level functions for managing LEGO Island save files
  */
 
-// Re-export core utilities
-export { BinaryReader } from './BinaryReader.js';
-export { BinaryWriter } from './BinaryWriter.js';
-export { SaveGameParser, parseSaveGame } from './SaveGameParser.js';
-export { SaveGameSerializer, createSerializer } from './SaveGameSerializer.js';
-export { PlayersParser, parsePlayers } from './PlayersParser.js';
-export { PlayersSerializer, createPlayersSerializer } from './PlayersSerializer.js';
+// Re-export format utilities (from formats/)
+export { BinaryReader, BinaryWriter } from '../formats/index.js';
+export { SaveGameParser, parseSaveGame } from '../formats/index.js';
+export { SaveGameSerializer, createSerializer } from '../formats/index.js';
+export { PlayersParser, parsePlayers } from '../formats/index.js';
+export { PlayersSerializer, createPlayersSerializer } from '../formats/index.js';
 export * from './constants.js';
 
 // Import dependencies
 import { readBinaryFile, writeBinaryFile, fileExists, listFiles } from '../opfs.js';
-import { parseSaveGame } from './SaveGameParser.js';
-import { parsePlayers } from './PlayersParser.js';
-import { createSerializer } from './SaveGameSerializer.js';
-import { createPlayersSerializer } from './PlayersSerializer.js';
+import { parseSaveGame, parsePlayers, createSerializer, createPlayersSerializer } from '../formats/index.js';
 import { getSaveFileName, PLAYERS_FILE, Actor, ActorNames } from './constants.js';
 
 /**

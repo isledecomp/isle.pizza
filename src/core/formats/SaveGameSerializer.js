@@ -3,7 +3,7 @@
  * Uses a "patch in place" approach - copies the original buffer and modifies specific bytes
  */
 import { SaveGameParser } from './SaveGameParser.js';
-import { GameStateTypes, GameStateSizes, Actor } from './constants.js';
+import { GameStateTypes, GameStateSizes, Actor } from '../savegame/constants.js';
 
 /**
  * Offsets for header fields

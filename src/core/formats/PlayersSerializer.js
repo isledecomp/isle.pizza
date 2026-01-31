@@ -2,7 +2,7 @@
  * Serializer for Players.gsi file - updating player names
  */
 import { BinaryWriter } from './BinaryWriter.js';
-import { LetterIndex } from './constants.js';
+import { LetterIndex } from '../savegame/constants.js';
 
 /**
  * Serializer for Players.gsi file

@@ -2,7 +2,7 @@
  * Parser for G0-G9.GS save game files
  */
 import { BinaryReader } from './BinaryReader.js';
-import { SAVEGAME_VERSION, GameStateTypes, GameStateSizes, Actor } from './constants.js';
+import { SAVEGAME_VERSION, GameStateTypes, GameStateSizes, Actor } from '../savegame/constants.js';
 
 /**
  * @typedef {Object} SaveGameHeader
