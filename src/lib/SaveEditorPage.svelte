@@ -189,12 +189,7 @@
         e.target.select();
     }
 
-    // Character/Act handlers
-    function handleActChange(e) {
-        currentAct = parseInt(e.target.value);
-        handleHeaderUpdate({ currentAct });
-    }
-
+    // Character handler
     function handleActorSelect(id) {
         actorId = id;
         handleHeaderUpdate({ actorId: id });
@@ -300,42 +295,27 @@
 
                         <div class="config-section-card">
                             <button type="button" class="config-card-header" onclick={() => toggleSection('character')}>
-                                Character / Act
+                                Character
                             </button>
                             <div class="config-card-content" class:open={openSection === 'character'}>
                                 <div class="section-inner">
-                                    <div class="character-act-row">
-                                        <div class="character-selection">
-                                            <label class="form-group-label">Character</label>
-                                            <div class="character-icons">
-                                                {#each actorOptions as actor}
-                                                    <button
-                                                        type="button"
-                                                        class="character-icon-btn"
-                                                        class:selected={actorId === actor.id}
-                                                        onclick={() => handleActorSelect(actor.id)}
-                                                        title={actor.name}
-                                                    >
-                                                        <img
-                                                            src={actorId === actor.id
-                                                                ? characterIcons[actor.id].selected
-                                                                : characterIcons[actor.id].normal}
-                                                            alt={actor.name}
-                                                        />
-                                                    </button>
-                                                {/each}
-                                            </div>
-                                        </div>
-                                        <div class="act-selection">
-                                            <label class="form-group-label" for="act-select">Act</label>
-                                            <div class="select-wrapper">
-                                                <select id="act-select" value={currentAct} onchange={handleActChange}>
-                                                    <option value={0}>Act 1</option>
-                                                    <option value={1}>Act 2</option>
-                                                    <option value={2}>Act 3</option>
-                                                </select>
-                                            </div>
-                                        </div>
+                                    <div class="character-icons">
+                                        {#each actorOptions as actor}
+                                            <button
+                                                type="button"
+                                                class="character-icon-btn"
+                                                class:selected={actorId === actor.id}
+                                                onclick={() => handleActorSelect(actor.id)}
+                                                title={actor.name}
+                                            >
+                                                <img
+                                                    src={actorId === actor.id
+                                                        ? characterIcons[actor.id].selected
+                                                        : characterIcons[actor.id].normal}
+                                                    alt={actor.name}
+                                                />
+                                            </button>
+                                        {/each}
                                     </div>
                                 </div>
                             </div>
@@ -370,11 +350,12 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 6px;
-        padding: 8px 12px;
+        gap: 4px;
+        padding: 6px 8px;
+        min-width: 85px;
         background: var(--gradient-panel);
         border: 2px solid var(--color-border-medium);
-        border-radius: 8px;
+        border-radius: 6px;
         cursor: pointer;
         transition: all 0.2s ease;
     }
@@ -390,14 +371,14 @@
     }
 
     .slot-character-icon {
-        width: 40px;
-        height: 46px;
+        width: 32px;
+        height: 37px;
         image-rendering: pixelated;
     }
 
     .slot-name {
         color: var(--color-text-light);
-        font-size: 0.85em;
+        font-size: 0.75em;
         font-weight: bold;
     }
 
@@ -436,20 +417,6 @@
         border-color: var(--color-border-light);
     }
 
-    .character-act-row {
-        display: flex;
-        gap: 30px;
-        align-items: flex-start;
-        flex-wrap: wrap;
-    }
-
-    .character-selection,
-    .act-selection {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
     .character-icons {
         display: flex;
         gap: 4px;
@@ -470,7 +437,6 @@
 
     .character-icon-btn.selected {
         border-color: var(--color-primary);
-        box-shadow: 0 0 6px var(--color-primary-glow);
     }
 
     .character-icon-btn img {
