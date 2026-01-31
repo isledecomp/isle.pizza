@@ -588,21 +588,27 @@ body {
 .config-card-content {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.3s ease;
+    transition: grid-template-rows 0.3s ease, padding-bottom 0.3s ease;
     padding: 0 16px;
+    padding-bottom: 0;
 }
 
 .config-card-content.open {
     grid-template-rows: 1fr;
-    padding: 0 16px 16px 16px;
+    padding-bottom: 16px;
 }
 
 .config-card-content > div {
+    min-height: 0;
     overflow: hidden;
 }
 
+@keyframes enable-tooltip-overflow {
+    to { overflow: visible; }
+}
+
 .config-card-content.open > div {
-    overflow: visible;
+    animation: enable-tooltip-overflow 0s 0.3s forwards;
 }
 
 /* Toggle switches */
