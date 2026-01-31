@@ -210,8 +210,8 @@
     <BackButton />
     {#if opfsDisabled}
         <blockquote id="opfs-disabled" class="error-box">
-            <p>OPFS is disabled in this browser. Default configuration will apply. If you are using a Firefox
-                Private window, please change to a regular window instead to change configuration.</p>
+            <p>OPFS is disabled in this browser. Default configuration will apply. If you are using a Private/Incognito
+                window, please change to a regular window instead to change configuration.</p>
         </blockquote>
     {/if}
     <div class="page-inner-content config-layout">
