@@ -33,6 +33,9 @@
     ];
 
     const changelogItems = [
+        { id: 'cl0', title: 'February 2026', items: [
+            { type: 'New', text: 'Save Editor lets you view and modify save files — change your player name, character, and high scores directly from the browser' }
+        ]},
         { id: 'cl1', title: 'January 2026', items: [
             { type: 'New', text: 'Debug menu for developers and power users. Tap the LEGO Island logo 5 times to unlock OGEL mode and access debug features like teleporting to locations, switching acts, and playing animations' },
             { type: 'Improved', text: 'Configure page redesigned with tabbed navigation, collapsible sections, quick presets (Classic/Modern Mode), and modern toggle switches' },
