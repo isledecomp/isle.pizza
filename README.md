@@ -23,17 +23,27 @@ A custom web frontend for the Emscripten port of [isle-portable](https://github.
 
 3. Obtain the game files (`isle.js` and `isle.wasm`) by building the Emscripten version of [isle-portable](https://github.com/isledecomp/isle-portable), then copy them to the project root.
 
-4. Start the development server:
+4. Set up the LEGO Island game assets:
+   ```bash
+   npm run prepare:assets
+   ```
+   This will prompt you for the path to your LEGO Island installation or mounted ISO and create the necessary symlinks. You can also provide the path directly:
+   ```bash
+   npm run prepare:assets -- -p /path/to/your/LEGO
+   ```
+
+5. Start the development server:
    ```bash
    npm run dev
    ```
 
-5. Open the URL shown in the terminal (usually `http://localhost:5173`).
+6. Open the URL shown in the terminal (usually `http://localhost:5173`).
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
+| `npm run prepare:assets` | Set up LEGO Island game assets via symlinks |
 | `npm run dev` | Start development server with hot reload |
 | `npm run build` | Build for production (outputs to `dist/`) |
 | `npm run preview` | Preview the production build locally |
