@@ -181,6 +181,12 @@
 </script>
 
 <div class="vehicle-editor">
+    <div class="vehicle-editor-header">
+        <span class="tooltip-trigger">?
+            <span class="tooltip-content">Click on the part to cycle through colors. Changes are automatically saved.</span>
+        </span>
+    </div>
+
     <!-- 3D Preview (clickable to cycle color) -->
     <div class="preview-container">
         <canvas
@@ -227,6 +233,11 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+    }
+
+    .vehicle-editor-header {
+        align-self: flex-end;
+        margin-bottom: 4px;
     }
 
     .preview-container {
