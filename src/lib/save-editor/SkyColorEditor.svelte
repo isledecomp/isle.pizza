@@ -96,7 +96,6 @@
             </label>
         </div>
     </div>
-    <p class="color-hint">Changes the sky/background color in the game.</p>
     {#if !isDefault}
         <button type="button" class="reset-btn" onclick={handleReset}>Reset to default</button>
     {/if}
@@ -192,12 +191,6 @@
         color: var(--color-text-light);
         font-family: monospace;
         flex-shrink: 0;
-    }
-
-    .color-hint {
-        margin: 10px 0 0 0;
-        font-size: 0.8em;
-        color: var(--color-text-muted);
     }
 
     .reset-btn {
