@@ -4,6 +4,7 @@
     import Carousel from './Carousel.svelte';
     import MissionScoresEditor from './save-editor/MissionScoresEditor.svelte';
     import SkyColorEditor from './save-editor/SkyColorEditor.svelte';
+    import LightPositionEditor from './save-editor/LightPositionEditor.svelte';
     import { saveEditorState, currentPage } from '../stores.js';
     import { listSaveSlots, updateSaveSlot, updatePlayerName } from '../core/savegame/index.js';
     import { Actor, ActorNames } from '../core/savegame/constants.js';
@@ -382,6 +383,15 @@
                             </button>
                             <div class="config-card-content" class:open={openSection === 'skycolor'}>
                                 <SkyColorEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
+                            </div>
+                        </div>
+
+                        <div class="config-section-card">
+                            <button type="button" class="config-card-header" onclick={() => toggleSection('lightposition')}>
+                                Light Position
+                            </button>
+                            <div class="config-card-content" class:open={openSection === 'lightposition'}>
+                                <LightPositionEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
                             </div>
                         </div>
                     </div>
