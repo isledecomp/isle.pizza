@@ -215,9 +215,11 @@
         <NavButton direction="right" onclick={nextPart} />
     </div>
 
-    {#if !isDefault && !loading && !error && !partError}
-        <ResetButton onclick={resetColor} />
-    {/if}
+    <div class="reset-container">
+        {#if !isDefault && !loading && !error && !partError}
+            <ResetButton onclick={resetColor} />
+        {/if}
+    </div>
 </div>
 
 <style>
@@ -305,5 +307,9 @@
         display: block;
         font-size: 0.9em;
         color: var(--color-text-light);
+    }
+
+    .reset-container {
+        height: 1.6em;
     }
 </style>
