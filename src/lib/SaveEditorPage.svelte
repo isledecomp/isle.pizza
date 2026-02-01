@@ -3,6 +3,8 @@
     import BackButton from './BackButton.svelte';
     import Carousel from './Carousel.svelte';
     import MissionScoresEditor from './save-editor/MissionScoresEditor.svelte';
+    import SkyColorEditor from './save-editor/SkyColorEditor.svelte';
+    import LightPositionEditor from './save-editor/LightPositionEditor.svelte';
     import { saveEditorState, currentPage } from '../stores.js';
     import { listSaveSlots, updateSaveSlot, updatePlayerName } from '../core/savegame/index.js';
     import { Actor, ActorNames } from '../core/savegame/constants.js';
@@ -18,7 +20,8 @@
 
     const saveTabs = [
         { id: 'player', label: 'Player', firstSection: 'name' },
-        { id: 'scores', label: 'Scores', firstSection: null }
+        { id: 'scores', label: 'Scores', firstSection: null },
+        { id: 'island', label: 'Island', firstSection: 'skycolor' }
     ];
 
     // Reset state when navigating to this page
@@ -104,6 +107,23 @@
             }
         } catch (e) {
             console.error('Failed to update mission score:', e);
+        }
+    }
+
+    async function handleVariableUpdate(update) {
+        if (selectedSlot === null) return;
+
+        try {
+            const updated = await updateSaveSlot(selectedSlot, update);
+            if (updated) {
+                slots = slots.map(s =>
+                    s.slotNumber === selectedSlot
+                        ? { ...s, variables: updated.variables }
+                        : s
+                );
+            }
+        } catch (e) {
+            console.error('Failed to update variable:', e);
         }
     }
 
@@ -353,6 +373,27 @@
                             slot={currentSlot}
                             onUpdate={handleMissionUpdate}
                         />
+                    </div>
+
+                    <!-- Island Tab -->
+                    <div class:hidden={activeTab !== 'island'}>
+                        <div class="config-section-card">
+                            <button type="button" class="config-card-header" onclick={() => toggleSection('skycolor')}>
+                                Sky Color
+                            </button>
+                            <div class="config-card-content" class:open={openSection === 'skycolor'}>
+                                <SkyColorEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
+                            </div>
+                        </div>
+
+                        <div class="config-section-card">
+                            <button type="button" class="config-card-header" onclick={() => toggleSection('lightposition')}>
+                                Light Position
+                            </button>
+                            <div class="config-card-content" class:open={openSection === 'lightposition'}>
+                                <LightPositionEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
+                            </div>
+                        </div>
                     </div>
                 </div>
             {/if}
