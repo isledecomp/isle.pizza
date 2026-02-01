@@ -37,10 +37,11 @@ export class WdbParser {
         const nameLen = this.reader.readS32();
         const name = this.reader.readString(nameLen).replace(/\0/g, '');
 
-        // Parse parts (skip for now)
+        // Parse parts
         const numParts = this.reader.readS32();
+        const parts = [];
         for (let i = 0; i < numParts; i++) {
-            this.skipPartReference();
+            parts.push(this.parsePartReference());
         }
 
         // Parse models
@@ -50,14 +51,15 @@ export class WdbParser {
             models.push(this.parseModelEntry());
         }
 
-        return { name, numParts, models };
+        return { name, numParts, parts, models };
     }
 
-    skipPartReference() {
+    parsePartReference() {
         const nameLen = this.reader.readU32();
-        this.reader.skip(nameLen); // name
-        this.reader.skip(4); // data_length
-        this.reader.skip(4); // data_offset
+        const name = this.reader.readString(nameLen).replace(/\0/g, '');
+        const dataLength = this.reader.readU32();
+        const dataOffset = this.reader.readU32();
+        return { name, dataLength, dataOffset };
     }
 
     parseModelEntry() {
@@ -88,6 +90,45 @@ export class WdbParser {
      */
     readCleanString(length) {
         return this.reader.readString(length).replace(/\0/g, '');
+    }
+
+    /**
+     * Parse part data blob at specified offset
+     * Parts have a simpler structure than models - no animation, direct LOD data
+     * @param {number} offset - Absolute file offset
+     * @returns {{ parts: Array, textures: Array }}
+     */
+    parsePartData(offset) {
+        this.reader.seek(offset);
+
+        const textureInfoOffset = this.reader.readU32();
+        const numRois = this.reader.readU32();
+        const parts = [];
+
+        for (let i = 0; i < numRois; i++) {
+            const nameLen = this.reader.readU32();
+            const name = this.readCleanString(nameLen);
+            const numLods = this.reader.readU32();
+            const roiInfoOffset = this.reader.readU32();
+
+            const lods = [];
+            for (let j = 0; j < numLods; j++) {
+                lods.push(this.parseLod());
+            }
+
+            parts.push({ name, lods });
+        }
+
+        // Parse textures at textureInfoOffset
+        this.reader.seek(offset + textureInfoOffset);
+        let textures = [];
+        try {
+            textures = this.parseTextureInfo();
+        } catch (e) {
+            // Continue without textures - wheel caps don't need textures for color display
+        }
+
+        return { parts, textures };
     }
 
     /**
@@ -264,7 +305,7 @@ export class WdbParser {
             children.push(this.parseRoi());
         }
 
-        return { name, boundingSphere, boundingBox, textureName, lods, children };
+        return { name, boundingSphere, boundingBox, textureName, sharedLodList: sharedLodList !== 0, lods, children };
     }
 
     parseLod() {
@@ -436,4 +477,55 @@ export function findRoi(roi, name) {
         if (found) return found;
     }
     return null;
+}
+
+/**
+ * Resolve LODs for an ROI, handling shared LOD lists
+ * This mirrors how the game's ViewLODListManager resolves shared parts
+ * @param {object} roi - ROI data with lods and sharedLodList flag
+ * @param {Map} partsMap - Map of part name (lowercase) -> part data with lods
+ * @returns {Array} - Array of LODs (may be empty)
+ */
+export function resolveLods(roi, partsMap) {
+    // If ROI has its own LODs, use them
+    if (roi.lods && roi.lods.length > 0) {
+        return roi.lods;
+    }
+
+    // If ROI uses shared LOD list, look up by name (strip trailing digits)
+    // This matches the game's logic in LegoROI::Read
+    if (roi.sharedLodList && roi.name && partsMap) {
+        const baseName = roi.name.replace(/\d+$/, '').toLowerCase();
+        const part = partsMap.get(baseName);
+        if (part && part.lods && part.lods.length > 0) {
+            return part.lods;
+        }
+    }
+
+    return [];
+}
+
+/**
+ * Build a parts lookup map from a world's parts array
+ * @param {WdbParser} parser - Parser instance for reading part data
+ * @param {Array} worldParts - Array of part references from world entry
+ * @returns {Map} - Map of part name (lowercase) -> part data
+ */
+export function buildPartsMap(parser, worldParts) {
+    const partsMap = new Map();
+    if (!worldParts || worldParts.length === 0) return partsMap;
+
+    for (const partRef of worldParts) {
+        try {
+            const partData = parser.parsePartData(partRef.dataOffset);
+            if (partData && partData.parts) {
+                for (const part of partData.parts) {
+                    partsMap.set(part.name.toLowerCase(), part);
+                }
+            }
+        } catch (e) {
+            // Continue with other parts
+        }
+    }
+    return partsMap;
 }

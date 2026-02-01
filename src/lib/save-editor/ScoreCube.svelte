@@ -27,15 +27,11 @@
             const parser = new WdbParser(buffer);
             const wdb = parser.parse();
 
-            console.log('Parsed worlds:', wdb.worlds.map(w => w.name));
-
             // Find ICUBE world and scormain model
             const icubeWorld = wdb.worlds.find(w => w.name === 'ICUBE');
             if (!icubeWorld) {
                 throw new Error('ICUBE world not found in WDB');
             }
-
-            console.log('ICUBE models:', icubeWorld.models.map(m => m.name));
 
             const scormainModel = icubeWorld.models.find(m =>
                 m.name.toLowerCase().includes('scormain')
@@ -44,21 +40,14 @@
                 throw new Error('scormain model not found in ICUBE world');
             }
 
-            console.log('scormain model:', scormainModel);
-
             // Parse the model_data blob
             const modelData = parser.parseModelData(scormainModel.dataOffset);
-
-            console.log('Model data ROI:', modelData.roi?.name);
-            console.log('Model data textures:', modelData.textures?.map(t => t.name));
 
             // Find scorcube ROI
             const scorcubeRoi = findRoi(modelData.roi, 'scorcube');
             if (!scorcubeRoi) {
                 throw new Error('scorcube ROI not found');
             }
-
-            console.log('scorcube ROI:', scorcubeRoi.name, 'lods:', scorcubeRoi.lods?.length);
 
             // Find bigcube texture
             const bigcubeTexture = modelData.textures.find(t =>
@@ -67,8 +56,6 @@
             if (!bigcubeTexture) {
                 throw new Error('bigcube.gif texture not found');
             }
-
-            console.log('bigcube texture:', bigcubeTexture.width, 'x', bigcubeTexture.height);
 
             // Initialize renderer
             renderer = new ScoreCubeRenderer(canvas);
