@@ -215,6 +215,7 @@
 
     function handleSlotFocus(e) {
         e.target.select();
+        e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     }
 
     // Character handler
@@ -496,11 +497,20 @@
 
     .section-inner {
         padding-top: 4px;
+        min-width: 0;
     }
 
     .name-slots {
         display: flex;
         gap: 4px;
+        max-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .name-slots::-webkit-scrollbar {
+        display: none;
     }
 
     .name-slot {
