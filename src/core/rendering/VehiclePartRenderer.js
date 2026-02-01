@@ -137,13 +137,22 @@ export class VehiclePartRenderer {
 
                 let material;
 
+                // Get alpha from mesh properties
+                // In the original game: alpha = 0 means opaque, alpha > 0 means transparent
+                const meshAlpha = mesh.properties?.alpha || 0;
+                const isTransparent = meshAlpha > 0;
+                const opacity = isTransparent ? meshAlpha : 1;
+
                 if (isColorable) {
                     // Mesh has INH prefix - use the LEGO color
                     material = new THREE.MeshStandardMaterial({
                         color: legoColor,
                         side: THREE.DoubleSide,
                         roughness: 0.7,
-                        metalness: 0.1
+                        metalness: 0.1,
+                        transparent: isTransparent,
+                        opacity: opacity,
+                        depthWrite: !isTransparent
                     });
                     this.colorableMeshes.push(null); // Placeholder, will set after mesh creation
                 } else if (hasUVs && meshTextureName && this.textures.has(meshTextureName)) {
@@ -152,7 +161,10 @@ export class VehiclePartRenderer {
                         map: this.textures.get(meshTextureName),
                         side: THREE.DoubleSide,
                         roughness: 0.8,
-                        metalness: 0.1
+                        metalness: 0.1,
+                        transparent: isTransparent,
+                        opacity: opacity,
+                        depthWrite: !isTransparent
                     });
                 } else {
                     // Fallback to mesh's vertex color
@@ -161,7 +173,10 @@ export class VehiclePartRenderer {
                         color: new THREE.Color(meshColor.r / 255, meshColor.g / 255, meshColor.b / 255),
                         side: THREE.DoubleSide,
                         roughness: 0.8,
-                        metalness: 0.1
+                        metalness: 0.1,
+                        transparent: isTransparent,
+                        opacity: opacity,
+                        depthWrite: !isTransparent
                     });
                 }
 
