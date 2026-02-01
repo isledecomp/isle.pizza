@@ -286,6 +286,58 @@ export class SaveGameSerializer {
     }
 
     /**
+     * Update a variable value in the save file
+     * @param {string} name - Variable name
+     * @param {string} newValue - New value string
+     * @param {ArrayBuffer} [buffer] - Optional buffer to use (for chaining operations)
+     * @returns {ArrayBuffer|null} - Modified buffer or null on error
+     */
+    updateVariable(name, newValue, buffer = null) {
+        const varInfo = this.parsed.variables.get(name);
+        if (!varInfo) {
+            console.error(`Variable not found: ${name}`);
+            return null;
+        }
+
+        const workingBuffer = buffer || this.createCopy();
+        const array = new Uint8Array(workingBuffer);
+        const encoder = new TextEncoder();
+
+        const oldLength = varInfo.valueLength;
+        const newLength = newValue.length;
+
+        if (oldLength === newLength) {
+            // In-place update - same length, just replace bytes
+            const valueBytes = encoder.encode(newValue);
+            array.set(valueBytes, varInfo.valueOffset + 1); // +1 for length byte
+            return workingBuffer;
+        } else {
+            // Different length - need to rebuild buffer
+            const oldArray = new Uint8Array(workingBuffer);
+            const sizeDiff = newLength - oldLength;
+            const newBuffer = new ArrayBuffer(workingBuffer.byteLength + sizeDiff);
+            const newArray = new Uint8Array(newBuffer);
+
+            // Copy everything up to the value (including the length byte position)
+            const valueDataStart = varInfo.valueOffset + 1; // After length byte
+            newArray.set(oldArray.slice(0, varInfo.valueOffset));
+
+            // Write new length byte
+            newArray[varInfo.valueOffset] = newLength;
+
+            // Write new value
+            const valueBytes = encoder.encode(newValue);
+            newArray.set(valueBytes, valueDataStart);
+
+            // Copy everything after the old value
+            const afterOldValue = valueDataStart + oldLength;
+            newArray.set(oldArray.slice(afterOldValue), valueDataStart + newLength);
+
+            return newBuffer;
+        }
+    }
+
+    /**
      * Get the byte offset for a mission score
      * @param {string} missionType
      * @param {number} actorId

@@ -11,6 +11,7 @@ export { SaveGameSerializer, createSerializer } from '../formats/index.js';
 export { PlayersParser, parsePlayers } from '../formats/index.js';
 export { PlayersSerializer, createPlayersSerializer } from '../formats/index.js';
 export * from './constants.js';
+export * from './colorUtils.js';
 
 // Import dependencies
 import { readBinaryFile, writeBinaryFile, fileExists, listFiles } from '../opfs.js';
@@ -24,6 +25,7 @@ import { getSaveFileName, PLAYERS_FILE, Actor, ActorNames } from './constants.js
  * @property {string} fileName - Save file name
  * @property {Object|null} header - Parsed header data
  * @property {Object|null} missions - Mission scores
+ * @property {Map|null} variables - Parsed variables (name -> { value, nameOffset, valueOffset, valueLength })
  * @property {string|null} playerName - Player name from Players.gsi
  * @property {ArrayBuffer|null} buffer - Raw file buffer (for editing)
  */
@@ -87,6 +89,7 @@ export async function listSaveSlots() {
             fileName,
             header: null,
             missions: null,
+            variables: null,
             playerName: null,
             buffer: null
         };
@@ -98,6 +101,7 @@ export async function listSaveSlots() {
                     const parsed = parseSaveGame(buffer);
                     slot.header = parsed.header;
                     slot.missions = parsed.missions;
+                    slot.variables = parsed.variables;
                     slot.buffer = buffer;
 
                     // Try to get player name
@@ -160,6 +164,7 @@ export async function loadSaveSlot(slotNumber) {
         fileName,
         header: parsed.header,
         missions: parsed.missions,
+        variables: parsed.variables,
         playerName,
         buffer
     };
@@ -213,6 +218,17 @@ export async function updateSaveSlot(slotNumber, updates) {
         const scoreSerializer = createSerializer(newBuffer);
         // updateMissionScore will add missing states automatically
         const result = scoreSerializer.updateMissionScore(missionType, actorId, scoreType, value);
+        if (result) {
+            newBuffer = result;
+            modified = true;
+        }
+    }
+
+    // Apply variable update
+    if (updates.variable) {
+        const { name, value } = updates.variable;
+        const varSerializer = createSerializer(newBuffer);
+        const result = varSerializer.updateVariable(name, value);
         if (result) {
             newBuffer = result;
             modified = true;

@@ -45,7 +45,9 @@ export class SaveGameParser {
             stateLocations: [],
             stateCountOffset: null,
             stateCount: 0,
-            statesEndOffset: null  // Where to insert new states (before previous_area)
+            statesEndOffset: null,  // Where to insert new states (before previous_area)
+            variables: new Map(),   // Map<string, { value, nameOffset, valueOffset, valueLength }>
+            variablesEndOffset: null // Where END_OF_VARIABLES marker ends
         };
     }
 
@@ -70,20 +72,30 @@ export class SaveGameParser {
     }
 
     /**
-     * Skip over the variables section
+     * Parse the variables section, storing name/value pairs with their offsets
      * Must be called after parseHeader()
      */
-    skipVariables() {
+    parseVariables() {
         while (true) {
+            const nameOffset = this.reader.tell();
             const nameLength = this.reader.readU8();
             const name = this.reader.readString(nameLength);
 
             if (name === 'END_OF_VARIABLES') {
+                this.parsed.variablesEndOffset = this.reader.tell();
                 break;
             }
 
+            const valueOffset = this.reader.tell();
             const valueLength = this.reader.readU8();
-            this.reader.skip(valueLength);
+            const value = this.reader.readString(valueLength);
+
+            this.parsed.variables.set(name, {
+                value,
+                nameOffset,
+                valueOffset,
+                valueLength
+            });
         }
     }
 
@@ -371,11 +383,11 @@ export class SaveGameParser {
 
     /**
      * Full parse for the save editor (header + missions)
-     * @returns {{ header: SaveGameHeader, missions: MissionScores, stateLocations: GameStateLocation[] }}
+     * @returns {{ header: SaveGameHeader, missions: MissionScores, stateLocations: GameStateLocation[], variables: Map }}
      */
     parse() {
         this.parseHeader();
-        this.skipVariables();
+        this.parseVariables();
         this.skipCharacters();
         this.skipPlants();
         this.skipBuildings();
