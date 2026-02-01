@@ -11,6 +11,7 @@
     } from '../../core/savegame/constants.js';
     import NavButton from '../NavButton.svelte';
     import ResetButton from '../ResetButton.svelte';
+    import EditorTooltip from '../EditorTooltip.svelte';
 
     export let slot;
     export let onUpdate = () => {};
@@ -180,13 +181,7 @@
 
 </script>
 
-<div class="vehicle-editor">
-    <div class="vehicle-editor-header">
-        <span class="tooltip-trigger">?
-            <span class="tooltip-content">Click on the part to cycle through colors. Changes are automatically saved.</span>
-        </span>
-    </div>
-
+<EditorTooltip text="Click on the part to cycle through colors. Changes are automatically saved.">
     <!-- 3D Preview (clickable to cycle color) -->
     <div class="preview-container">
         <canvas
@@ -226,20 +221,9 @@
             <ResetButton onclick={resetColor} />
         {/if}
     </div>
-</div>
+</EditorTooltip>
 
 <style>
-    .vehicle-editor {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .vehicle-editor-header {
-        align-self: flex-end;
-        margin-bottom: 4px;
-    }
-
     .preview-container {
         position: relative;
     }

@@ -2,6 +2,7 @@
     import { onMount, onDestroy } from 'svelte';
     import { ScoreCubeRenderer } from '../../core/rendering/ScoreCubeRenderer.js';
     import { WdbParser, findRoi } from '../../core/formats/WdbParser.js';
+    import EditorTooltip from '../EditorTooltip.svelte';
 
     export let missions = {};
     export let onUpdate = () => {};
@@ -120,44 +121,34 @@
     }
 </script>
 
-<div class="score-cube-container">
-    <div class="score-cube-header">
-        <span class="tooltip-trigger">?
-            <span class="tooltip-content">Click on the cube to cycle high scores. Changes are automatically saved.</span>
-        </span>
-    </div>
-    <canvas
-        bind:this={canvas}
-        width="200"
-        height="200"
-        onclick={handleClick}
-        class:hidden={loading || error}
-        role="button"
-        tabindex="0"
-        aria-label="Score cube - click to edit scores"
-    ></canvas>
+<EditorTooltip text="Click on the cube to cycle high scores. Changes are automatically saved.">
+    <div class="score-cube-container">
+        <canvas
+            bind:this={canvas}
+            width="200"
+            height="200"
+            onclick={handleClick}
+            class:hidden={loading || error}
+            role="button"
+            tabindex="0"
+            aria-label="Score cube - click to edit scores"
+        ></canvas>
 
-    {#if loading}
-        <div class="overlay">
-            <div class="spinner"></div>
-        </div>
-    {:else if error}
-        <div class="overlay error">Error: {error}</div>
-    {/if}
-</div>
+        {#if loading}
+            <div class="overlay">
+                <div class="spinner"></div>
+            </div>
+        {:else if error}
+            <div class="overlay error">Error: {error}</div>
+        {/if}
+    </div>
+</EditorTooltip>
 
 <style>
     .score-cube-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
         position: relative;
         min-width: 0;
-    }
-
-    .score-cube-header {
-        align-self: flex-end;
-        margin-bottom: 4px;
+        margin-top: 16px;
     }
 
     canvas {
