@@ -119,14 +119,8 @@ export class WdbParser {
             parts.push({ name, lods });
         }
 
-        // Parse textures at textureInfoOffset
         this.reader.seek(offset + textureInfoOffset);
-        let textures = [];
-        try {
-            textures = this.parseTextureInfo();
-        } catch (e) {
-            // Continue without textures - wheel caps don't need textures for color display
-        }
+        const textures = this.parseTextureInfo();
 
         return { parts, textures };
     }
@@ -153,9 +147,8 @@ export class WdbParser {
         // Parse ROI hierarchy
         const roi = this.parseRoi();
 
-        // Parse textures at textureInfoOffset
         this.reader.seek(offset + textureInfoOffset);
-        const textures = this.parseTextureInfo();
+        const textures = this.parseTextureInfo(true); // Models have skipTextures field
 
         return { version, anim, roi, textures };
     }
@@ -407,9 +400,19 @@ export class WdbParser {
         return { color, alpha, shading, useAlias, textureName, materialName };
     }
 
-    parseTextureInfo() {
+    /**
+     * Parse texture info block
+     * @param {boolean} isModel - If true, read skipTextures field (models have it, parts don't)
+     */
+    parseTextureInfo(isModel = false) {
         const numTextures = this.reader.readU32();
-        const skipTextures = this.reader.readU32();
+
+        // Models have an extra skipTextures field that parts don't have
+        // See legomodelpresenter.cpp vs legopartpresenter.cpp in LEGO1 source
+        if (isModel) {
+            this.reader.readU32(); // skipTextures - skip over this field
+        }
+
         const textures = [];
 
         for (let i = 0; i < numTextures; i++) {
@@ -516,15 +519,9 @@ export function buildPartsMap(parser, worldParts) {
     if (!worldParts || worldParts.length === 0) return partsMap;
 
     for (const partRef of worldParts) {
-        try {
-            const partData = parser.parsePartData(partRef.dataOffset);
-            if (partData && partData.parts) {
-                for (const part of partData.parts) {
-                    partsMap.set(part.name.toLowerCase(), part);
-                }
-            }
-        } catch (e) {
-            // Continue with other parts
+        const partData = parser.parsePartData(partRef.dataOffset);
+        for (const part of partData.parts) {
+            partsMap.set(part.name.toLowerCase(), part);
         }
     }
     return partsMap;
