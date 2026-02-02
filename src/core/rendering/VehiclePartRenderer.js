@@ -32,20 +32,12 @@ export class VehiclePartRenderer {
     }
 
     setupLighting() {
-        const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.8);
         this.scene.add(ambient);
 
-        const keyLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        keyLight.position.set(2, 2, 3);
-        this.scene.add(keyLight);
-
-        const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
-        fillLight.position.set(-2, 1, 2);
-        this.scene.add(fillLight);
-
-        const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
-        rimLight.position.set(0, 1, -3);
-        this.scene.add(rimLight);
+        const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        sunLight.position.set(1, 2, 3);
+        this.scene.add(sunLight);
     }
 
     /**
@@ -145,11 +137,9 @@ export class VehiclePartRenderer {
 
                 if (isColorable) {
                     // Mesh has INH prefix - use the LEGO color
-                    material = new THREE.MeshStandardMaterial({
+                    material = new THREE.MeshLambertMaterial({
                         color: legoColor,
                         side: THREE.DoubleSide,
-                        roughness: 0.7,
-                        metalness: 0.1,
                         transparent: isTransparent,
                         opacity: opacity,
                         depthWrite: !isTransparent
@@ -157,11 +147,9 @@ export class VehiclePartRenderer {
                     this.colorableMeshes.push(null); // Placeholder, will set after mesh creation
                 } else if (hasUVs && meshTextureName && this.textures.has(meshTextureName)) {
                     // Mesh has its own texture
-                    material = new THREE.MeshStandardMaterial({
+                    material = new THREE.MeshLambertMaterial({
                         map: this.textures.get(meshTextureName),
                         side: THREE.DoubleSide,
-                        roughness: 0.8,
-                        metalness: 0.1,
                         transparent: isTransparent,
                         opacity: opacity,
                         depthWrite: !isTransparent
@@ -169,11 +157,9 @@ export class VehiclePartRenderer {
                 } else {
                     // Fallback to mesh's vertex color
                     const meshColor = mesh.properties?.color || { r: 128, g: 128, b: 128 };
-                    material = new THREE.MeshStandardMaterial({
+                    material = new THREE.MeshLambertMaterial({
                         color: new THREE.Color(meshColor.r / 255, meshColor.g / 255, meshColor.b / 255),
                         side: THREE.DoubleSide,
-                        roughness: 0.8,
-                        metalness: 0.1,
                         transparent: isTransparent,
                         opacity: opacity,
                         depthWrite: !isTransparent
