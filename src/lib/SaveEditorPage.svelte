@@ -5,6 +5,7 @@
     import MissionScoresEditor from './save-editor/MissionScoresEditor.svelte';
     import SkyColorEditor from './save-editor/SkyColorEditor.svelte';
     import LightPositionEditor from './save-editor/LightPositionEditor.svelte';
+    import VehicleEditor from './save-editor/VehicleEditor.svelte';
     import { saveEditorState, currentPage } from '../stores.js';
     import { listSaveSlots, updateSaveSlot, updatePlayerName } from '../core/savegame/index.js';
     import { Actor, ActorNames } from '../core/savegame/constants.js';
@@ -21,7 +22,8 @@
     const saveTabs = [
         { id: 'player', label: 'Player', firstSection: 'name' },
         { id: 'scores', label: 'Scores', firstSection: null },
-        { id: 'island', label: 'Island', firstSection: 'skycolor' }
+        { id: 'island', label: 'Island', firstSection: 'skycolor' },
+        { id: 'vehicles', label: 'Vehicles', firstSection: null }
     ];
 
     // Reset state when navigating to this page
@@ -213,6 +215,7 @@
 
     function handleSlotFocus(e) {
         e.target.select();
+        e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     }
 
     // Character handler
@@ -395,6 +398,13 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Vehicles Tab -->
+                    <div class:hidden={activeTab !== 'vehicles'}>
+                        {#if $currentPage === 'save-editor'}
+                            <VehicleEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
+                        {/if}
+                    </div>
                 </div>
             {/if}
         </div>
@@ -487,11 +497,20 @@
 
     .section-inner {
         padding-top: 4px;
+        min-width: 0;
     }
 
     .name-slots {
         display: flex;
         gap: 4px;
+        max-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .name-slots::-webkit-scrollbar {
+        display: none;
     }
 
     .name-slot {

@@ -2,6 +2,7 @@
     import { onMount, onDestroy } from 'svelte';
     import { ScoreCubeRenderer } from '../../core/rendering/ScoreCubeRenderer.js';
     import { WdbParser, findRoi } from '../../core/formats/WdbParser.js';
+    import EditorTooltip from '../EditorTooltip.svelte';
 
     export let missions = {};
     export let onUpdate = () => {};
@@ -27,15 +28,11 @@
             const parser = new WdbParser(buffer);
             const wdb = parser.parse();
 
-            console.log('Parsed worlds:', wdb.worlds.map(w => w.name));
-
             // Find ICUBE world and scormain model
             const icubeWorld = wdb.worlds.find(w => w.name === 'ICUBE');
             if (!icubeWorld) {
                 throw new Error('ICUBE world not found in WDB');
             }
-
-            console.log('ICUBE models:', icubeWorld.models.map(m => m.name));
 
             const scormainModel = icubeWorld.models.find(m =>
                 m.name.toLowerCase().includes('scormain')
@@ -44,21 +41,14 @@
                 throw new Error('scormain model not found in ICUBE world');
             }
 
-            console.log('scormain model:', scormainModel);
-
             // Parse the model_data blob
             const modelData = parser.parseModelData(scormainModel.dataOffset);
-
-            console.log('Model data ROI:', modelData.roi?.name);
-            console.log('Model data textures:', modelData.textures?.map(t => t.name));
 
             // Find scorcube ROI
             const scorcubeRoi = findRoi(modelData.roi, 'scorcube');
             if (!scorcubeRoi) {
                 throw new Error('scorcube ROI not found');
             }
-
-            console.log('scorcube ROI:', scorcubeRoi.name, 'lods:', scorcubeRoi.lods?.length);
 
             // Find bigcube texture
             const bigcubeTexture = modelData.textures.find(t =>
@@ -67,8 +57,6 @@
             if (!bigcubeTexture) {
                 throw new Error('bigcube.gif texture not found');
             }
-
-            console.log('bigcube texture:', bigcubeTexture.width, 'x', bigcubeTexture.height);
 
             // Initialize renderer
             renderer = new ScoreCubeRenderer(canvas);
@@ -133,44 +121,34 @@
     }
 </script>
 
-<div class="score-cube-container">
-    <div class="score-cube-header">
-        <span class="tooltip-trigger">?
-            <span class="tooltip-content">Click on the cube to cycle high scores. Changes are automatically saved.</span>
-        </span>
-    </div>
-    <canvas
-        bind:this={canvas}
-        width="200"
-        height="200"
-        onclick={handleClick}
-        class:hidden={loading || error}
-        role="button"
-        tabindex="0"
-        aria-label="Score cube - click to edit scores"
-    ></canvas>
+<EditorTooltip text="Click on the cube to cycle high scores. Changes are automatically saved.">
+    <div class="score-cube-container">
+        <canvas
+            bind:this={canvas}
+            width="200"
+            height="200"
+            onclick={handleClick}
+            class:hidden={loading || error}
+            role="button"
+            tabindex="0"
+            aria-label="Score cube - click to edit scores"
+        ></canvas>
 
-    {#if loading}
-        <div class="overlay">
-            <div class="spinner"></div>
-        </div>
-    {:else if error}
-        <div class="overlay error">Error: {error}</div>
-    {/if}
-</div>
+        {#if loading}
+            <div class="overlay">
+                <div class="spinner"></div>
+            </div>
+        {:else if error}
+            <div class="overlay error">Error: {error}</div>
+        {/if}
+    </div>
+</EditorTooltip>
 
 <style>
     .score-cube-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
         position: relative;
         min-width: 0;
-    }
-
-    .score-cube-header {
-        align-self: flex-end;
-        margin-bottom: 4px;
+        margin-top: 16px;
     }
 
     canvas {

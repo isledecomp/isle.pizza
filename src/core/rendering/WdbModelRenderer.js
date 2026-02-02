@@ -35,14 +35,12 @@ export class WdbModelRenderer {
      * Setup scene lighting - override to customize
      */
     setupLighting() {
-        // Flat, even lighting similar to in-game
-        const ambient = new THREE.AmbientLight(0xffffff, 1.5);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.8);
         this.scene.add(ambient);
 
-        // Soft front light
-        const frontLight = new THREE.DirectionalLight(0xffffff, 0.3);
-        frontLight.position.set(0, 0, 5);
-        this.scene.add(frontLight);
+        const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        sunLight.position.set(1, 2, 3);
+        this.scene.add(sunLight);
     }
 
     /**
@@ -62,22 +60,18 @@ export class WdbModelRenderer {
         this.texture.magFilter = THREE.LinearFilter;
 
         if (texturedGeometry) {
-            const texturedMaterial = new THREE.MeshStandardMaterial({
+            const texturedMaterial = new THREE.MeshLambertMaterial({
                 map: this.texture,
-                side: THREE.DoubleSide,
-                roughness: 0.8,
-                metalness: 0.1
+                side: THREE.DoubleSide
             });
             this.texturedMesh = new THREE.Mesh(texturedGeometry, texturedMaterial);
             this.modelGroup.add(this.texturedMesh);
         }
 
         for (const { geometry, color } of nonTexturedGeometries) {
-            const material = new THREE.MeshStandardMaterial({
+            const material = new THREE.MeshLambertMaterial({
                 color: new THREE.Color(color.r / 255, color.g / 255, color.b / 255),
-                side: THREE.DoubleSide,
-                roughness: 0.8,
-                metalness: 0.1
+                side: THREE.DoubleSide
             });
             const mesh = new THREE.Mesh(geometry, material);
             this.modelGroup.add(mesh);
@@ -126,7 +120,6 @@ export class WdbModelRenderer {
                 }
             }
 
-            // Build mesh vertices following brickolini-island logic
             const meshVertices = [];
             const meshNormals = [];
             const meshUvs = [];

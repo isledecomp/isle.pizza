@@ -1,5 +1,6 @@
 <script>
     import { parseBackgroundColor, formatBackgroundColor, hsvToHex } from '../../core/savegame/colorUtils.js';
+    import ResetButton from '../ResetButton.svelte';
 
     export let slot;
     export let onUpdate = () => {};
@@ -97,7 +98,7 @@
         </div>
     </div>
     {#if !isDefault}
-        <button type="button" class="reset-btn" onclick={handleReset}>Reset to default</button>
+        <ResetButton onclick={handleReset} />
     {/if}
 </div>
 
@@ -191,22 +192,6 @@
         color: var(--color-text-light);
         font-family: monospace;
         flex-shrink: 0;
-    }
-
-    .reset-btn {
-        display: block;
-        margin-top: 8px;
-        font-size: 0.8em;
-        color: var(--color-text-muted);
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 0;
-        text-decoration: underline;
-    }
-
-    .reset-btn:hover {
-        color: var(--color-text-light);
     }
 
     @media (max-width: 400px) {

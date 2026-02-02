@@ -1,5 +1,6 @@
 <script>
     import { onMount } from 'svelte';
+    import NavButton from './NavButton.svelte';
 
     export let gap = 10;
 
@@ -85,17 +86,7 @@
 </script>
 
 <div class="carousel">
-    <button
-        type="button"
-        class="carousel-arrow carousel-arrow-left"
-        class:disabled={!canScrollLeft}
-        onclick={scrollLeft}
-        aria-label="Scroll left"
-    >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-    </button>
+    <NavButton direction="left" onclick={scrollLeft} disabled={!canScrollLeft} />
     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions a11y_no_noninteractive_element_interactions -->
     <div
         class="carousel-track"
@@ -112,17 +103,7 @@
     >
         <slot />
     </div>
-    <button
-        type="button"
-        class="carousel-arrow carousel-arrow-right"
-        class:disabled={!canScrollRight}
-        onclick={scrollRight}
-        aria-label="Scroll right"
-    >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-    </button>
+    <NavButton direction="right" onclick={scrollRight} disabled={!canScrollRight} />
 </div>
 
 <style>
@@ -154,31 +135,5 @@
 
     .carousel-track:not(.dragging) {
         cursor: grab;
-    }
-
-    .carousel-arrow {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        background: var(--gradient-panel);
-        border: 1px solid var(--color-border-medium);
-        border-radius: 50%;
-        color: var(--color-text-light);
-        cursor: pointer;
-        flex-shrink: 0;
-        transition: all 0.2s ease;
-    }
-
-    .carousel-arrow:hover:not(.disabled) {
-        border-color: var(--color-border-light);
-        background: var(--gradient-hover);
-    }
-
-    .carousel-arrow.disabled {
-        opacity: 0.3;
-        pointer-events: none;
-        cursor: default;
     }
 </style>
