@@ -807,7 +807,18 @@ body {
     max-height: 0;
 }
 
-.tooltip-trigger:hover>.tooltip-content,
+/* Only use hover on devices with real hover support (not touch) */
+@media (hover: hover) {
+    .tooltip-trigger:hover>.tooltip-content {
+        opacity: 1;
+        visibility: visible;
+        padding: 10px;
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+/* Active state for touch devices (controlled by JS) */
 .tooltip-trigger.active>.tooltip-content {
     opacity: 1;
     visibility: visible;

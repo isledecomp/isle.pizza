@@ -20,6 +20,12 @@
         const tooltip = trigger.querySelector('.tooltip-content');
         if (!tooltip) return;
 
+        // Temporarily expand tooltip for measurement (keep invisible)
+        tooltip.style.maxHeight = 'none';
+        tooltip.style.padding = '10px';
+        tooltip.style.visibility = 'hidden';
+        tooltip.style.opacity = '0';
+
         const { x, y } = await computePosition(trigger, tooltip, {
             placement: 'top',
             middleware: [
@@ -31,7 +37,12 @@
 
         Object.assign(tooltip.style, {
             left: `${x}px`,
-            top: `${y}px`
+            top: `${y}px`,
+            // Clear temporary styles - CSS will handle final visibility
+            maxHeight: '',
+            padding: '',
+            visibility: '',
+            opacity: ''
         });
     }
 
@@ -39,7 +50,7 @@
         const isTouchDevice = window.matchMedia('(any-pointer: coarse)').matches;
 
         // Touch devices: position and show on click
-        document.addEventListener('click', (e) => {
+        document.addEventListener('click', async (e) => {
             const trigger = e.target.closest('.tooltip-trigger');
             if (trigger) {
                 e.preventDefault();
@@ -47,7 +58,7 @@
                 const wasActive = trigger.classList.contains('active');
                 document.querySelectorAll('.tooltip-trigger.active').forEach(t => t.classList.remove('active'));
                 if (!wasActive) {
-                    positionTooltip(trigger);
+                    await positionTooltip(trigger);
                     trigger.classList.add('active');
                 }
             } else {
