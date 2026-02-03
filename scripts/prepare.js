@@ -5,6 +5,7 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as readline from 'node:readline';
+import { parseArgs } from 'node:util';
 
 // Expand ~ to home directory
 function expandTilde(filePath) {
@@ -72,25 +73,12 @@ const OPTIONAL_FOLDERS = ['extra', 'textures'];
 
 const TARGET_DIR = path.join(process.cwd(), 'LEGO');
 
-// Parse command line arguments
-function parseArgs() {
-  const args = process.argv.slice(2);
-  let sourcePath = null;
-  let force = false;
-
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--path' || args[i] === '-p') {
-      sourcePath = args[i + 1];
-      i++;
-    } else if (args[i] === '--force' || args[i] === '-f') {
-      force = true;
-    } else if (args[i].startsWith('--path=')) {
-      sourcePath = args[i].slice(7);
-    }
-  }
-
-  return { sourcePath, force };
-}
+const { values: args } = parseArgs({
+  options: {
+    path: { type: 'string', short: 'p' },
+    force: { type: 'boolean', short: 'f', default: false },
+  },
+});
 
 // Create readline interface for prompts
 function createReadline() {
@@ -270,7 +258,7 @@ async function createOptionalSymlinks(optionalFiles) {
 async function main() {
   console.log('LEGO Island Asset Setup\n');
 
-  const { sourcePath: argPath, force } = parseArgs();
+  const { path: argPath, force } = args;
   const rl = createReadline();
 
   try {
