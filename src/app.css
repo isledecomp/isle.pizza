@@ -786,13 +786,13 @@ body {
 
 .tooltip-content {
     position: absolute;
-    bottom: 140%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 220px;
+    top: 0;
+    left: 0;
+    width: max-content;
+    max-width: 220px;
     background-color: var(--color-bg-panel);
     color: var(--color-text-light);
-    padding: 10px;
+    padding: 0;
     border-radius: 5px;
     font-size: 0.85em;
     font-weight: normal;
@@ -802,14 +802,18 @@ body {
     z-index: 10000;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.2s, visibility 0.2s;
     pointer-events: none;
+    overflow: hidden;
+    max-height: 0;
 }
 
 .tooltip-trigger:hover>.tooltip-content,
 .tooltip-trigger.active>.tooltip-content {
     opacity: 1;
     visibility: visible;
+    padding: 10px;
+    max-height: none;
+    overflow: visible;
 }
 
 .option-list {

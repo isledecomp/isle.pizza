@@ -11,6 +11,7 @@
     "prepare:assets": "node scripts/prepare.js"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.5",
     "three": "^0.182.0"
   },
   "devDependencies": {
