@@ -68,6 +68,7 @@
                 // Save defaults silently (no toast on initial creation)
                 await saveConfig(configForm, getSiFiles, true);
             }
+            showOrHideGraphicsOptions();
         }
 
         // Check cache status
