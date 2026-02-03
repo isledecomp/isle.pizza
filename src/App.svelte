@@ -1,5 +1,6 @@
 <script>
     import { onMount } from 'svelte';
+    import { computePosition, flip, shift, offset } from '@floating-ui/dom';
     import { currentPage, debugEnabled } from './stores.js';
     import { registerServiceWorker, checkCacheStatus } from './core/service-worker.js';
     import { setupCanvasEvents } from './core/emscripten.js';
@@ -15,6 +16,54 @@
     import DebugPanel from './lib/DebugPanel.svelte';
     import CanvasWrapper from './lib/CanvasWrapper.svelte';
 
+    async function positionTooltip(trigger) {
+        const tooltip = trigger.querySelector('.tooltip-content');
+        if (!tooltip) return;
+
+        const { x, y } = await computePosition(trigger, tooltip, {
+            placement: 'top',
+            middleware: [
+                offset(8),
+                flip(),
+                shift({ padding: 8 })
+            ]
+        });
+
+        Object.assign(tooltip.style, {
+            left: `${x}px`,
+            top: `${y}px`
+        });
+    }
+
+    function setupTooltips() {
+        const isTouchDevice = window.matchMedia('(any-pointer: coarse)').matches;
+
+        // Touch devices: position and show on click
+        document.addEventListener('click', (e) => {
+            const trigger = e.target.closest('.tooltip-trigger');
+            if (trigger) {
+                e.preventDefault();
+                e.stopPropagation();
+                const wasActive = trigger.classList.contains('active');
+                document.querySelectorAll('.tooltip-trigger.active').forEach(t => t.classList.remove('active'));
+                if (!wasActive) {
+                    positionTooltip(trigger);
+                    trigger.classList.add('active');
+                }
+            } else {
+                document.querySelectorAll('.tooltip-trigger.active').forEach(t => t.classList.remove('active'));
+            }
+        });
+
+        // Desktop: position on hover
+        if (!isTouchDevice) {
+            document.addEventListener('mouseenter', (e) => {
+                const trigger = e.target.closest('.tooltip-trigger');
+                if (trigger) positionTooltip(trigger);
+            }, true);
+        }
+    }
+
     onMount(async () => {
         // Disable browser's automatic scroll restoration
         if ('scrollRestoration' in history) {
@@ -29,6 +78,9 @@
 
         // Setup canvas events
         setupCanvasEvents();
+
+        // Setup global tooltip positioning
+        setupTooltips();
 
         // Initialize history state based on current page
         const initialHash = window.location.hash;

@@ -101,27 +101,7 @@
                 }
             });
         }
-
-        // Setup tooltip handling for touch devices
-        if (isTouchDevice) {
-            setupTouchTooltips();
-        }
     });
-
-    function setupTouchTooltips() {
-        document.addEventListener('click', (e) => {
-            const trigger = e.target.closest('.tooltip-trigger');
-            if (trigger) {
-                e.preventDefault();
-                e.stopPropagation();
-                const wasActive = trigger.classList.contains('active');
-                document.querySelectorAll('.tooltip-trigger.active').forEach(t => t.classList.remove('active'));
-                if (!wasActive) trigger.classList.add('active');
-            } else {
-                document.querySelectorAll('.tooltip-trigger.active').forEach(t => t.classList.remove('active'));
-            }
-        });
-    }
 
     function getSiFiles() {
         const hdMusic = document.getElementById('check-hd-music');
