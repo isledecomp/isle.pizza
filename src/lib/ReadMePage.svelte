@@ -34,7 +34,9 @@
 
     const changelogItems = [
         { id: 'cl0', title: 'February 2026', items: [
-            { type: 'New', text: 'Save Editor lets you view and modify save files — change your player name, character, and high scores directly from the browser' }
+            { type: 'New', text: 'Save Editor lets you view and modify save files — change your player name, character, and high scores directly from the browser' },
+            { type: 'New', text: 'Sky Color Editor allows customizing the island sky gradient colors in your save file' },
+            { type: 'New', text: 'Vehicle Part Editor enables modifying vehicle parts and colors with a 3D preview' }
         ]},
         { id: 'cl1', title: 'January 2026', items: [
             { type: 'New', text: 'Debug menu for developers and power users. Tap the LEGO Island logo 5 times to unlock OGEL mode and access debug features like teleporting to locations, switching acts, and playing animations' },
