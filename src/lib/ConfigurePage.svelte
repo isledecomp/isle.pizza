@@ -182,7 +182,6 @@
     }
 
     function handleExtensionChange() {
-        handleFormChange();
         checkCacheStatus();
     }
 </script>
