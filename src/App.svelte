@@ -126,7 +126,7 @@
 <UpdatePopup />
 <ConfigToast />
 
-<div id="main-container">
+<main id="main-container">
     <div class="page-wrapper" class:active={$currentPage === 'main'}>
         <TopContent />
         <Controls />
@@ -156,7 +156,7 @@
             <p><strong>DEVELOPMENT MODE</strong></p>
         {/if}
     </div>
-</div>
+</main>
 
 <CanvasWrapper />
 
