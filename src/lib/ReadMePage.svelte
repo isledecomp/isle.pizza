@@ -12,11 +12,11 @@
     }
 
     const tabs = [
-        { id: 'about', label: 'About', icon: 'register.webp' },
-        { id: 'system', label: 'System', icon: 'sysinfo.webp' },
-        { id: 'faq', label: 'FAQ', icon: 'getinfo.webp' },
-        { id: 'changelog', label: 'Changelog', icon: 'callfail.webp' },
-        { id: 'manual', label: 'Manual', icon: 'bonus.webp' }
+        { id: 'about', label: 'About', icon: 'images/register.webp' },
+        { id: 'system', label: 'System', icon: 'images/sysinfo.webp' },
+        { id: 'faq', label: 'FAQ', icon: 'images/getinfo.webp' },
+        { id: 'changelog', label: 'Changelog', icon: 'images/callfail.webp' },
+        { id: 'manual', label: 'Manual', icon: 'images/bonus.webp' }
     ];
 
     const faqItems = [
@@ -240,7 +240,7 @@
             <div class="tab-panel" class:active={activeTab === 'manual'} id="tab-manual">
                 <div class="manual-container">
                     <p class="manual-description">The original 15-page instruction manual from the 1997 CD-ROM release.</p>
-                    <a href="comic.pdf" target="_blank" rel="noopener" class="manual-open-btn">Open Manual in New Tab</a>
+                    <a href="pdf/comic.pdf" target="_blank" rel="noopener" class="manual-open-btn">Open Manual in New Tab</a>
                 </div>
             </div>
 

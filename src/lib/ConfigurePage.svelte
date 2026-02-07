@@ -196,7 +196,7 @@
     {/if}
     <div class="page-inner-content config-layout">
         <div class="config-art-panel">
-            <img src="shark.webp" alt="LEGO Island Shark and Brickster">
+            <img src="images/shark.webp" alt="LEGO Island Shark and Brickster">
         </div>
         <div class="config-main">
             <div class="config-presets">

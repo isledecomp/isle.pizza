@@ -41,7 +41,7 @@
                 title="Position {position}"
             >
                 <img
-                    src="globe{position + 1}.webp"
+                    src="images/globe{position + 1}.webp"
                     alt="Light position {position}"
                 />
             </button>

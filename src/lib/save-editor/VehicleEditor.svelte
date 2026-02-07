@@ -224,7 +224,7 @@
 
     async function preloadDefaultTextures(info) {
         const results = await Promise.all(info.texFiles.map(async (texFile) => {
-            const response = await fetch(`/${texFile}.tex`);
+            const response = await fetch(`/textures/${texFile}.tex`);
             if (!response.ok) return null;
             const buffer = await response.arrayBuffer();
             const parsed = parseTex(buffer);

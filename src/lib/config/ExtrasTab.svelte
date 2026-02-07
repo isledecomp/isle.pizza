@@ -64,16 +64,16 @@
                     {:else if $installState.installed}
                         <ImageButton
                             id="uninstall-btn"
-                            offSrc="uninstall_off.webp"
-                            onSrc="uninstall_on.webp"
+                            offSrc="images/uninstall_off.webp"
+                            onSrc="images/uninstall_on.webp"
                             alt="Uninstall Game"
                             onclick={handleUninstall}
                         />
                     {:else}
                         <ImageButton
                             id="install-btn"
-                            offSrc="install_off.webp"
-                            onSrc="install_on.webp"
+                            offSrc="images/install_off.webp"
+                            onSrc="images/install_on.webp"
                             alt="Install Game"
                             onclick={handleInstall}
                         />

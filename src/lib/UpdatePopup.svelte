@@ -19,6 +19,6 @@
             <button class="update-reload-btn" onclick={reload}>Reload Now</button>
         </div>
     </div>
-    <img src="bonus.webp" alt="Pepper" class="update-character" width="150" height="187">
+    <img src="images/bonus.webp" alt="Pepper" class="update-character" width="150" height="187">
 </div>
 {/if}

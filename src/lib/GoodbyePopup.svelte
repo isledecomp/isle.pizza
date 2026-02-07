@@ -54,6 +54,6 @@
                 </div>
             </div>
         </div>
-        <img src="later.webp" alt="Goodbye" class="update-character" width="150" height="187">
+        <img src="images/later.webp" alt="Goodbye" class="update-character" width="150" height="187">
     </div>
 {/if}
