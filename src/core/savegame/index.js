@@ -90,6 +90,7 @@ export async function listSaveSlots() {
             header: null,
             missions: null,
             variables: null,
+            act1State: null,
             playerName: null,
             buffer: null
         };
@@ -102,6 +103,7 @@ export async function listSaveSlots() {
                     slot.header = parsed.header;
                     slot.missions = parsed.missions;
                     slot.variables = parsed.variables;
+                    slot.act1State = parsed.act1State || null;
                     slot.buffer = buffer;
 
                     // Try to get player name
@@ -165,6 +167,7 @@ export async function loadSaveSlot(slotNumber) {
         header: parsed.header,
         missions: parsed.missions,
         variables: parsed.variables,
+        act1State: parsed.act1State || null,
         playerName,
         buffer
     };
@@ -229,6 +232,17 @@ export async function updateSaveSlot(slotNumber, updates) {
         const { name, value } = updates.variable;
         const varSerializer = createSerializer(newBuffer);
         const result = varSerializer.updateVariable(name, value);
+        if (result) {
+            newBuffer = result;
+            modified = true;
+        }
+    }
+
+    // Apply texture update
+    if (updates.texture) {
+        const { textureName, textureData } = updates.texture;
+        const texSerializer = createSerializer(newBuffer);
+        const result = texSerializer.updateAct1Texture(textureName, textureData);
         if (result) {
             newBuffer = result;
             modified = true;

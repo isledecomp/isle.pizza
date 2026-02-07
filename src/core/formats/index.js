@@ -16,3 +16,6 @@ export { SaveGameSerializer, createSerializer } from './SaveGameSerializer.js';
 // Players format
 export { PlayersParser, parsePlayers } from './PlayersParser.js';
 export { PlayersSerializer, createPlayersSerializer } from './PlayersSerializer.js';
+
+// Texture format
+export { parseTex } from './TexParser.js';

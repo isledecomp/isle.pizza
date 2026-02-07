@@ -120,7 +120,7 @@
             if (updated) {
                 slots = slots.map(s =>
                     s.slotNumber === selectedSlot
-                        ? { ...s, variables: updated.variables }
+                        ? { ...s, variables: updated.variables, act1State: updated.act1State }
                         : s
                 );
             }
