@@ -103,9 +103,9 @@
         renderer?.dispose();
     });
 
-    // Reload part when index changes
+    // Reload part when index or slot changes
     $: if (renderer && !loading && currentPart) {
-        const partKey = `${vehicle}-${globalIndex}`;
+        const partKey = `${slot?.slotNumber}-${vehicle}-${globalIndex}`;
         if (partKey !== loadedPartKey) {
             loadCurrentPart();
         }
@@ -136,7 +136,7 @@
         if (!wdbData || !wdbParser || !currentPart || !renderer) return;
 
         partError = null;
-        const partKey = `${vehicle}-${globalIndex}`;
+        const partKey = `${slot?.slotNumber}-${vehicle}-${globalIndex}`;
 
         try {
             const worldName = VehicleWorlds[vehicle];
