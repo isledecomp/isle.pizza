@@ -69,7 +69,7 @@
         // Desktop: position on hover
         if (!isTouchDevice) {
             document.addEventListener('mouseenter', (e) => {
-                const trigger = e.target.closest('.tooltip-trigger');
+                const trigger = e.target.closest?.('.tooltip-trigger');
                 if (trigger) positionTooltip(trigger);
             }, true);
         }
