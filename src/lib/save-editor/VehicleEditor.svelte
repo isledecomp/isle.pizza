@@ -223,19 +223,19 @@
     }
 
     async function preloadDefaultTextures(info) {
-        const loaded = [];
-        for (const texFile of info.texFiles) {
+        const results = await Promise.all(info.texFiles.map(async (texFile) => {
             const response = await fetch(`/${texFile}.tex`);
-            if (!response.ok) continue;
+            if (!response.ok) return null;
             const buffer = await response.arrayBuffer();
             const parsed = parseTex(buffer);
             if (parsed.textures.length > 0) {
-                loaded.push({ name: texFile, ...parsed.textures[0] });
+                return { name: texFile, ...parsed.textures[0] };
             }
-        }
+            return null;
+        }));
         // Only apply if textureInfo hasn't changed since we started
         if (textureInfo === info) {
-            preloadedDefaults = loaded;
+            preloadedDefaults = results.filter(Boolean);
         }
     }
 
@@ -275,16 +275,16 @@
             }
         };
 
-        // Reset texture to WDB default (equivalent to WriteDefaultTexture in the game)
+        // Reset texture to WDB default (equivalent to WriteDefaultTexture in the game).
+        // wdbTexture is already squared when cached in loadCurrentPart().
         if (canEditTexture && wdbTexture && renderer) {
             const texKey = textureInfo.textureName.toLowerCase();
-            const saveData = squareTexture(wdbTexture);
 
-            renderer.updateTexture(texKey, saveData);
+            renderer.updateTexture(texKey, wdbTexture);
 
             update.texture = {
                 textureName: textureInfo.textureName,
-                textureData: saveData
+                textureData: wdbTexture
             };
         }
 

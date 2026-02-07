@@ -325,19 +325,18 @@ export class SaveGameParser {
 
         // Conditional textures based on which planes have names
         const textures = new Map();
-        const textureOrder = [];
 
         if (planes[3].nameLength > 0) {
-            for (let i = 0; i < 3; i++) textureOrder.push(this.readAct1Texture(textures));
+            for (let i = 0; i < 3; i++) this.readAct1Texture(textures);
         }
         if (planes[4].nameLength > 0) {
-            for (let i = 0; i < 2; i++) textureOrder.push(this.readAct1Texture(textures));
+            for (let i = 0; i < 2; i++) this.readAct1Texture(textures);
         }
         if (planes[5].nameLength > 0) {
-            textureOrder.push(this.readAct1Texture(textures));
+            this.readAct1Texture(textures);
         }
         if (planes[6].nameLength > 0) {
-            for (let i = 0; i < 3; i++) textureOrder.push(this.readAct1Texture(textures));
+            for (let i = 0; i < 3; i++) this.readAct1Texture(textures);
         }
 
         // Final fields
@@ -347,7 +346,6 @@ export class SaveGameParser {
         this.parsed.act1State = {
             planes,
             textures,
-            textureOrder,
             startOffset,
             endOffset: this.reader.tell(),
             cptClickDialogueNextIndex,

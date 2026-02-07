@@ -70,13 +70,13 @@
         return canvas.toDataURL();
     }
 
-    function selectDefault(tex) {
+    function applyTexture(tex) {
         onSelect({
             width: tex.width,
             height: tex.height,
             palette: tex.palette,
             pixels: tex.pixels,
-            paletteSize: tex.palette.length
+            paletteSize: tex.paletteSize || tex.palette.length
         });
     }
 
@@ -86,14 +86,7 @@
 
     function applyCustom() {
         const tex = customTextures.find(t => t.id === selectedCustomId);
-        if (!tex) return;
-        onSelect({
-            width: tex.width,
-            height: tex.height,
-            palette: tex.palette,
-            pixels: tex.pixels,
-            paletteSize: tex.paletteSize
-        });
+        if (tex) applyTexture(tex);
     }
 
     function handleUploadClick() {
@@ -194,7 +187,7 @@
                             <button
                                 type="button"
                                 class="texture-thumb"
-                                onclick={() => selectDefault(tex)}
+                                onclick={() => applyTexture(tex)}
                                 title={tex.name}
                             >
                                 <img src={tex.dataUrl} alt={tex.name} />
