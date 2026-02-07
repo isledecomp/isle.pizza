@@ -227,6 +227,36 @@ export const VehicleNames = Object.freeze({
     racecar: 'Race Car'
 });
 
+// Act1State plane indices for each vehicle type (indices into the 7-plane array)
+export const Act1PlaneIndices = Object.freeze({
+    helicopter: 3,
+    jetski: 4,
+    dunebuggy: 5,
+    racecar: 6
+});
+
+// Parts that have UV-mapped texture regions in Act1State
+// textureName: name stored in Act1State, texFiles: base names of 4 default .tex files
+export const TexturedParts = Object.freeze({
+    chwindy1: { textureName: 'chwind.gif', texFiles: ['CHWIND1', 'CHWIND2', 'CHWIND3', 'CHWIND4'], vehicle: 'helicopter' },
+    chljety1: { textureName: 'chjetl.gif', texFiles: ['CHJETL1', 'CHJETL2', 'CHJETL3', 'CHJETL4'], vehicle: 'helicopter' },
+    chrjety1: { textureName: 'chjetr.gif', texFiles: ['CHJETR1', 'CHJETR2', 'CHJETR3', 'CHJETR4'], vehicle: 'helicopter' },
+    jsfrnty5: { textureName: 'jsfrnt.gif', texFiles: ['jsfrnt1', 'jsfrnt2', 'jsfrnt3', 'jsfrnt4'], vehicle: 'jetski' },
+    jswnshy5: { textureName: 'jswnsh.gif', texFiles: ['JSWNSH1', 'JSWNSH2', 'JSWNSH3', 'JSWNSH4'], vehicle: 'jetski' },
+    dbfrfny4: { textureName: 'dbfrfn.gif', texFiles: ['Dbfrfn1', 'Dbfrfn2', 'Dbfrfn3', 'Dbfrfn4'], vehicle: 'dunebuggy' },
+    rcfrnty6: { textureName: 'rcfrnt.gif', texFiles: ['rcfrnt1', 'rcfrnt2', 'rcfrnt3', 'rcfrnt4'], vehicle: 'racecar' },
+    rcbacky6: { textureName: 'rcback.gif', texFiles: ['rcback1', 'rcback2', 'rcback3', 'rcback4'], vehicle: 'racecar' },
+    rctailya: { textureName: 'rctail.gif', texFiles: ['rctail1', 'rctail2', 'rctail3', 'rctail4'], vehicle: 'racecar' }
+});
+
+// Texture write order per vehicle in Act1State (from isle.cpp Act1State::Serialize)
+export const Act1TextureOrder = Object.freeze({
+    helicopter: ['chwind.gif', 'chjetl.gif', 'chjetr.gif'],
+    jetski: ['jsfrnt.gif', 'jswnsh.gif'],
+    dunebuggy: ['dbfrfn.gif'],
+    racecar: ['rcfrnt.gif', 'rcback.gif', 'rctail.gif']
+});
+
 // Vehicle part color definitions - 43 parts total (from legogamestate.cpp)
 export const VehiclePartColors = Object.freeze({
     dunebuggy: [

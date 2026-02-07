@@ -310,8 +310,10 @@ export class WdbParser {
         }
 
         // Packed vertex/normal counts
+        // Game source (legolod.cpp): numVerts = lower16 & MAXSHORT (bits 0-14), bit 15 is a flag
+        // numNormals = (upper16 >> 1) & MAXSHORT (bits 17-31)
         const vertexNormalCounts = this.reader.readU32();
-        const vertexCount = vertexNormalCounts & 0xFFFF;
+        const vertexCount = vertexNormalCounts & 0x7FFF;
         const normalCount = (vertexNormalCounts >> 17) & 0x7FFF;
 
         const numTextureVertices = this.reader.readS32();

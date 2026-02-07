@@ -3,7 +3,8 @@
  * Uses a "patch in place" approach - copies the original buffer and modifies specific bytes
  */
 import { SaveGameParser } from './SaveGameParser.js';
-import { GameStateTypes, GameStateSizes, Actor } from '../savegame/constants.js';
+import { BinaryWriter } from './BinaryWriter.js';
+import { GameStateTypes, GameStateSizes, Actor, Act1TextureOrder } from '../savegame/constants.js';
 
 /**
  * Offsets for header fields
@@ -335,6 +336,129 @@ export class SaveGameSerializer {
 
             return newBuffer;
         }
+    }
+
+    /**
+     * Update an Act1State texture in the save file
+     * @param {string} textureName - Texture name (e.g. 'chwind.gif')
+     * @param {{ palette: Array<{r,g,b}>, pixels: Uint8Array, width: number, height: number }} newTextureData
+     * @param {ArrayBuffer} [buffer] - Optional buffer to use
+     * @returns {ArrayBuffer|null} - Modified buffer or null on error
+     */
+    updateAct1Texture(textureName, newTextureData, buffer = null) {
+        const workingBuffer = buffer || this.createCopy();
+
+        // Re-parse to get fresh Act1State from the working buffer
+        const freshParser = new SaveGameParser(workingBuffer);
+        const freshParsed = freshParser.parse();
+        const act1State = freshParsed.act1State;
+
+        if (!act1State) {
+            console.error('Act1State not found in save file');
+            return null;
+        }
+
+        const act1Location = freshParsed.stateLocations.find(loc => loc.name === 'Act1State');
+        if (!act1Location) {
+            console.error('Act1State location not found');
+            return null;
+        }
+
+        const targetKey = textureName.toLowerCase();
+        if (!act1State.textures.has(targetKey)) {
+            console.error(`Texture not found in Act1State: ${textureName}`);
+            return null;
+        }
+
+        // Replace texture data, preserving original name
+        const oldTex = act1State.textures.get(targetKey);
+        act1State.textures.set(targetKey, {
+            name: oldTex.name,
+            width: newTextureData.width,
+            height: newTextureData.height,
+            paletteSize: newTextureData.palette.length,
+            palette: newTextureData.palette,
+            pixels: newTextureData.pixels
+        });
+
+        return this._rebuildAct1State(workingBuffer, act1Location, act1State);
+    }
+
+    /**
+     * Rebuild the full buffer with updated Act1State
+     * @private
+     */
+    _rebuildAct1State(sourceBuffer, act1Location, act1State) {
+        const writer = new BinaryWriter(sourceBuffer.byteLength + 4096);
+        const srcArray = new Uint8Array(sourceBuffer);
+
+        // Write 7 planes
+        let readOffset = act1Location.dataOffset;
+        for (const plane of act1State.planes) {
+            writer.writeS16(plane.nameLength);
+            readOffset += 2;
+            if (plane.nameLength > 0) {
+                writer.writeString(plane.name);
+                readOffset += plane.nameLength;
+            }
+            // Copy 36 bytes of position/direction/up from source
+            writer.writeBytes(srcArray.slice(readOffset, readOffset + 36));
+            readOffset += 36;
+        }
+
+        // Write conditional textures in correct order
+        const vehicleOrder = ['helicopter', 'jetski', 'dunebuggy', 'racecar'];
+        const planeIndices = [3, 4, 5, 6];
+
+        for (let v = 0; v < vehicleOrder.length; v++) {
+            const vehicleName = vehicleOrder[v];
+            const planeIdx = planeIndices[v];
+            if (act1State.planes[planeIdx].nameLength <= 0) continue;
+
+            const textureNames = Act1TextureOrder[vehicleName];
+            for (const texName of textureNames) {
+                const texKey = texName.toLowerCase();
+                const tex = act1State.textures.get(texKey);
+                if (!tex) continue;
+
+                writer.writeS16(tex.name.length);
+                writer.writeString(tex.name);
+                writer.writeU32(tex.width);
+                writer.writeU32(tex.height);
+                writer.writeU32(tex.paletteSize);
+                for (const color of tex.palette) {
+                    writer.writeU8(color.r);
+                    writer.writeU8(color.g);
+                    writer.writeU8(color.b);
+                }
+                writer.writeBytes(tex.pixels);
+            }
+        }
+
+        // Write final fields
+        writer.writeS16(act1State.cptClickDialogueNextIndex);
+        writer.writeU8(act1State.playedExitExplanation);
+
+        const newAct1Data = writer.toUint8Array();
+        const oldAct1Size = act1Location.dataSize;
+        const newAct1Size = newAct1Data.length;
+        const sizeDiff = newAct1Size - oldAct1Size;
+
+        // Build final buffer
+        const newBuffer = new ArrayBuffer(sourceBuffer.byteLength + sizeDiff);
+        const newArray = new Uint8Array(newBuffer);
+
+        // Copy everything before Act1State data
+        newArray.set(srcArray.slice(0, act1Location.dataOffset));
+
+        // Write new Act1State data
+        newArray.set(newAct1Data, act1Location.dataOffset);
+
+        // Copy everything after old Act1State data
+        const afterOld = act1Location.dataOffset + oldAct1Size;
+        newArray.set(srcArray.slice(afterOld), act1Location.dataOffset + newAct1Size);
+
+        return newBuffer;
     }
 
     /**

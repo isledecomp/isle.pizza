@@ -73,6 +73,8 @@ export class VehiclePartRenderer {
         const texture = new THREE.CanvasTexture(canvas);
         texture.minFilter = THREE.NearestFilter;
         texture.magFilter = THREE.NearestFilter;
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
         return texture;
     }
 
@@ -167,6 +169,9 @@ export class VehiclePartRenderer {
                 }
 
                 const threeMesh = new THREE.Mesh(geometry, material);
+                if (meshTextureName) {
+                    threeMesh.userData.textureName = meshTextureName;
+                }
                 this.modelGroup.add(threeMesh);
 
                 // Track colorable meshes
@@ -250,6 +255,32 @@ export class VehiclePartRenderer {
         }
 
         return geometry;
+    }
+
+    /**
+     * Update texture on meshes matching a given texture name
+     * @param {string} textureName - Texture name to match (case-insensitive)
+     * @param {{ width: number, height: number, palette: Array<{r,g,b}>, pixels: Uint8Array }} textureData
+     */
+    updateTexture(textureName, textureData) {
+        if (!this.modelGroup) return;
+
+        const newTexture = this.createTexture(textureData);
+        const targetName = textureName.toLowerCase();
+
+        this.modelGroup.traverse((child) => {
+            if (!(child instanceof THREE.Mesh)) return;
+            if (child.userData.textureName !== targetName) return;
+
+            const oldMap = child.material.map;
+            child.material.map = newTexture;
+            // Set color to white so texture isn't tinted by the fallback color
+            child.material.color.setRGB(1, 1, 1);
+            child.material.needsUpdate = true;
+            if (oldMap && oldMap !== newTexture) oldMap.dispose();
+        });
+
+        this.renderer.render(this.scene, this.camera);
     }
 
     /**

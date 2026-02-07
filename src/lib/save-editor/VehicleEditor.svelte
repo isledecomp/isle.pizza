@@ -7,11 +7,15 @@
         VehicleWorlds,
         VehicleModels,
         VehicleNames,
-        VehiclePartColors
+        VehiclePartColors,
+        TexturedParts,
+        Act1PlaneIndices
     } from '../../core/savegame/constants.js';
+    import { squareTexture } from '../../core/savegame/imageQuantizer.js';
     import NavButton from '../NavButton.svelte';
     import ResetButton from '../ResetButton.svelte';
     import EditorTooltip from '../EditorTooltip.svelte';
+    import TexturePickerModal from './TexturePickerModal.svelte';
 
     export let slot;
     export let onUpdate = () => {};
@@ -37,6 +41,11 @@
     // Track current loaded part to avoid redundant reloads
     let loadedPartKey = null;
 
+    // Texture modal state
+    let showTextureModal = false;
+    let texturePalette = null;
+    let wdbTexture = null;
+
     // Current part info from flat list
     $: currentEntry = allParts[globalIndex];
     $: vehicle = currentEntry?.vehicle || 'dunebuggy';
@@ -48,7 +57,20 @@
         : 'lego red';
 
     // Check if current color differs from default
-    $: isDefault = currentPart && currentColorValue === currentPart.defaultColor;
+    $: isDefaultColor = currentPart && currentColorValue === currentPart.defaultColor;
+
+    // Texture info for current part (if it's a textured part)
+    $: textureInfo = currentPart ? TexturedParts[currentPart.part] || null : null;
+
+    // Check if vehicle has a plane in Act1State (vehicle is placed in world)
+    $: vehicleHasPlane = (() => {
+        if (!textureInfo || !slot?.act1State) return false;
+        const planeIdx = Act1PlaneIndices[textureInfo.vehicle];
+        return planeIdx !== undefined && slot.act1State.planes[planeIdx]?.nameLength > 0;
+    })();
+
+    // Can edit texture: part has texture info AND vehicle plane exists in Act1State
+    $: canEditTexture = textureInfo && vehicleHasPlane;
 
     onMount(async () => {
         try {
@@ -88,6 +110,22 @@
             loadCurrentPart();
         }
     }
+
+    // Check if current texture matches the WDB default.
+    // Declared after the loadCurrentPart block: Svelte 5 runs legacy $: effects
+    // in source order, and wdbTexture must be set before this evaluates.
+    function isTextureDefault(info, wdbTex, act1Textures) {
+        if (!info || !wdbTex || !act1Textures) return true;
+        const act1Tex = act1Textures.get(info.textureName.toLowerCase());
+        if (!act1Tex) return true;
+        if (act1Tex.pixels.length !== wdbTex.pixels.length) return false;
+        for (let i = 0; i < act1Tex.pixels.length; i++) {
+            if (act1Tex.pixels[i] !== wdbTex.pixels[i]) return false;
+        }
+        return true;
+    }
+
+    $: isDefaultTexture = isTextureDefault(textureInfo, wdbTexture, slot?.act1State?.textures);
 
     // Update color when variable changes (without reloading geometry)
     $: if (renderer && !loading && currentColorValue && loadedPartKey) {
@@ -133,8 +171,41 @@
             // Build parts map for shared LOD resolution
             const partsMap = buildPartsMap(wdbParser, world.parts);
 
+            // Build texture list, merging Act1State texture if available
+            let textures = modelData.textures || [];
+            if (textureInfo && slot?.act1State?.textures) {
+                const texKey = textureInfo.textureName.toLowerCase();
+                const act1Tex = slot.act1State.textures.get(texKey);
+                if (act1Tex) {
+                    const existingIdx = textures.findIndex(t => t.name?.toLowerCase() === texKey);
+                    if (existingIdx >= 0) {
+                        textures = [...textures];
+                        textures[existingIdx] = { ...act1Tex, name: texKey };
+                    } else {
+                        textures = [...textures, { ...act1Tex, name: texKey }];
+                    }
+                }
+            }
+
+            // Extract palette from the WDB texture (the ground truth) for the
+            // texture picker modal. The game's LoadBits() only overwrites pixel
+            // data on the DirectDraw surface — the palette always stays from the
+            // original WDB load. So custom pixel indices must reference THIS palette.
+            if (textureInfo) {
+                const texKey = textureInfo.textureName.toLowerCase();
+                const wdbTex = (modelData.textures || []).find(t => t.name === texKey);
+                if (wdbTex) {
+                    texturePalette = wdbTex.palette;
+                    wdbTexture = squareTexture(wdbTex);
+                } else {
+                    wdbTexture = null;
+                }
+            } else {
+                wdbTexture = null;
+            }
+
             // Load part with current color, textures, and parts map for shared LOD lookup
-            renderer.loadPartWithColor(partRoi, currentColorValue, modelData.textures || [], partsMap);
+            renderer.loadPartWithColor(partRoi, currentColorValue, textures, partsMap)
             loadedPartKey = partKey;
         } catch (e) {
             console.error('Failed to load part:', e);
@@ -171,17 +242,61 @@
     function resetColor() {
         if (!currentPart) return;
 
-        onUpdate({
+        const update = {
             variable: {
                 name: currentPart.variable,
                 value: currentPart.defaultColor
             }
+        };
+
+        // Reset texture to WDB default (equivalent to WriteDefaultTexture in the game)
+        if (canEditTexture && wdbTexture && renderer) {
+            const texKey = textureInfo.textureName.toLowerCase();
+            const saveData = squareTexture(wdbTexture);
+
+            renderer.updateTexture(texKey, saveData);
+
+            update.texture = {
+                textureName: textureInfo.textureName,
+                textureData: saveData
+            };
+        }
+
+        onUpdate(update);
+    }
+
+    function openTexturePicker() {
+        if (!canEditTexture) return;
+        showTextureModal = true;
+    }
+
+    function handleTextureSelect(textureData) {
+        if (!textureInfo || !renderer) return;
+
+        const texKey = textureInfo.textureName.toLowerCase();
+
+        // Square the texture for game compatibility — the game's DirectDraw
+        // surfaces are always square, and LoadBits() expects matching dimensions.
+        // No-op if already square.
+        const saveData = squareTexture(textureData);
+
+        // Update preview immediately
+        renderer.updateTexture(texKey, saveData);
+
+        // Save to file
+        onUpdate({
+            texture: {
+                textureName: textureInfo.textureName,
+                textureData: saveData
+            }
         });
+
+        showTextureModal = false;
     }
 
 </script>
 
-<EditorTooltip text="Click on the part to cycle through colors. Changes are automatically saved.">
+<EditorTooltip text="Click on the part to cycle through colors. Use the texture button to customize textures on supported parts (vehicle must be fully built first). Changes are automatically saved.">
     <!-- 3D Preview (clickable to cycle color) -->
     <div class="preview-container">
         <canvas
@@ -207,21 +322,46 @@
     </div>
 
     <!-- Part navigation below canvas -->
-    <div class="part-nav">
-        <NavButton direction="left" onclick={prevPart} />
-        <div class="part-info">
-            <span class="vehicle-name">{VehicleNames[vehicle]}</span>
-            <span class="part-name">{currentPart?.label || 'Unknown'}</span>
+    <div class="part-nav-wrapper">
+        <div class="part-nav">
+            <NavButton direction="left" onclick={prevPart} />
+            <div class="part-info">
+                <span class="vehicle-name">{VehicleNames[vehicle]}</span>
+                <span class="part-name">{currentPart?.label || 'Unknown'}</span>
+            </div>
+            <NavButton direction="right" onclick={nextPart} />
         </div>
-        <NavButton direction="right" onclick={nextPart} />
+        {#if textureInfo}
+            <button
+                type="button"
+                class="texture-btn"
+                class:disabled={!canEditTexture}
+                onclick={openTexturePicker}
+                disabled={!canEditTexture}
+                title={canEditTexture ? 'Edit texture' : 'Vehicle not placed in world'}
+            >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M14.5 2.5a1.5 1.5 0 0 0-3 0v1h-2v-1a1.5 1.5 0 0 0-3 0v1h-2v-1a1.5 1.5 0 0 0-3 0v2h1v2h-1v2h1v2h-1v2a1.5 1.5 0 0 0 3 0v-1h2v1a1.5 1.5 0 0 0 3 0v-1h2v1a1.5 1.5 0 0 0 3 0v-2h-1v-2h1v-2h-1v-2h1v-2zm-3 2h-2v2h2v-2zm-5 0h-2v2h2v-2zm0 4h-2v2h2v-2zm5 0h-2v2h2v-2z"/>
+                </svg>
+            </button>
+        {/if}
     </div>
 
     <div class="reset-container">
-        {#if !isDefault && !loading && !error && !partError}
+        {#if (!isDefaultColor || !isDefaultTexture) && !loading && !error && !partError}
             <ResetButton onclick={resetColor} />
         {/if}
     </div>
 </EditorTooltip>
+
+{#if showTextureModal && textureInfo}
+    <TexturePickerModal
+        {textureInfo}
+        palette={texturePalette}
+        onSelect={handleTextureSelect}
+        onClose={() => showTextureModal = false}
+    />
+{/if}
 
 <style>
     .preview-container {
@@ -278,11 +418,15 @@
         to { transform: rotate(360deg); }
     }
 
+    .part-nav-wrapper {
+        position: relative;
+        margin-top: 10px;
+    }
+
     .part-nav {
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-top: 10px;
     }
 
     .part-info {
@@ -306,5 +450,34 @@
 
     .reset-container {
         height: 1.6em;
+    }
+
+    .texture-btn {
+        position: absolute;
+        right: -36px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        background: var(--color-bg-input);
+        border: 1px solid var(--color-border-medium);
+        border-radius: 6px;
+        color: var(--color-text-light);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .texture-btn:hover:not(.disabled) {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+    }
+
+    .texture-btn.disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
     }
 </style>

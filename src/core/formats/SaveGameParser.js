@@ -280,7 +280,7 @@ export class SaveGameParser {
         }
 
         if (name === 'Act1State') {
-            return this.skipAct1State();
+            return this.parseAct1State();
         }
 
         // Unknown state - this shouldn't happen with valid save files
@@ -305,71 +305,88 @@ export class SaveGameParser {
     }
 
     /**
-     * Skip Act1State (variable length with conditional textures)
-     * @returns {number} - Number of bytes skipped
+     * Parse Act1State (variable length with conditional textures)
+     * @returns {number} - Number of bytes consumed
      */
-    skipAct1State() {
+    parseAct1State() {
         const startOffset = this.reader.tell();
 
         // Read 7 named planes
-        const planeNameLengths = [];
+        const planes = [];
         for (let i = 0; i < 7; i++) {
             const nameLength = this.reader.readS16();
-            planeNameLengths.push(nameLength);
+            let name = '';
             if (nameLength > 0) {
-                this.reader.skip(nameLength); // name
+                name = this.reader.readString(nameLength);
             }
             this.reader.skip(36); // position(12) + direction(12) + up(12)
+            planes.push({ name, nameLength });
         }
 
         // Conditional textures based on which planes have names
-        const helicopterHasName = planeNameLengths[3] > 0;
-        const jetskiHasName = planeNameLengths[4] > 0;
-        const dunebuggyHasName = planeNameLengths[5] > 0;
-        const racecarHasName = planeNameLengths[6] > 0;
+        const textures = new Map();
+        const textureOrder = [];
 
-        if (helicopterHasName) {
-            for (let i = 0; i < 3; i++) {
-                this.skipAct1Texture();
-            }
+        if (planes[3].nameLength > 0) {
+            for (let i = 0; i < 3; i++) textureOrder.push(this.readAct1Texture(textures));
         }
-
-        if (jetskiHasName) {
-            for (let i = 0; i < 2; i++) {
-                this.skipAct1Texture();
-            }
+        if (planes[4].nameLength > 0) {
+            for (let i = 0; i < 2; i++) textureOrder.push(this.readAct1Texture(textures));
         }
-
-        if (dunebuggyHasName) {
-            this.skipAct1Texture();
+        if (planes[5].nameLength > 0) {
+            textureOrder.push(this.readAct1Texture(textures));
         }
-
-        if (racecarHasName) {
-            for (let i = 0; i < 3; i++) {
-                this.skipAct1Texture();
-            }
+        if (planes[6].nameLength > 0) {
+            for (let i = 0; i < 3; i++) textureOrder.push(this.readAct1Texture(textures));
         }
 
         // Final fields
-        this.reader.skip(2); // cpt_click_dialogue_next_index (S16)
-        this.reader.skip(1); // played_exit_explanation (U8)
+        const cptClickDialogueNextIndex = this.reader.readS16();
+        const playedExitExplanation = this.reader.readU8();
+
+        this.parsed.act1State = {
+            planes,
+            textures,
+            textureOrder,
+            startOffset,
+            endOffset: this.reader.tell(),
+            cptClickDialogueNextIndex,
+            playedExitExplanation
+        };
 
         return this.reader.tell() - startOffset;
     }
 
     /**
-     * Skip a single Act1 texture
+     * Read a single Act1 texture into the textures map
+     * @param {Map} textures - Map to store texture data
+     * @returns {string} - Texture name
      */
-    skipAct1Texture() {
+    readAct1Texture(textures) {
         const nameLength = this.reader.readS16();
+        let name = '';
         if (nameLength > 0) {
-            this.reader.skip(nameLength); // name
+            name = this.reader.readString(nameLength);
         }
+
         const width = this.reader.readU32();
         const height = this.reader.readU32();
-        const paletteCount = this.reader.readU32();
-        this.reader.skip(paletteCount * 3); // palette (RGB triplets)
-        this.reader.skip(width * height); // bitmap data
+        const paletteSize = this.reader.readU32();
+
+        const palette = [];
+        for (let i = 0; i < paletteSize; i++) {
+            palette.push({
+                r: this.reader.readU8(),
+                g: this.reader.readU8(),
+                b: this.reader.readU8()
+            });
+        }
+
+        const pixels = new Uint8Array(this.reader.slice(width * height));
+
+        const nameLower = name.toLowerCase();
+        textures.set(nameLower, { name, width, height, paletteSize, palette, pixels });
+        return nameLower;
     }
 
     /**
