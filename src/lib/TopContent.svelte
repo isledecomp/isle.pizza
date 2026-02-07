@@ -68,7 +68,7 @@
 
 <div id="top-content">
     <div class="video-container">
-        <img id="install-video" width="260" height="260" src="images/install.webp" alt="Install Game">
+        <img id="install-video" width="300" height="300" fetchpriority="high" src="images/install.webp" alt="Install Game">
         <span
             id="sound-toggle-emoji"
             title={$soundEnabled ? 'Pause Audio' : 'Play Audio'}
