@@ -1,18 +1,17 @@
 <script>
     import { onMount } from 'svelte';
-    import { parseTex } from '../../core/formats/TexParser.js';
     import { quantizeImage, squareTexture } from '../../core/savegame/imageQuantizer.js';
     import { saveCustomTexture, listCustomTextures, deleteCustomTexture } from '../../core/savegame/textureStorage.js';
     import Carousel from '../Carousel.svelte';
 
     export let textureInfo;
     export let palette = null;
+    export let defaults = null;
     export let onSelect = () => {};
     export let onClose = () => {};
 
-    let defaults = [];
+    let defaultTextures = [];
     let customTextures = [];
-    let loadingDefaults = true;
     let fileInput;
     let activeTab = 'default';
     let selectedCustomId = null;
@@ -22,40 +21,20 @@
     let targetHeight = 128;
 
     onMount(async () => {
-        await loadDefaults();
+        initDefaults();
         await loadCustomTextures();
     });
 
-    async function loadDefaults() {
-        loadingDefaults = true;
-        const loaded = [];
-
-        for (const texFile of textureInfo.texFiles) {
-            try {
-                const response = await fetch(`/${texFile}.tex`);
-                if (!response.ok) continue;
-                const buffer = await response.arrayBuffer();
-                const parsed = parseTex(buffer);
-                if (parsed.textures.length > 0) {
-                    const tex = parsed.textures[0];
-                    loaded.push({
-                        name: texFile,
-                        ...tex,
-                        dataUrl: textureToDataUrl(tex)
-                    });
-                }
-            } catch (e) {
-                console.error(`Failed to load ${texFile}.tex:`, e);
-            }
+    function initDefaults() {
+        const source = defaults || [];
+        defaultTextures = source.map(tex => ({
+            ...tex,
+            dataUrl: textureToDataUrl(tex)
+        }));
+        if (defaultTextures.length > 0) {
+            targetWidth = defaultTextures[0].width;
+            targetHeight = defaultTextures[0].height;
         }
-
-        if (loaded.length > 0) {
-            targetWidth = loaded[0].width;
-            targetHeight = loaded[0].height;
-        }
-
-        defaults = loaded;
-        loadingDefaults = false;
     }
 
     async function loadCustomTextures() {
@@ -127,7 +106,7 @@
 
         // Use the WDB palette (passed as prop) — this is the palette the game's
         // DirectDraw surface actually uses. Fall back to first default's palette.
-        const targetPalette = palette || defaults[0]?.palette;
+        const targetPalette = palette || defaultTextures[0]?.palette;
         if (!targetPalette) return;
 
         const img = new Image();
@@ -210,11 +189,8 @@
 
         <div class="modal-body">
             {#if activeTab === 'default'}
-                {#if loadingDefaults}
-                    <div class="loading">Loading textures...</div>
-                {:else}
                     <div class="texture-grid">
-                        {#each defaults as tex}
+                        {#each defaultTextures as tex}
                             <button
                                 type="button"
                                 class="texture-thumb"
@@ -225,7 +201,6 @@
                             </button>
                         {/each}
                     </div>
-                {/if}
             {:else}
                 {#if customTextures.length > 0}
                     <div class="custom-carousel">
@@ -331,13 +306,6 @@
 
     .modal-body {
         padding: 14px;
-    }
-
-    .loading {
-        color: var(--color-text-muted);
-        font-size: 0.85em;
-        text-align: center;
-        padding: 20px 0;
     }
 
     .texture-grid {

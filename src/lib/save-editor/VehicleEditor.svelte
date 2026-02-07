@@ -12,6 +12,7 @@
         Act1PlaneIndices
     } from '../../core/savegame/constants.js';
     import { squareTexture } from '../../core/savegame/imageQuantizer.js';
+    import { parseTex } from '../../core/formats/TexParser.js';
     import NavButton from '../NavButton.svelte';
     import ResetButton from '../ResetButton.svelte';
     import EditorTooltip from '../EditorTooltip.svelte';
@@ -45,6 +46,7 @@
     let showTextureModal = false;
     let texturePalette = null;
     let wdbTexture = null;
+    let preloadedDefaults = null;
 
     // Current part info from flat list
     $: currentEntry = allParts[globalIndex];
@@ -207,9 +209,33 @@
             // Load part with current color, textures, and parts map for shared LOD lookup
             renderer.loadPartWithColor(partRoi, currentColorValue, textures, partsMap)
             loadedPartKey = partKey;
+
+            // Preload default .tex files in background for the texture picker
+            if (textureInfo) {
+                preloadDefaultTextures(textureInfo);
+            } else {
+                preloadedDefaults = null;
+            }
         } catch (e) {
             console.error('Failed to load part:', e);
             partError = e.message;
+        }
+    }
+
+    async function preloadDefaultTextures(info) {
+        const loaded = [];
+        for (const texFile of info.texFiles) {
+            const response = await fetch(`/${texFile}.tex`);
+            if (!response.ok) continue;
+            const buffer = await response.arrayBuffer();
+            const parsed = parseTex(buffer);
+            if (parsed.textures.length > 0) {
+                loaded.push({ name: texFile, ...parsed.textures[0] });
+            }
+        }
+        // Only apply if textureInfo hasn't changed since we started
+        if (textureInfo === info) {
+            preloadedDefaults = loaded;
         }
     }
 
@@ -358,6 +384,7 @@
     <TexturePickerModal
         {textureInfo}
         palette={texturePalette}
+        defaults={preloadedDefaults}
         onSelect={handleTextureSelect}
         onClose={() => showTextureModal = false}
     />
