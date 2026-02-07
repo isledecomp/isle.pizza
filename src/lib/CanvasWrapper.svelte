@@ -4,7 +4,7 @@
 
 <div id="canvas-wrapper">
     <div id="loading-gif-overlay">
-        <img src="cdspin.gif" alt="Loading game...">
+        <img src="images/cdspin.gif" alt="Loading game...">
         <div class="quote-block">
             <p class="quote-text">"Whoops! You have to put the CD in your computer"</p>
             <p class="quote-attribution">- The Infomaniac (1997)</p>

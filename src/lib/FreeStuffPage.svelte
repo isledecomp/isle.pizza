@@ -11,7 +11,7 @@
         { href: 'https://github.com/isledecomp/LEGOIslandRebuilder', title: 'LEGO Island Rebuilder', desc: 'A powerful launcher and tool for patching and modding the original 1997 PC version of LEGO Island. Essential for play and modding.' },
         { href: 'https://github.com/isledecomp/SIEdit', title: 'SIEdit', desc: 'A suite of tools developed by the decompilation team for viewing and editing the ".si" script and resource files from the original game.' },
         { href: 'https://www.legoisland.org/wiki/The_Making_of_LEGO_Island', title: 'The Making of LEGO Island, a memoir by Wes Jenkins', desc: 'Read the fascinating, incomplete memoir from Creative Director Wes Jenkins, detailing the development process and the team behind the game.' },
-        { href: '/poster.pdf', title: 'LEGO Island: Free Poster', desc: 'Download a copy of the iconic poster that was originally included with the retail release of the game.' },
+        { href: '/pdf/poster.pdf', title: 'LEGO Island: Free Poster', desc: 'Download a copy of the iconic poster that was originally included with the retail release of the game.' },
         { href: 'https://brickstobytes.org/games/lego-island', title: 'Development Materials Archive', desc: 'Explore a collection of development materials, concept art, and other historical assets from the creation of LEGO Island.' },
         { href: 'https://le717.github.io/LEGO-Island-VGF/legoisland/#interview', title: 'Video Game Flashback: An Interview with Wes Jenkins', desc: 'A detailed interview with LEGO Island\'s Creative Director, Wes Jenkins, offering unique insights into the game\'s production.' },
         { href: 'https://www.youtube.com/watch?v=fodBG_QylVM', title: 'LEGO Island - Behind the Scenes', desc: 'Watch a rare promotional video created during the game\'s development, showcasing its progress and vision at the time.' },
@@ -26,7 +26,7 @@
         <div class="resource-list">
             <div class="quote-panel">
                 <div class="quote-panel-art">
-                    <img src="congrats.webp" alt="LEGO Island characters celebrating">
+                    <img src="images/congrats.webp" alt="LEGO Island characters celebrating">
                 </div>
                 <blockquote class="quote-panel-content">
                     <p>"In November of 2010, after all was said and done, I started getting emails from a few kids

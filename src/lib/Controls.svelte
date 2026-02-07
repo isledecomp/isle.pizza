@@ -8,11 +8,11 @@
     let rendererValue = "0 0x682656f3 0x0 0x0 0x4000000"; // WebGL default
 
     const buttons = [
-        { id: 'run-game-btn', off: 'run_game_off.webp', on: 'run_game_on.webp', alt: 'Run Game', width: 135, height: 164, action: handleRunGame },
-        { id: 'configure-btn', off: 'configure_off.webp', on: 'configure_on.webp', alt: 'Configure', width: 130, height: 147, action: () => navigateTo('configure') },
-        { id: 'free-stuff-btn', off: 'free_stuff_off.webp', on: 'free_stuff_on.webp', alt: 'Free Stuff', width: 134, height: 149, action: () => navigateTo('free-stuff') },
-        { id: 'read-me-btn', off: 'read_me_off.webp', on: 'read_me_on.webp', alt: 'Read Me', width: 134, height: 149, action: () => navigateTo('read-me') },
-        { id: 'cancel-btn', off: 'cancel_off.webp', on: 'cancel_on.webp', alt: 'Cancel', width: 93, height: 145, action: () => showGoodbyePopup.set(true) }
+        { id: 'run-game-btn', off: 'images/run_game_off.webp', on: 'images/run_game_on.webp', alt: 'Run Game', width: 135, height: 164, action: handleRunGame },
+        { id: 'configure-btn', off: 'images/configure_off.webp', on: 'images/configure_on.webp', alt: 'Configure', width: 130, height: 147, action: () => navigateTo('configure') },
+        { id: 'free-stuff-btn', off: 'images/free_stuff_off.webp', on: 'images/free_stuff_on.webp', alt: 'Free Stuff', width: 134, height: 149, action: () => navigateTo('free-stuff') },
+        { id: 'read-me-btn', off: 'images/read_me_off.webp', on: 'images/read_me_on.webp', alt: 'Read Me', width: 134, height: 149, action: () => navigateTo('read-me') },
+        { id: 'cancel-btn', off: 'images/cancel_off.webp', on: 'images/cancel_on.webp', alt: 'Cancel', width: 93, height: 145, action: () => showGoodbyePopup.set(true) }
     ];
 
     function handleRunGame() {

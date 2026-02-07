@@ -43,11 +43,11 @@
 
     // Character icons mapping
     const characterIcons = {
-        [Actor.PEPPER]: { normal: 'pepper.webp', selected: 'pepper-selected.webp' },
-        [Actor.MAMA]: { normal: 'mama.webp', selected: 'mama-selected.webp' },
-        [Actor.PAPA]: { normal: 'papa.webp', selected: 'papa-selected.webp' },
-        [Actor.NICK]: { normal: 'nick.webp', selected: 'nick-selected.webp' },
-        [Actor.LAURA]: { normal: 'laura.webp', selected: 'laura-selected.webp' }
+        [Actor.PEPPER]: { normal: 'images/pepper.webp', selected: 'images/pepper-selected.webp' },
+        [Actor.MAMA]: { normal: 'images/mama.webp', selected: 'images/mama-selected.webp' },
+        [Actor.PAPA]: { normal: 'images/papa.webp', selected: 'images/papa-selected.webp' },
+        [Actor.NICK]: { normal: 'images/nick.webp', selected: 'images/nick-selected.webp' },
+        [Actor.LAURA]: { normal: 'images/laura.webp', selected: 'images/laura-selected.webp' }
     };
 
     // Carousel state (bound from Carousel component)
@@ -253,7 +253,7 @@
     <BackButton />
     <div class="page-inner-content config-layout">
         <div class="config-art-panel">
-            <img src="save.webp" alt="LEGO Island Save Editor">
+            <img src="images/save.webp" alt="LEGO Island Save Editor">
         </div>
         <div class="config-main">
             {#if loading || error || existingSlots.length > 0}
@@ -271,7 +271,7 @@
                                 onclick={() => handleSlotSelect(slot.slotNumber)}
                             >
                                 <img
-                                    src={characterIcons[slot.header?.actorId]?.selected || 'pepper-selected.webp'}
+                                    src={characterIcons[slot.header?.actorId]?.selected || 'images/pepper-selected.webp'}
                                     alt={ActorNames[slot.header?.actorId] || 'Character'}
                                     class="slot-character-icon"
                                     draggable="false"
@@ -285,7 +285,7 @@
 
             {#if !loading && !error && existingSlots.length === 0}
                 <div class="no-saves-state">
-                    <img src="callfail.webp" alt="" class="no-saves-image" />
+                    <img src="images/callfail.webp" alt="" class="no-saves-image" />
                     <span class="no-saves-title">No save files found</span>
                     <p class="no-saves-description">
                         Start playing LEGO Island and your save will appear here automatically.
@@ -293,7 +293,7 @@
                 </div>
             {:else if !loading && !error && existingSlots.length > 0 && !currentSlot}
                 <div class="no-saves-state">
-                    <img src="register.webp" alt="" class="no-saves-image" />
+                    <img src="images/register.webp" alt="" class="no-saves-image" />
                     <span class="no-saves-title">Select a save file above</span>
                     <p class="no-saves-description">
                         Choose a save slot to view and edit your player name, character, and high scores.

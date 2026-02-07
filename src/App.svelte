@@ -119,7 +119,7 @@
 
 <!-- Audio element outside page routing so it persists across navigation -->
 <audio id="install-audio" loop preload="none">
-    <source src="install.mp3" type="audio/mpeg">
+    <source src="audio/install.mp3" type="audio/mpeg">
 </audio>
 
 <GoodbyePopup />

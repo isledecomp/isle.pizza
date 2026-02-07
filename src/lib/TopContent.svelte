@@ -68,7 +68,7 @@
 
 <div id="top-content">
     <div class="video-container">
-        <img id="install-video" width="260" height="260" src="install.webp" alt="Install Game">
+        <img id="install-video" width="260" height="260" src="images/install.webp" alt="Install Game">
         <span
             id="sound-toggle-emoji"
             title={$soundEnabled ? 'Pause Audio' : 'Play Audio'}
@@ -85,7 +85,7 @@
             id="island-logo-img"
             width="567"
             height="198"
-            src={$debugEnabled ? 'ogel.webp' : 'island.webp'}
+            src={$debugEnabled ? 'images/ogel.webp' : 'images/island.webp'}
             alt={$debugEnabled ? 'OGEL Mode Enabled' : 'Lego Island Logo'}
         >
     </button>
