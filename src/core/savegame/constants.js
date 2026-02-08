@@ -2,6 +2,12 @@
  * Constants and enums from KSY save file specifications
  */
 
+// Re-export actor constants
+export { ActorInfoInit, ActorLODs, ActorPart, ActorLODFlags, ActorPartLabels,
+    CharacterType, getCharacterType, CharacterFieldOffsets, CHARACTER_RECORD_SIZE,
+    hatPartNames, bodyPartNames, chestTextures, faceTextures, colorAliases
+} from './actorConstants.js';
+
 // Save game file version (must match for valid saves)
 export const SAVEGAME_VERSION = 0x1000c; // 65548
 

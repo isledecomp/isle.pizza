@@ -100,10 +100,31 @@ export class SaveGameParser {
     }
 
     /**
-     * Skip character manager data (66 characters * 16 bytes = 1056 bytes)
+     * Parse character manager data (66 characters * 16 bytes = 1056 bytes)
+     * Each character: sound(S32) + move(S32) + mood(U8)
+     *   + hatPartNameIndex(U8) + hatNameIndex(U8) + infogronNameIndex(U8)
+     *   + armlftNameIndex(U8) + armrtNameIndex(U8) + leglftNameIndex(U8) + legrtNameIndex(U8)
      */
-    skipCharacters() {
-        this.reader.skip(66 * 16);
+    parseCharacters() {
+        this.parsed.charactersOffset = this.reader.tell();
+        const characters = [];
+
+        for (let i = 0; i < 66; i++) {
+            characters.push({
+                sound: this.reader.readS32(),
+                move: this.reader.readS32(),
+                mood: this.reader.readU8(),
+                hatPartNameIndex: this.reader.readU8(),
+                hatNameIndex: this.reader.readU8(),
+                infogronNameIndex: this.reader.readU8(),
+                armlftNameIndex: this.reader.readU8(),
+                armrtNameIndex: this.reader.readU8(),
+                leglftNameIndex: this.reader.readU8(),
+                legrtNameIndex: this.reader.readU8()
+            });
+        }
+
+        this.parsed.characters = characters;
     }
 
     /**
@@ -403,7 +424,7 @@ export class SaveGameParser {
     parse() {
         this.parseHeader();
         this.parseVariables();
-        this.skipCharacters();
+        this.parseCharacters();
         this.skipPlants();
         this.skipBuildings();
         this.parseGameStates();
