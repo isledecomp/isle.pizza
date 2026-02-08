@@ -284,6 +284,36 @@ export class ActorRenderer extends BaseRenderer {
     }
 
     /**
+     * Center and scale the actor, excluding the hat from the bounding box
+     * so that changing hats doesn't shift the actor's position.
+     */
+    centerAndScaleModel(scaleFactor) {
+        if (!this.modelGroup) return;
+
+        const box = new THREE.Box3();
+        for (let i = 0; i < this.partGroups.length; i++) {
+            if (i === 1 || !this.partGroups[i]) continue; // skip hat
+            box.expandByObject(this.partGroups[i]);
+        }
+
+        if (box.isEmpty()) {
+            super.centerAndScaleModel(scaleFactor);
+            return;
+        }
+
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+
+        this.modelGroup.position.sub(center);
+
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if (maxDim > 0) {
+            const scale = scaleFactor / maxDim;
+            this.modelGroup.scale.setScalar(scale);
+        }
+    }
+
+    /**
      * Apply position/direction/up transform from ActorLOD data.
      * The game uses CalcLocalTransform with direction/up vectors.
      */
