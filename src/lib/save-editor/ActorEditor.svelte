@@ -2,7 +2,7 @@
     import { onMount, onDestroy } from 'svelte';
     import { ActorRenderer } from '../../core/rendering/ActorRenderer.js';
     import { WdbParser, buildGlobalPartsMap } from '../../core/formats/WdbParser.js';
-    import { ActorInfoInit, ActorPart } from '../../core/savegame/actorConstants.js';
+    import { ActorInfoInit, ActorPart, ActorDisplayNames } from '../../core/savegame/actorConstants.js';
     import { Actor } from '../../core/savegame/constants.js';
     import NavButton from '../NavButton.svelte';
     import ResetButton from '../ResetButton.svelte';
@@ -24,7 +24,7 @@
     let loadedActorKey = null;
 
     $: actorInfo = ActorInfoInit[actorIndex];
-    $: actorName = actorInfo?.name || 'Unknown';
+    $: actorName = ActorDisplayNames[actorIndex] || actorInfo?.name || 'Unknown';
     $: charState = slot?.characters?.[actorIndex];
 
     $: isDefault = actorInfo && charState &&
@@ -317,7 +317,7 @@
 
     .part-info {
         text-align: center;
-        min-width: 100px;
+        min-width: 150px;
     }
 
     .actor-index {
