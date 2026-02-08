@@ -1,18 +1,8 @@
 import * as THREE from 'three';
-import { ActorLODs, ActorLODFlags, ActorInfoInit, partToLODIndex } from '../savegame/actorConstants.js';
+import { ActorLODs, ActorLODFlags, ActorInfoInit } from '../savegame/actorConstants.js';
+import { LegoColors } from '../savegame/constants.js';
 import { parseAnimation } from '../formats/AnimationParser.js';
-
-// Extended LEGO colors (includes brown and lt grey not in the vehicle editor)
-const ExtendedLegoColors = Object.freeze({
-    'lego black': { r: 0x21, g: 0x21, b: 0x21 },
-    'lego blue': { r: 0x00, g: 0x54, b: 0x8c },
-    'lego green': { r: 0x00, g: 0x78, b: 0x2d },
-    'lego red': { r: 0xcb, g: 0x12, b: 0x20 },
-    'lego white': { r: 0xfa, g: 0xfa, b: 0xfa },
-    'lego yellow': { r: 0xff, g: 0xb9, b: 0x00 },
-    'lego brown': { r: 0x4a, g: 0x23, b: 0x00 },
-    'lego lt grey': { r: 0xc0, g: 0xc0, b: 0xc0 }
-});
+import { BaseRenderer } from './BaseRenderer.js';
 
 /**
  * Map actor index to animation suffix index (from g_characters[].m_unk0x16).
@@ -39,11 +29,6 @@ const ACTOR_SUFFIX_INDEX = (() => {
     map[56] = 1;  // pep → Pe (same as pepper)
     return map;
 })();
-
-/**
- * Suffix names indexed by g_cycles row index.
- */
-const SUFFIX_NAMES = ['xx', 'Pe', 'Ma', 'Pa', 'Ni', 'La', 'Br', 'Bd', 'Pg', 'Rd', 'Sy'];
 
 /**
  * g_cycles[11][17] — animation name table from legoanimationmanager.cpp.
@@ -95,72 +80,19 @@ const PART_NAME_TO_ANIM_NODE = {
  * Renderer for full LEGO characters assembled from WDB global parts.
  * Mirrors the game's LegoCharacterManager::CreateActorROI logic.
  */
-export class ActorRenderer {
+export class ActorRenderer extends BaseRenderer {
     constructor(canvas) {
-        this.canvas = canvas;
-        this.animating = false;
-        this.modelGroup = null;
+        super(canvas);
         this.partGroups = []; // 10 part groups for click targeting
-        this.textures = new Map();
         this.clock = new THREE.Clock();
         this.mixer = null;
         this.currentAction = null;
         this.animationCache = new Map(); // suffix → parsed animation data
 
-        this.scene = new THREE.Scene();
-
-        this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
         this.camera.position.set(2, 0.8, 3.5);
         this.camera.lookAt(0, 0.2, 0);
 
-        this.renderer = new THREE.WebGLRenderer({
-            canvas,
-            antialias: true,
-            alpha: true
-        });
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        this.renderer.setClearColor(0x000000, 0);
-
         this.raycaster = new THREE.Raycaster();
-
-        this.setupLighting();
-    }
-
-    setupLighting() {
-        const ambient = new THREE.AmbientLight(0xffffff, 0.8);
-        this.scene.add(ambient);
-
-        const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        sunLight.position.set(1, 2, 3);
-        this.scene.add(sunLight);
-    }
-
-    /**
-     * Create a Three.js texture from parsed texture data
-     */
-    createTexture(textureData) {
-        const canvas = document.createElement('canvas');
-        canvas.width = textureData.width;
-        canvas.height = textureData.height;
-        const ctx = canvas.getContext('2d');
-
-        const imageData = ctx.createImageData(textureData.width, textureData.height);
-        for (let i = 0; i < textureData.pixels.length; i++) {
-            const colorIdx = textureData.pixels[i];
-            const color = textureData.palette[colorIdx] || { r: 0, g: 0, b: 0 };
-            imageData.data[i * 4 + 0] = color.r;
-            imageData.data[i * 4 + 1] = color.g;
-            imageData.data[i * 4 + 2] = color.b;
-            imageData.data[i * 4 + 3] = 255;
-        }
-        ctx.putImageData(imageData, 0, 0);
-
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.minFilter = THREE.NearestFilter;
-        texture.magFilter = THREE.NearestFilter;
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        return texture;
     }
 
     /**
@@ -174,17 +106,13 @@ export class ActorRenderer {
         this.clearModel();
 
         const actorInfo = ActorInfoInit[actorIndex];
-        if (!actorInfo) return;
-
-        const charState = characters ? characters[actorIndex] : null;
+        const charState = characters[actorIndex];
 
         // Build texture lookup
         this.textures.clear();
-        if (globalTextures) {
-            for (const tex of globalTextures) {
-                if (tex.name) {
-                    this.textures.set(tex.name.toLowerCase(), this.createTexture(tex));
-                }
+        for (const tex of globalTextures) {
+            if (tex.name) {
+                this.textures.set(tex.name.toLowerCase(), this.createTexture(tex));
             }
         }
 
@@ -193,8 +121,7 @@ export class ActorRenderer {
 
         // Assemble 10 body parts (matching CreateActorROI loop: i=0..9 maps to ActorLODs[1..10])
         for (let i = 0; i < 10; i++) {
-            const lodIdx = partToLODIndex[i];
-            const actorLOD = ActorLODs[lodIdx];
+            const actorLOD = ActorLODs[i + 1];
             const part = actorInfo.parts[i];
 
             // Resolve part name for body (i=0) and hat (i=1)
@@ -235,7 +162,7 @@ export class ActorRenderer {
             this.partGroups[i] = partGroup;
         }
 
-        this.centerAndScaleModel();
+        this.centerAndScaleModel(1.8);
         // Rotate 180° around Y so actor faces the camera (negating X for
         // left-to-right-handed conversion flips the facing direction)
         this.modelGroup.rotation.y = Math.PI;
@@ -251,65 +178,38 @@ export class ActorRenderer {
 
     /**
      * Resolve which part geometry to use (body variant or hat type).
-     * For body (i=0): partNameIndices[charState.hatPartNameIndex or default] → bodyPartNames index
-     * For hat (i=1): partNameIndices[charState.hatPartNameIndex or default] → hatPartNames
-     * The save file stores the index into the partNameIndices array.
      */
     resolvePartName(part, charState, partIdx) {
         if (!part.partNameIndices || !part.partNames) return null;
 
-        let nameIdx = part.partNameIndex; // default from actorInfoInit
-
-        // For body (part 0): the partNameIndex selects from bodyPartNames
-        // For hat (part 1): the partNameIndex selects from hatPartNames
-        // The save file overrides hatPartNameIndex for part 1 only
+        let nameIdx = part.partNameIndex;
         if (partIdx === 1 && charState) {
             nameIdx = charState.hatPartNameIndex;
         }
 
-        if (nameIdx >= part.partNameIndices.length) {
-            nameIdx = part.partNameIndex;
-        }
-
-        const resolvedIdx = part.partNameIndices[nameIdx];
-        if (resolvedIdx === undefined || resolvedIdx >= part.partNames.length) {
-            return part.partNames[part.partNameIndices[part.partNameIndex]];
-        }
-
-        return part.partNames[resolvedIdx];
+        return part.partNames[part.partNameIndices[nameIdx]];
     }
 
     /**
      * Resolve the color or texture name for a part.
-     * Uses nameIndices[nameIndex] → names[] (colorAliases or faceTextures/chestTextures)
      */
     resolveNameValue(part, charState, partIdx) {
         if (!part.nameIndices || !part.names) return null;
 
-        let nameIdx = part.nameIndex; // default
+        let nameIdx = part.nameIndex;
 
-        // Save file overrides specific fields
         if (charState) {
             switch (partIdx) {
-                case 1: nameIdx = charState.hatNameIndex; break; // hat color
-                case 2: nameIdx = charState.infogronNameIndex; break; // infogron color
-                case 4: nameIdx = charState.armlftNameIndex; break; // arm left
-                case 5: nameIdx = charState.armrtNameIndex; break; // arm right
-                case 8: nameIdx = charState.leglftNameIndex; break; // leg left
-                case 9: nameIdx = charState.legrtNameIndex; break; // leg right
+                case 1: nameIdx = charState.hatNameIndex; break;
+                case 2: nameIdx = charState.infogronNameIndex; break;
+                case 4: nameIdx = charState.armlftNameIndex; break;
+                case 5: nameIdx = charState.armrtNameIndex; break;
+                case 8: nameIdx = charState.leglftNameIndex; break;
+                case 9: nameIdx = charState.legrtNameIndex; break;
             }
         }
 
-        if (nameIdx >= part.nameIndices.length) {
-            nameIdx = part.nameIndex;
-        }
-
-        const resolvedIdx = part.nameIndices[nameIdx];
-        if (resolvedIdx === undefined || resolvedIdx >= part.names.length) {
-            return part.names[part.nameIndices[part.nameIndex]];
-        }
-
-        return part.names[resolvedIdx];
+        return part.names[part.nameIndices[nameIdx]];
     }
 
     /**
@@ -337,7 +237,7 @@ export class ActorRenderer {
 
         if ((useColor || bodyUsesDefaultGeom) && !partTexture) {
             // Resolve LEGO color
-            const colorEntry = ExtendedLegoColors[resolvedName] || ExtendedLegoColors['lego white'];
+            const colorEntry = LegoColors[resolvedName] || LegoColors['lego white'];
             partColor = new THREE.Color(colorEntry.r / 255, colorEntry.g / 255, colorEntry.b / 255);
         }
 
@@ -384,110 +284,14 @@ export class ActorRenderer {
     }
 
     /**
-     * Create geometry from mesh data (same approach as VehiclePartRenderer)
-     */
-    createGeometry(mesh, lod) {
-        if (!mesh.polygonIndices || mesh.polygonIndices.length === 0) return null;
-
-        const hasTexture = mesh.textureIndices && mesh.textureIndices.length > 0;
-
-        const vertexIndicesPacked = [];
-        for (const poly of mesh.polygonIndices) {
-            vertexIndicesPacked.push(poly.a, poly.b, poly.c);
-        }
-
-        const textureIndicesFlat = [];
-        if (hasTexture) {
-            for (const texPoly of mesh.textureIndices) {
-                textureIndicesFlat.push(texPoly.a, texPoly.b, texPoly.c);
-            }
-        }
-
-        const meshVertices = [];
-        const meshNormals = [];
-        const meshUvs = [];
-        const indices = [];
-
-        for (let i = 0; i < vertexIndicesPacked.length; i++) {
-            const packed = vertexIndicesPacked[i];
-
-            if ((packed & 0x80000000) !== 0) {
-                indices.push(meshVertices.length);
-
-                const gv = packed & 0xFFFF;
-                const v = lod.vertices[gv] || { x: 0, y: 0, z: 0 };
-                meshVertices.push([-v.x, v.y, v.z]);
-
-                const gn = (packed >>> 16) & 0x7fff;
-                const n = lod.normals[gn] || { x: 0, y: 1, z: 0 };
-                meshNormals.push([-n.x, n.y, n.z]);
-
-                if (hasTexture && lod.textureVertices && lod.textureVertices.length > 0) {
-                    const tex = textureIndicesFlat[i];
-                    const uv = lod.textureVertices[tex] || { u: 0, v: 0 };
-                    meshUvs.push([uv.u, 1 - uv.v]);
-                }
-            } else {
-                indices.push(packed & 0xFFFF);
-            }
-        }
-
-        // Reverse face winding
-        for (let i = 0; i < indices.length; i += 3) {
-            const temp = indices[i];
-            indices[i] = indices[i + 2];
-            indices[i + 2] = temp;
-        }
-
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(meshVertices.flat(), 3));
-        geometry.setAttribute('normal', new THREE.Float32BufferAttribute(meshNormals.flat(), 3));
-        geometry.setIndex(indices);
-
-        if (hasTexture && meshUvs.length > 0) {
-            geometry.setAttribute('uv', new THREE.Float32BufferAttribute(meshUvs.flat(), 2));
-        }
-
-        return geometry;
-    }
-
-    /**
      * Apply position/direction/up transform from ActorLOD data.
      * The game uses CalcLocalTransform with direction/up vectors.
      */
     applyPartTransform(group, actorLOD) {
         const pos = actorLOD.position;
-        const dir = actorLOD.direction;
-        const up = actorLOD.up;
-
-        // Build right vector = cross(dir, up)
-        const right = new THREE.Vector3(
-            dir[1] * up[2] - dir[2] * up[1],
-            dir[2] * up[0] - dir[0] * up[2],
-            dir[0] * up[1] - dir[1] * up[0]
-        );
 
         // Negate X for our coordinate system (matching VehiclePartRenderer's -v.x)
         group.position.set(-pos[0], pos[1], pos[2]);
-    }
-
-    /**
-     * Update a single part's color without full reload
-     */
-    updatePartColor(partIndex, colorName) {
-        const partGroup = this.partGroups[partIndex];
-        if (!partGroup) return;
-
-        const colorEntry = ExtendedLegoColors[colorName] || ExtendedLegoColors['lego white'];
-        const threeColor = new THREE.Color(colorEntry.r / 255, colorEntry.g / 255, colorEntry.b / 255);
-
-        partGroup.traverse((child) => {
-            if (child instanceof THREE.Mesh && child.material && !child.material.map) {
-                child.material.color = threeColor;
-            }
-        });
-
-        this.renderer.render(this.scene, this.camera);
     }
 
     /**
@@ -550,9 +354,9 @@ export class ActorRenderer {
                 const pg = this.partGroups[i];
                 if (!pg) continue;
                 const lodName = pg.userData.lodName;
-                const animName = PART_NAME_TO_ANIM_NODE[lodName];
-                if (animName) {
-                    nodeToPartGroup.set(animName.toLowerCase(), pg);
+                const animNodeName = PART_NAME_TO_ANIM_NODE[lodName];
+                if (animNodeName) {
+                    nodeToPartGroup.set(animNodeName.toLowerCase(), pg);
                 }
             }
 
@@ -564,7 +368,7 @@ export class ActorRenderer {
             this.currentAction = this.mixer.clipAction(clip);
             this.currentAction.play();
         } catch (e) {
-            // Animation unavailable — fall back to rotation (handled in animate())
+            // Animation unavailable — fall back to rotation (handled in updateAnimation())
         }
     }
 
@@ -802,41 +606,10 @@ export class ActorRenderer {
 
     // ─── Scene Management ────────────────────────────────────────────
 
-    centerAndScaleModel() {
-        if (!this.modelGroup) return;
-
-        const box = new THREE.Box3().setFromObject(this.modelGroup);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-
-        this.modelGroup.position.sub(center);
-
-        const maxDim = Math.max(size.x, size.y, size.z);
-        if (maxDim > 0) {
-            const scale = 1.8 / maxDim;
-            this.modelGroup.scale.setScalar(scale);
-        }
-    }
-
     clearModel() {
         this.stopAnimation();
-
-        if (this.modelGroup) {
-            this.modelGroup.traverse((child) => {
-                if (child instanceof THREE.Mesh) {
-                    child.geometry?.dispose();
-                    child.material?.dispose();
-                }
-            });
-            this.scene.remove(this.modelGroup);
-            this.modelGroup = null;
-        }
+        super.clearModel();
         this.partGroups = [];
-
-        for (const texture of this.textures.values()) {
-            texture.dispose();
-        }
-        this.textures.clear();
     }
 
     start() {
@@ -845,14 +618,7 @@ export class ActorRenderer {
         this.animate();
     }
 
-    stop() {
-        this.animating = false;
-    }
-
-    animate = () => {
-        if (!this.animating) return;
-        requestAnimationFrame(this.animate);
-
+    updateAnimation() {
         const delta = this.clock.getDelta();
 
         if (this.mixer) {
@@ -861,14 +627,6 @@ export class ActorRenderer {
             // Fallback: rotate if no animation loaded
             this.modelGroup.rotation.y += 0.01;
         }
-
-        this.renderer.render(this.scene, this.camera);
-    }
-
-    resize(width, height) {
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(width, height, false);
     }
 
     dispose() {

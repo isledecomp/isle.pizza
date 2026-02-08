@@ -39,11 +39,6 @@ export const ActorPart = Object.freeze({
     LEGRT: 9
 });
 
-// Mapping from ActorPart index to the ActorLOD that provides its transform.
-// ActorLODs[0] ("top") is the root and not directly a part.
-// Parts 0..9 map to ActorLODs[1..10] respectively.
-export const partToLODIndex = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-
 /**
  * g_actorLODs[11] — transform/bounding data for each body part position.
  * Fields: name, parentName, flags, boundingSphere[4], boundingBox[6],
@@ -144,24 +139,6 @@ export const faceTextures = [
 export const colorAliases = [
     'lego white', 'lego black', 'lego yellow', 'lego red', 'lego blue', 'lego brown', 'lego lt grey', 'lego green'
 ];
-
-// Character type classification
-export const CharacterType = Object.freeze({
-    STANDARD: 0,
-    PEPPER: 1,
-    INFOMAN: 2,
-    GHOST: 3
-});
-
-/**
- * Determine character type from actor index
- */
-export function getCharacterType(actorIndex) {
-    if (actorIndex === 0 || actorIndex === 56) return CharacterType.PEPPER; // pepper, pep
-    if (actorIndex === 5) return CharacterType.INFOMAN;
-    if (actorIndex >= 48 && actorIndex <= 53) return CharacterType.GHOST; // ghost, ghost01..05
-    return CharacterType.STANDARD;
-}
 
 // Reference names for the index arrays (used to build part configs)
 const HP = 'hatPartIndices';

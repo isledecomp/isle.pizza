@@ -4,7 +4,8 @@
  */
 import { SaveGameParser } from './SaveGameParser.js';
 import { BinaryWriter } from './BinaryWriter.js';
-import { GameStateTypes, GameStateSizes, Actor, Act1TextureOrder, CharacterFieldOffsets, CHARACTER_RECORD_SIZE } from '../savegame/constants.js';
+import { GameStateTypes, GameStateSizes, Actor, Act1TextureOrder } from '../savegame/constants.js';
+import { CharacterFieldOffsets, CHARACTER_RECORD_SIZE } from '../savegame/actorConstants.js';
 
 /**
  * Offsets for header fields
@@ -466,25 +467,12 @@ export class SaveGameSerializer {
      * @param {number} characterIndex - Character index (0-65)
      * @param {string} field - Field name from CharacterFieldOffsets
      * @param {number} value - New value
-     * @param {ArrayBuffer} [buffer] - Optional buffer to use
-     * @returns {ArrayBuffer|null} - Modified buffer or null on error
+     * @returns {ArrayBuffer} - Modified buffer
      */
-    updateCharacter(characterIndex, field, value, buffer = null) {
-        if (characterIndex < 0 || characterIndex > 65) {
-            console.error(`Invalid character index: ${characterIndex}`);
-            return null;
-        }
-
-        const fieldOffset = CharacterFieldOffsets[field];
-        if (fieldOffset === undefined) {
-            console.error(`Unknown character field: ${field}`);
-            return null;
-        }
-
-        const workingBuffer = buffer || this.createCopy();
+    updateCharacter(characterIndex, field, value) {
+        const workingBuffer = this.createCopy();
         const view = new DataView(workingBuffer);
-
-        const offset = this.parsed.charactersOffset + (characterIndex * CHARACTER_RECORD_SIZE) + fieldOffset;
+        const offset = this.parsed.charactersOffset + (characterIndex * CHARACTER_RECORD_SIZE) + CharacterFieldOffsets[field];
 
         if (field === 'sound' || field === 'move') {
             view.setInt32(offset, value, true);

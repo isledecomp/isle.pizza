@@ -2,8 +2,7 @@
     import { onMount, onDestroy } from 'svelte';
     import { ActorRenderer } from '../../core/rendering/ActorRenderer.js';
     import { WdbParser, buildGlobalPartsMap } from '../../core/formats/WdbParser.js';
-    import { ActorInfoInit, ActorPart, ActorPartLabels, colorAliases,
-        CharacterFieldOffsets } from '../../core/savegame/actorConstants.js';
+    import { ActorInfoInit, ActorPart } from '../../core/savegame/actorConstants.js';
     import { Actor } from '../../core/savegame/constants.js';
     import NavButton from '../NavButton.svelte';
     import EditorTooltip from '../EditorTooltip.svelte';
@@ -27,6 +26,9 @@
     $: actorName = actorInfo?.name || 'Unknown';
     $: charState = slot?.characters?.[actorIndex];
 
+    function actorKey(slotNumber, idx, cs) {
+        return `${slotNumber}-${idx}-${cs.hatPartNameIndex}-${cs.hatNameIndex}-${cs.infogronNameIndex}-${cs.armlftNameIndex}-${cs.armrtNameIndex}-${cs.leglftNameIndex}-${cs.legrtNameIndex}-${cs.move}-${cs.sound}`;
+    }
 
     onMount(async () => {
         try {
@@ -67,9 +69,7 @@
 
     // Reload actor when index or character state changes
     $: if (renderer && !loading && actorInfo && charState) {
-        const cs = charState;
-        const key = `${slot?.slotNumber}-${actorIndex}-${cs.hatPartNameIndex}-${cs.hatNameIndex}-${cs.infogronNameIndex}-${cs.armlftNameIndex}-${cs.armrtNameIndex}-${cs.leglftNameIndex}-${cs.legrtNameIndex}-${cs.move}-${cs.sound}`;
-        if (key !== loadedActorKey) {
+        if (actorKey(slot?.slotNumber, actorIndex, charState) !== loadedActorKey) {
             loadCurrentActor();
         }
     }
@@ -78,8 +78,7 @@
         if (!renderer || !globalPartsMap || !slot?.characters) return;
 
         renderer.loadActor(actorIndex, slot.characters, globalPartsMap, globalTextures);
-        const cs = slot.characters[actorIndex];
-        loadedActorKey = `${slot?.slotNumber}-${actorIndex}-${cs.hatPartNameIndex}-${cs.hatNameIndex}-${cs.infogronNameIndex}-${cs.armlftNameIndex}-${cs.armrtNameIndex}-${cs.leglftNameIndex}-${cs.legrtNameIndex}-${cs.move}-${cs.sound}`;
+        loadedActorKey = actorKey(slot?.slotNumber, actorIndex, slot.characters[actorIndex]);
     }
 
     function prevActor() {

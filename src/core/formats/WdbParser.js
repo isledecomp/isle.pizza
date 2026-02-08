@@ -130,37 +130,15 @@ export class WdbParser {
     }
 
     /**
-     * Parse global parts block (same structure as parsePartData but inline)
+     * Parse global parts block (same structure as parsePartData)
      * @param {number} size - Size of global parts block
      * @returns {{ parts: Array, textures: Array }}
      */
     parseGlobalParts(size) {
         const startOffset = this.reader.tell();
-        const textureInfoOffset = this.reader.readU32();
-        const numRois = this.reader.readU32();
-        const parts = [];
-
-        for (let i = 0; i < numRois; i++) {
-            const nameLen = this.reader.readU32();
-            const name = this.readCleanString(nameLen);
-            const numLods = this.reader.readU32();
-            const roiInfoOffset = this.reader.readU32();
-
-            const lods = [];
-            for (let j = 0; j < numLods; j++) {
-                lods.push(this.parseLod());
-            }
-
-            parts.push({ name, lods });
-        }
-
-        this.reader.seek(startOffset + textureInfoOffset);
-        const textures = this.parseTextureInfo();
-
-        // Ensure we've consumed the full block
+        const result = this.parsePartData(startOffset);
         this.reader.seek(startOffset + size);
-
-        return { parts, textures };
+        return result;
     }
 
     /**
