@@ -244,14 +244,16 @@ export async function updateSaveSlot(slotNumber, updates) {
         }
     }
 
-    // Apply character update
+    // Apply character update(s)
     if (updates.character) {
-        const { characterIndex, field, value } = updates.character;
-        const charSerializer = createSerializer(newBuffer);
-        const result = charSerializer.updateCharacter(characterIndex, field, value);
-        if (result) {
-            newBuffer = result;
-            modified = true;
+        const entries = Array.isArray(updates.character) ? updates.character : [updates.character];
+        for (const { characterIndex, field, value } of entries) {
+            const charSerializer = createSerializer(newBuffer);
+            const result = charSerializer.updateCharacter(characterIndex, field, value);
+            if (result) {
+                newBuffer = result;
+                modified = true;
+            }
         }
     }
 

@@ -5,6 +5,7 @@
     import { ActorInfoInit, ActorPart } from '../../core/savegame/actorConstants.js';
     import { Actor } from '../../core/savegame/constants.js';
     import NavButton from '../NavButton.svelte';
+    import ResetButton from '../ResetButton.svelte';
     import EditorTooltip from '../EditorTooltip.svelte';
 
     export let slot;
@@ -25,6 +26,18 @@
     $: actorInfo = ActorInfoInit[actorIndex];
     $: actorName = actorInfo?.name || 'Unknown';
     $: charState = slot?.characters?.[actorIndex];
+
+    $: isDefault = actorInfo && charState &&
+        charState.sound === actorInfo.sound &&
+        charState.move === actorInfo.move &&
+        charState.mood === actorInfo.mood &&
+        charState.hatPartNameIndex === actorInfo.parts[1].partNameIndex &&
+        charState.hatNameIndex === actorInfo.parts[1].nameIndex &&
+        charState.infogronNameIndex === actorInfo.parts[2].nameIndex &&
+        charState.armlftNameIndex === actorInfo.parts[4].nameIndex &&
+        charState.armrtNameIndex === actorInfo.parts[5].nameIndex &&
+        charState.leglftNameIndex === actorInfo.parts[8].nameIndex &&
+        charState.legrtNameIndex === actorInfo.parts[9].nameIndex;
 
     function actorKey(slotNumber, idx, cs) {
         return `${slotNumber}-${idx}-${cs.hatPartNameIndex}-${cs.hatNameIndex}-${cs.infogronNameIndex}-${cs.armlftNameIndex}-${cs.armrtNameIndex}-${cs.leglftNameIndex}-${cs.legrtNameIndex}-${cs.move}-${cs.sound}`;
@@ -176,6 +189,25 @@
             character: { characterIndex: actorIndex, field: 'mood', value: nextMood }
         });
     }
+
+    function resetActor() {
+        const i = actorIndex;
+        const p = actorInfo.parts;
+        onUpdate({
+            character: [
+                { characterIndex: i, field: 'sound', value: actorInfo.sound },
+                { characterIndex: i, field: 'move', value: actorInfo.move },
+                { characterIndex: i, field: 'mood', value: actorInfo.mood },
+                { characterIndex: i, field: 'hatPartNameIndex', value: p[1].partNameIndex },
+                { characterIndex: i, field: 'hatNameIndex', value: p[1].nameIndex },
+                { characterIndex: i, field: 'infogronNameIndex', value: p[2].nameIndex },
+                { characterIndex: i, field: 'armlftNameIndex', value: p[4].nameIndex },
+                { characterIndex: i, field: 'armrtNameIndex', value: p[5].nameIndex },
+                { characterIndex: i, field: 'leglftNameIndex', value: p[8].nameIndex },
+                { characterIndex: i, field: 'legrtNameIndex', value: p[9].nameIndex }
+            ]
+        });
+    }
 </script>
 
 <EditorTooltip text="Click to customize based on your current character. Navigate between all 66 game actors using the arrows. Changes are automatically saved.">
@@ -209,6 +241,12 @@
             </div>
             <NavButton direction="right" onclick={nextActor} />
         </div>
+    </div>
+
+    <div class="reset-container">
+        {#if !isDefault && !loading && !error}
+            <ResetButton onclick={resetActor} />
+        {/if}
     </div>
 </EditorTooltip>
 
@@ -294,5 +332,9 @@
         display: block;
         font-size: 0.9em;
         color: var(--color-text-light);
+    }
+
+    .reset-container {
+        height: 1.6em;
     }
 </style>
