@@ -13,6 +13,7 @@
     } from '../../core/savegame/constants.js';
     import { squareTexture } from '../../core/savegame/imageQuantizer.js';
     import { parseTex } from '../../core/formats/TexParser.js';
+    import { fetchTexture } from '../../core/assetLoader.js';
     import NavButton from '../NavButton.svelte';
     import ResetButton from '../ResetButton.svelte';
     import EditorTooltip from '../EditorTooltip.svelte';
@@ -224,9 +225,8 @@
 
     async function preloadDefaultTextures(info) {
         const results = await Promise.all(info.texFiles.map(async (texFile) => {
-            const response = await fetch(`/textures/${texFile}.tex`);
-            if (!response.ok) return null;
-            const buffer = await response.arrayBuffer();
+            const buffer = await fetchTexture(texFile);
+            if (!buffer) return null;
             const parsed = parseTex(buffer);
             if (parsed.textures.length > 0) {
                 return { name: texFile, ...parsed.textures[0] };

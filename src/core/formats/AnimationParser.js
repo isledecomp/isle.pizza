@@ -33,11 +33,6 @@
 
 import { BinaryReader } from './BinaryReader.js';
 
-// Keyframe flags
-const KEY_ACTIVE = 0x01;
-const KEY_NEGATE_ROTATION = 0x02;
-const KEY_SKIP_INTERPOLATION = 0x04;
-
 export class AnimationParser {
     /**
      * @param {ArrayBuffer} buffer

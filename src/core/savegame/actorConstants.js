@@ -10,21 +10,6 @@ export const ActorLODFlags = Object.freeze({
     USE_COLOR: 0x02
 });
 
-// LegoActorLODs enum — indices into ActorLODs[]
-export const ActorLODIndex = Object.freeze({
-    TOP: 0,
-    BODY: 1,
-    INFOHAT: 2,
-    INFOGRON: 3,
-    HEAD: 4,
-    ARMLFT: 5,
-    ARMRT: 6,
-    CLAWLFT: 7,
-    CLAWRT: 8,
-    LEGLFT: 9,
-    LEGRT: 10
-});
-
 // LegoActorParts enum — indices into the 10-part array on each actor
 export const ActorPart = Object.freeze({
     BODY: 0,

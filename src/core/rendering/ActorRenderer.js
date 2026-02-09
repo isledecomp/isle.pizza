@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { ActorLODs, ActorLODFlags, ActorInfoInit } from '../savegame/actorConstants.js';
 import { LegoColors } from '../savegame/constants.js';
 import { parseAnimation } from '../formats/AnimationParser.js';
+import { fetchAnimation } from '../assetLoader.js';
 import { BaseRenderer } from './BaseRenderer.js';
 
 /**
@@ -410,10 +411,8 @@ export class ActorRenderer extends BaseRenderer {
             return this.animationCache.get(animName);
         }
 
-        const response = await fetch(`/animations/${animName}.ani`);
-        if (!response.ok) return null;
-
-        const buffer = await response.arrayBuffer();
+        const buffer = await fetchAnimation(animName);
+        if (!buffer) return null;
         const animData = parseAnimation(buffer);
         this.animationCache.set(animName, animData);
         return animData;
