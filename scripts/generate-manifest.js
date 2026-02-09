@@ -145,14 +145,24 @@ const TEXTURES = [
   ['rctail4', 'Scripts/Build/RACECAR.SI', 134, 4236, '614cb9aa532ee85c119cc1432e6d65e9'],
 ];
 
-// [name, objectId, size, md5] — all in ISLE.SI
+// [name, siFile, objectId, size, md5]
 const BITMAPS = [
-  ['globe1', 1130, 5824, '12554d2a7d38bdc0e6bc1709f8404293'],
-  ['globe2', 1131, 5824, 'b0b39a4b959b4bf1605a6c695d9e3dd0'],
-  ['globe3', 1132, 5824, '71672bff19044f7df059c87a0759d950'],
-  ['globe4', 1133, 5824, 'f5421e06ae9997d9cbfc774942f097d4'],
-  ['globe5', 1134, 5824, '47974b0577cab1c3775175eab074e5b5'],
-  ['globe6', 1135, 5824, '65237421063fa993167ed4af9be9180c'],
+  ['globe1', 'Scripts/Isle/ISLE.SI', 1130, 5824, '12554d2a7d38bdc0e6bc1709f8404293'],
+  ['globe2', 'Scripts/Isle/ISLE.SI', 1131, 5824, 'b0b39a4b959b4bf1605a6c695d9e3dd0'],
+  ['globe3', 'Scripts/Isle/ISLE.SI', 1132, 5824, '71672bff19044f7df059c87a0759d950'],
+  ['globe4', 'Scripts/Isle/ISLE.SI', 1133, 5824, 'f5421e06ae9997d9cbfc774942f097d4'],
+  ['globe5', 'Scripts/Isle/ISLE.SI', 1134, 5824, '47974b0577cab1c3775175eab074e5b5'],
+  ['globe6', 'Scripts/Isle/ISLE.SI', 1135, 5824, '65237421063fa993167ed4af9be9180c'],
+  ['pepper', 'Scripts/Infocntr/INFOMAIN.SI', 80, 2904, '4143f58632135089b7bc695bff406077'],
+  ['pepper-selected', 'Scripts/Infocntr/INFOMAIN.SI', 81, 2904, '01f57a3a32f7aea6bc48a78a8c95ee1b'],
+  ['mama', 'Scripts/Infocntr/INFOMAIN.SI', 76, 2904, 'ad68ae8fe78c368cac026ae09f1ad8c4'],
+  ['mama-selected', 'Scripts/Infocntr/INFOMAIN.SI', 77, 2904, '72f041d1080b20f713d39f7ae00d966d'],
+  ['papa', 'Scripts/Infocntr/INFOMAIN.SI', 78, 2904, '0cd5ef1c6d68198862c102b36b2f04fe'],
+  ['papa-selected', 'Scripts/Infocntr/INFOMAIN.SI', 79, 2904, 'ec7d3d87d796dd824dfd5110911d4aa4'],
+  ['nick', 'Scripts/Infocntr/INFOMAIN.SI', 82, 2904, 'c29ecdce0ffae81a71b973b8af26c26c'],
+  ['nick-selected', 'Scripts/Infocntr/INFOMAIN.SI', 83, 2904, '8db4e63632c6f90e543832e6c92c89fa'],
+  ['laura', 'Scripts/Infocntr/INFOMAIN.SI', 84, 2904, '99abd3415870285d487da20882f3bbf3'],
+  ['laura-selected', 'Scripts/Infocntr/INFOMAIN.SI', 85, 2904, 'f56c2efb4f744d306d5a3d4ac8d332ca'],
 ];
 
 const MXCH_SIGNATURE = Buffer.from('MxCh');
@@ -300,20 +310,30 @@ async function main() {
   }
   console.log(`  ${texFound}/${TEXTURES.length} textures found\n`);
 
-  // --- Bitmaps (in ISLE.SI) ---
-  const bmpObjectIds = new Set(BITMAPS.map(([, objectId]) => objectId));
-  const bmpRanges = findMxChByObjectId(isleSI, bmpObjectIds);
+  // --- Bitmaps (across SI files) ---
+  const bmpBySI = new Map();
+  for (const entry of BITMAPS) {
+    const siFile = entry[1];
+    if (!bmpBySI.has(siFile)) bmpBySI.set(siFile, []);
+    bmpBySI.get(siFile).push(entry);
+  }
 
   let bmpFound = 0;
-  for (const [name, objectId, size, expectedMd5] of BITMAPS) {
-    const result = verifyRanges(isleSI, bmpRanges.get(objectId), size, expectedMd5);
-    if (result) {
-      manifest.bitmaps[name] = formatResult('Scripts/Isle/ISLE.SI', result);
-      bmpFound++;
-      found++;
-    } else {
-      console.error(`  FAILED: ${name} (objectId ${objectId})`);
-      failed++;
+  for (const [siFile, entries] of bmpBySI) {
+    const siBuf = await loadSI(siFile);
+    const objectIds = new Set(entries.map(([, , objectId]) => objectId));
+    const bmpRanges = findMxChByObjectId(siBuf, objectIds);
+
+    for (const [name, , objectId, size, expectedMd5] of entries) {
+      const result = verifyRanges(siBuf, bmpRanges.get(objectId), size, expectedMd5);
+      if (result) {
+        manifest.bitmaps[name] = formatResult(siFile, result);
+        bmpFound++;
+        found++;
+      } else {
+        console.error(`  FAILED: ${name} (objectId ${objectId})`);
+        failed++;
+      }
     }
   }
   console.log(`  ${bmpFound}/${BITMAPS.length} bitmaps found\n`);
