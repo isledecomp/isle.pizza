@@ -40,7 +40,7 @@
         charState.legrtNameIndex === actorInfo.parts[9].nameIndex;
 
     function actorKey(slotNumber, idx, cs) {
-        return `${slotNumber}-${idx}-${cs.hatPartNameIndex}-${cs.hatNameIndex}-${cs.infogronNameIndex}-${cs.armlftNameIndex}-${cs.armrtNameIndex}-${cs.leglftNameIndex}-${cs.legrtNameIndex}-${cs.move}-${cs.sound}`;
+        return `${slotNumber}-${idx}-${cs.hatPartNameIndex}-${cs.hatNameIndex}-${cs.infogronNameIndex}-${cs.armlftNameIndex}-${cs.armrtNameIndex}-${cs.leglftNameIndex}-${cs.legrtNameIndex}-${cs.mood}`;
     }
 
     onMount(async () => {
@@ -141,7 +141,7 @@
     }
 
     function switchSound() {
-        const nextSound = (charState.sound + 1) % 4;
+        const nextSound = (charState.sound + 1) % 9;
         onUpdate({
             character: { characterIndex: actorIndex, field: 'sound', value: nextSound }
         });
@@ -155,8 +155,15 @@
     }
 
     function switchColor(event) {
-        const partIdx = renderer.getClickedPart(event);
+        let partIdx = renderer.getClickedPart(event);
         if (partIdx < 0) return;
+
+        // Remap clicked part to the part that owns its color
+        // (matches SwitchColor in legocharactermanager.cpp)
+        if (partIdx === ActorPart.CLAWLFT) partIdx = ActorPart.ARMLFT;
+        else if (partIdx === ActorPart.CLAWRT) partIdx = ActorPart.ARMRT;
+        else if (partIdx === ActorPart.HEAD) partIdx = ActorPart.INFOHAT;
+        else if (partIdx === ActorPart.BODY) partIdx = ActorPart.INFOGRON;
 
         // Map part index to the save field
         const fieldMap = {
@@ -169,7 +176,7 @@
         };
 
         const field = fieldMap[partIdx];
-        if (!field) return; // Body (0) and Head (3) don't have color fields
+        if (!field) return;
 
         const part = actorInfo.parts[partIdx];
         if (!part.nameIndices) return;

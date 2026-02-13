@@ -33,13 +33,13 @@ const ACTOR_SUFFIX_INDEX = (() => {
 
 /**
  * g_cycles[11][17] — animation name table from legoanimationmanager.cpp.
- * Rows = character type suffix index, columns = sound + 4 * move (0-16).
+ * Rows = character type suffix index, columns = mood (0-3) for walking, higher indices for other animations.
  */
 const G_CYCLES = [
     // 0: xx
     ['CNs001xx','CNs002xx','CNs003xx','CNs004xx','CNs005xx','CNs007xx','CNs006xx','CNs008xx','CNs009xx','CNs010xx','CNs011xx','CNs012xx',null,null,null,null,null],
     // 1: Pe
-    ['CNs001Pe','CNs002Pe','CNs003Pe','CNs004Pe','CNs005Pe','CNs007Pe','CNs006Pe','CNs008Pe','CNs009Pe','CNs010Pe','CNs001Sk',null,null,null,null,null,null], // CNs001Sk = skateboard
+    ['CNs001Pe','CNs002Pe','CNs003Pe','CNs004Pe','CNs005Pe','CNs007Pe','CNs006Pe','CNs008Pe','CNs009Pe','CNs010Pe','CNs001sk',null,null,null,null,null,null], // CNs001sk = skateboard
     // 2: Ma
     ['CNs001Ma','CNs002Ma','CNs003Ma','CNs004Ma','CNs005Ma','CNs007Ma','CNs006Ma','CNs008Ma','CNs009Ma','CNs010Ma','CNs0x4Ma',null,null,'CNs011Ma','CNs012Ma','CNs013Ma',null],
     // 3: Pa
@@ -49,7 +49,7 @@ const G_CYCLES = [
     // 5: La
     ['CNs001La','CNs002La','CNs003La','CNs004La','CNs005La','CNs007La','CNs006La','CNs008La','CNs009La','CNs010La','CNs011La','CNsx11La',null,null,null,null,null],
     // 6: Br
-    ['CNs001Br','CNs002Br','CNs003Br','CNs004Br','CNs005Br','CNs007Br','CNs006Br','CNs008Br','CNs009Br','CNs010Br','CNs011Br','CNs900Br','CNs901BR','CNs011Br','CNs012Br','CNs013Br','CNs014Br'],
+    ['CNs001Br','CNs002Br','CNs003Br','CNs004Br','CNs005Br','CNs007Br','CNs006Br','CNs008Br','CNs009Br','CNs010Br','CNs011Br','CNs900Br','CNs901Br','CNs011Br','CNs012Br','CNs013Br','CNs014Br'],
     // 7: Bd
     ['CNs001xx','CNs002xx','CNs003xx','CNs004xx','CNs005xx','CNs007xx','CNs006xx','CNs008xx','CNs009xx','CNs010xx','CNs001Bd','CNs012xx',null,null,null,null,null],
     // 8: Pg
@@ -169,10 +169,9 @@ export class ActorRenderer extends BaseRenderer {
         this.modelGroup.rotation.y = Math.PI;
         this.scene.add(this.modelGroup);
 
-        // Load and start animation based on move/sound
-        const move = charState?.move ?? 0;
-        const sound = charState?.sound ?? 0;
-        this.loadAnimationForActor(actorIndex, move, sound);
+        // Load and start walking animation based on mood
+        const mood = charState?.mood ?? 0;
+        this.loadAnimationForActor(actorIndex, mood);
 
         this.renderer.render(this.scene, this.camera);
     }
@@ -359,19 +358,36 @@ export class ActorRenderer extends BaseRenderer {
     // ─── Animation System ────────────────────────────────────────────
 
     /**
-     * Load and start animation for the given actor using g_cycles table.
-     * Animation index = sound + 4 * move. Pre-computes world-space transforms
-     * by evaluating the animation tree hierarchically, then plays via AnimationMixer.
+     * Compute secondary animation column index from mood, matching FUN_10063b90.
+     * Primary: columns 0-3 (speed 0.7), Secondary: columns 4-6 (speed 4.0).
+     * NPCs walk at speed 0.6-2.0, so most use the secondary animation which has
+     * independent head/hat movement. Mood adjustment: if (mood >= 2) mood--.
+     */
+    static getSecondaryAnimColumn(mood) {
+        let adjMood = mood;
+        if (adjMood >= 2) adjMood--;
+        return adjMood + 4;
+    }
+
+    /**
+     * Load and start walking animation for the given actor using g_cycles table.
+     * Loads the secondary (speed 4.0) animation which NPCs typically use in-game,
+     * falling back to primary (speed 0.7) if unavailable. Matches FUN_10063b90
+     * in legoanimationmanager.cpp. Pre-computes world-space transforms by evaluating
+     * the animation tree hierarchically, then plays via AnimationMixer.
      * Falls back to Y-axis rotation if unavailable.
      */
-    async loadAnimationForActor(actorIndex, move = 0, sound = 0) {
+    async loadAnimationForActor(actorIndex, mood = 0) {
         if (!this.modelGroup) return;
 
         this.stopAnimation();
 
         const suffixIdx = ACTOR_SUFFIX_INDEX[actorIndex] ?? 0;
-        const animIdx = sound + 4 * move;
-        const animName = G_CYCLES[suffixIdx]?.[animIdx];
+        // Use secondary animation (speed 4.0 threshold) — this is what NPCs use in-game
+        // since their walking speed (0.6-2.0) exceeds the 0.7 primary threshold
+        const secondaryCol = ActorRenderer.getSecondaryAnimColumn(mood);
+        const primaryCol = mood;
+        const animName = G_CYCLES[suffixIdx]?.[secondaryCol] ?? G_CYCLES[suffixIdx]?.[primaryCol];
 
         if (!animName) return; // null entry in g_cycles — no animation for this combo
 
@@ -448,6 +464,8 @@ export class ActorRenderer extends BaseRenderer {
                 tracks.push(new THREE.VectorKeyframeTrack(name, timesSec, values));
             } else if (name.endsWith('.quaternion')) {
                 tracks.push(new THREE.QuaternionKeyframeTrack(name, timesSec, values));
+            } else if (name.endsWith('.visible')) {
+                tracks.push(new THREE.BooleanKeyframeTrack(name, timesSec, values));
             }
         }
         return tracks;
@@ -461,6 +479,7 @@ export class ActorRenderer extends BaseRenderer {
         for (const key of data.translationKeys) timesSet.add(key.time);
         for (const key of data.rotationKeys) timesSet.add(key.time);
         for (const key of data.scaleKeys) timesSet.add(key.time);
+        for (const key of data.morphKeys) timesSet.add(key.time);
         for (const child of node.children) {
             this.collectKeyframeTimes(child, timesSet);
         }
@@ -489,13 +508,19 @@ export class ActorRenderer extends BaseRenderer {
             mat = this.evaluateRotation(data.rotationKeys, time);
         }
 
-        // 2. Translation (skip on root node so the actor walks in place)
-        if (!isRoot && data.translationKeys.length > 0) {
+        // 2. Translation
+        if (data.translationKeys.length > 0) {
             const vertex = this.interpolateVertex(data.translationKeys, time, true);
             if (vertex) {
-                mat.elements[12] += vertex.x;
-                mat.elements[13] += vertex.y;
-                mat.elements[14] += vertex.z;
+                if (isRoot) {
+                    // Root: only apply vertical (Y) to preserve bounce,
+                    // strip horizontal (XZ) so the actor walks in place
+                    mat.elements[13] += vertex.y;
+                } else {
+                    mat.elements[12] += vertex.x;
+                    mat.elements[13] += vertex.y;
+                    mat.elements[14] += vertex.z;
+                }
             }
         }
 
@@ -519,6 +544,12 @@ export class ActorRenderer extends BaseRenderer {
                 const trackName = partGroup.name;
                 this.pushValues(valueMap, `${trackName}.position`, position.toArray());
                 this.pushValues(valueMap, `${trackName}.quaternion`, [quaternion.x, quaternion.y, quaternion.z, quaternion.w]);
+
+                // Evaluate visibility from morph keys (matches game's SetVisibility(data->GetVisibility(p_time)))
+                if (data.morphKeys.length > 0) {
+                    const visible = this.getVisibility(data.morphKeys, time);
+                    this.pushValues(valueMap, `${trackName}.visible`, [visible]);
+                }
             }
         }
 
@@ -608,6 +639,23 @@ export class ActorRenderer extends BaseRenderer {
         if (idx < 0) idx = keys.length;
         const before = keys[Math.max(0, idx - 1)];
         return { before, after: keys[idx] || null };
+    }
+
+    /**
+     * Evaluate visibility from morph keys at a given time.
+     * Matches game's GetVisibility: returns true (visible) by default,
+     * or the last morph key's visible flag at or before the given time.
+     */
+    getVisibility(morphKeys, time) {
+        let lastKey = null;
+        for (const key of morphKeys) {
+            if (key.time <= time) {
+                lastKey = key;
+            } else {
+                break;
+            }
+        }
+        return lastKey ? lastKey.visible : true;
     }
 
     /**
