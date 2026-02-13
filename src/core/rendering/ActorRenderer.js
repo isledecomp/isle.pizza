@@ -98,13 +98,16 @@ export class ActorRenderer extends BaseRenderer {
     }
 
     /**
-     * Load a full actor from global parts.
+     * Load a full actor from global parts, optionally with a vehicle.
      * @param {number} actorIndex - Index into ActorInfoInit (0-65)
      * @param {Array} characters - Parsed character state from save file (66 entries)
      * @param {Map} globalPartsMap - Name→part lookup for global parts
      * @param {Array} globalTextures - Global texture list from WDB
+     * @param {Map|null} vehiclePartsMap - Name→part lookup for vehicle parts (null if no vehicle)
+     * @param {Array|null} vehicleTextures - Vehicle texture list (null if no vehicle)
+     * @param {object|null} vehicleInfo - { vehicleModel, vehicleAnim } or null
      */
-    loadActor(actorIndex, characters, globalPartsMap, globalTextures) {
+    loadActor(actorIndex, characters, globalPartsMap, globalTextures, vehiclePartsMap, vehicleTextures, vehicleInfo) {
         this.clearModel();
 
         const actorInfo = ActorInfoInit[actorIndex];
@@ -118,8 +121,19 @@ export class ActorRenderer extends BaseRenderer {
             }
         }
 
+        // Merge vehicle textures (if present)
+        if (vehicleInfo && vehicleTextures) {
+            for (const tex of vehicleTextures) {
+                if (tex.name && !this.textures.has(tex.name.toLowerCase())) {
+                    this.textures.set(tex.name.toLowerCase(), this.createTexture(tex));
+                }
+            }
+        }
+
         this.modelGroup = new THREE.Group();
         this.partGroups = [];
+        this.vehicleGroup = null;
+        this.vehicleInfo = vehicleInfo || null;
 
         // Assemble 10 body parts (matching CreateActorROI loop: i=0..9 maps to ActorLODs[1..10])
         for (let i = 0; i < 10; i++) {
@@ -164,15 +178,24 @@ export class ActorRenderer extends BaseRenderer {
             this.partGroups[i] = partGroup;
         }
 
+        // Create vehicle mesh if vehicle info is provided
+        if (vehicleInfo && vehiclePartsMap) {
+            this.createVehicleMesh(vehicleInfo, vehiclePartsMap);
+        }
+
         this.centerAndScaleModel(1.8);
         // Rotate 180° around Y so actor faces the camera (negating X for
         // left-to-right-handed conversion flips the facing direction)
         this.modelGroup.rotation.y = Math.PI;
+        // Shift model up in vehicle mode so it's better framed
+        if (this.vehicleGroup) {
+            this.modelGroup.position.y += 0.2;
+        }
         this.scene.add(this.modelGroup);
 
-        // Load and start walking animation based on mood
+        // Load and start walking/vehicle animation based on mood
         const mood = charState?.mood ?? 0;
-        this.loadAnimationForActor(actorIndex, mood);
+        this.loadAnimationForActor(actorIndex, mood, vehicleInfo);
 
         this.renderer.render(this.scene, this.camera);
     }
@@ -285,6 +308,49 @@ export class ActorRenderer extends BaseRenderer {
     }
 
     /**
+     * Create vehicle mesh from WDB model ROIs and add to modelGroup.
+     * vehiclePartsMap maps model name → array of { name, lods }.
+     */
+    createVehicleMesh(vehicleInfo, vehiclePartsMap) {
+        const rois = vehiclePartsMap.get(vehicleInfo.vehicleModel.toLowerCase());
+        if (!rois || rois.length === 0) return;
+
+        this.vehicleGroup = new THREE.Group();
+        this.vehicleGroup.name = `vehicle_${vehicleInfo.vehicleModel}`;
+
+        for (const roi of rois) {
+            const lods = roi.lods || [];
+            if (lods.length === 0) continue;
+
+            const lod = lods[lods.length - 1]; // Highest quality
+            for (const mesh of lod.meshes) {
+                const geometry = this.createGeometry(mesh, lod);
+                if (!geometry) continue;
+
+                let material;
+                const meshTexName = mesh.properties?.textureName?.toLowerCase();
+                if (meshTexName && this.textures.has(meshTexName)) {
+                    material = new THREE.MeshLambertMaterial({
+                        map: this.textures.get(meshTexName),
+                        side: THREE.DoubleSide,
+                        color: 0xffffff
+                    });
+                } else {
+                    const meshColor = mesh.properties?.color || { r: 128, g: 128, b: 128 };
+                    material = new THREE.MeshLambertMaterial({
+                        color: new THREE.Color(meshColor.r / 255, meshColor.g / 255, meshColor.b / 255),
+                        side: THREE.DoubleSide
+                    });
+                }
+
+                this.vehicleGroup.add(new THREE.Mesh(geometry, material));
+            }
+        }
+
+        this.modelGroup.add(this.vehicleGroup);
+    }
+
+    /**
      * Center and scale the actor, excluding the hat from the bounding box
      * so that changing hats doesn't shift the actor's position.
      */
@@ -295,6 +361,9 @@ export class ActorRenderer extends BaseRenderer {
         for (let i = 0; i < this.partGroups.length; i++) {
             if (i === 1 || !this.partGroups[i]) continue; // skip hat
             box.expandByObject(this.partGroups[i]);
+        }
+        if (this.vehicleGroup) {
+            box.expandByObject(this.vehicleGroup);
         }
 
         if (box.isEmpty()) {
@@ -383,27 +452,40 @@ export class ActorRenderer extends BaseRenderer {
      * is queued, plays it first (one-shot), then resumes the walking loop.
      * Otherwise loads the walking animation from the g_cycles table using the
      * secondary (speed 4.0) variant which NPCs typically use in-game.
+     * When vehicleInfo is provided, uses the vehicle animation instead.
      * Falls back to Y-axis rotation if unavailable.
      */
-    async loadAnimationForActor(actorIndex, mood = 0) {
+    async loadAnimationForActor(actorIndex, mood = 0, vehicleInfo = undefined) {
         if (!this.modelGroup) return;
 
-        // If a click animation is queued, play it first, then resume walking
-        if (this._queuedClickMove !== null) {
+        // Use stored vehicleInfo when not explicitly provided (e.g. resuming after click anim)
+        if (vehicleInfo === undefined) {
+            vehicleInfo = this.vehicleInfo;
+        }
+
+        // If a click animation is queued (skip in vehicle mode), play it first
+        if (this._queuedClickMove !== null && !vehicleInfo) {
             const move = this._queuedClickMove;
             this._queuedClickMove = null;
             await this.playClickAnimation(move, actorIndex, mood);
             return;
         }
+        this._queuedClickMove = null;
 
         this.stopAnimation();
 
-        const suffixIdx = ACTOR_SUFFIX_INDEX[actorIndex] ?? 0;
-        // Use secondary animation (speed 4.0 threshold) — this is what NPCs use in-game
-        // since their walking speed (0.6-2.0) exceeds the 0.7 primary threshold
-        const secondaryCol = ActorRenderer.getSecondaryAnimColumn(mood);
-        const primaryCol = mood;
-        const animName = G_CYCLES[suffixIdx]?.[secondaryCol] ?? G_CYCLES[suffixIdx]?.[primaryCol];
+        let animName;
+        if (vehicleInfo) {
+            // Vehicle mode: use the vehicle animation name
+            animName = vehicleInfo.vehicleAnim;
+        } else {
+            const suffixIdx = ACTOR_SUFFIX_INDEX[actorIndex] ?? 0;
+            // Use secondary animation (speed 4.0 threshold) — this is what NPCs use in-game
+            // since their walking speed (0.6-2.0) exceeds the 0.7 primary threshold
+            const secondaryCol = ActorRenderer.getSecondaryAnimColumn(mood);
+            const primaryCol = mood;
+            animName = G_CYCLES[suffixIdx]?.[secondaryCol] ?? G_CYCLES[suffixIdx]?.[primaryCol];
+        }
 
         if (!animName) return; // null entry in g_cycles — no animation for this combo
 
@@ -423,6 +505,11 @@ export class ActorRenderer extends BaseRenderer {
                 }
             }
 
+            // Map vehicle animation nodes if in vehicle mode
+            if (vehicleInfo && this.vehicleGroup) {
+                this.mapVehicleAnimNodes(animData, vehicleInfo, nodeToPartGroup);
+            }
+
             const tracks = this.buildHierarchicalTracks(animData, nodeToPartGroup);
             if (tracks.length === 0) return;
 
@@ -433,6 +520,32 @@ export class ActorRenderer extends BaseRenderer {
         } catch (e) {
             // Animation unavailable — fall back to rotation (handled in updateAnimation())
         }
+    }
+
+    /**
+     * Map vehicle animation tree nodes to the vehicle group.
+     * Scans the animation tree for nodes whose name (stripped of trailing
+     * digits/underscores) matches the vehicle model name, and maps them
+     * to the vehicleGroup so buildHierarchicalTracks can drive the vehicle.
+     */
+    mapVehicleAnimNodes(animData, vehicleInfo, nodeToPartGroup) {
+        const vehicleName = vehicleInfo.vehicleModel.toLowerCase();
+
+        const scanTree = (node) => {
+            const name = node.data.name?.toLowerCase();
+            if (name) {
+                // Strip trailing digits and underscores to get base name
+                const baseName = name.replace(/[\d_]+$/, '');
+                if (baseName === vehicleName) {
+                    nodeToPartGroup.set(name, this.vehicleGroup);
+                }
+            }
+            for (const child of node.children) {
+                scanTree(child);
+            }
+        };
+
+        scanTree(animData.rootNode);
     }
 
     /**
@@ -761,6 +874,8 @@ export class ActorRenderer extends BaseRenderer {
         this.stopAnimation();
         super.clearModel();
         this.partGroups = [];
+        this.vehicleGroup = null;
+        this.vehicleInfo = null;
     }
 
     start() {

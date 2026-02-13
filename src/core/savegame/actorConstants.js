@@ -666,6 +666,32 @@ export const ActorDisplayNames = Object.freeze([
 ]);
 
 /**
+ * Vehicle associations for actors. Maps ActorInfoInit index -> vehicle info.
+ * From g_characters[].m_vehicleId and g_vehicles[] in legoanimationmanager.cpp.
+ * vehicleAnim = g_cycles[row][10] for each character.
+ */
+export const ActorVehicles = Object.freeze({
+    0:  { vehicleModel: 'board',  vehicleAnim: 'CNs001Sk' },  // pepper -> skateboard
+    3:  { vehicleModel: 'motoni', vehicleAnim: 'CNs011Ni' },  // nick -> motorcycle
+    4:  { vehicleModel: 'motola', vehicleAnim: 'CNs011La' },  // laura -> motorcycle
+    37: { vehicleModel: 'bikerd', vehicleAnim: 'CNs001Rd' },  // rd -> bicycle
+    38: { vehicleModel: 'bikepg', vehicleAnim: 'CNs001Pg' },  // pg -> bicycle
+    39: { vehicleModel: 'bikebd', vehicleAnim: 'CNs001Bd' },  // bd -> bicycle
+    40: { vehicleModel: 'bikesy', vehicleAnim: 'CNs001Sy' },  // sy -> bicycle
+    56: { vehicleModel: 'board',  vehicleAnim: 'CNs001Sk' },  // pep (pepper alias)
+});
+
+export const VehicleDisplayNames = Object.freeze({
+    'board': 'Skateboard',
+    'motoni': 'Motorcycle',
+    'motola': 'Motorcycle',
+    'bikebd': 'Bicycle',
+    'bikepg': 'Bicycle',
+    'bikerd': 'Bicycle',
+    'bikesy': 'Bicycle',
+});
+
+/**
  * Save file field offsets within the 16-byte character record.
  * The save file stores these per-character values that override defaults:
  *   sound(S32) + move(S32) + mood(U8) + hatPartNameIndex(U8) + hatNameIndex(U8)

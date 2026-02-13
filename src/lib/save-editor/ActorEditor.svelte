@@ -1,8 +1,8 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import { ActorRenderer } from '../../core/rendering/ActorRenderer.js';
-    import { WdbParser, buildGlobalPartsMap } from '../../core/formats/WdbParser.js';
-    import { ActorInfoInit, ActorPart, ActorDisplayNames } from '../../core/savegame/actorConstants.js';
+    import { WdbParser, buildGlobalPartsMap, buildPartsMap, resolveLods } from '../../core/formats/WdbParser.js';
+    import { ActorInfoInit, ActorPart, ActorDisplayNames, ActorVehicles, VehicleDisplayNames } from '../../core/savegame/actorConstants.js';
     import { Actor } from '../../core/savegame/constants.js';
     import NavButton from '../NavButton.svelte';
     import ResetButton from '../ResetButton.svelte';
@@ -19,13 +19,18 @@
     // Cached WDB data
     let globalPartsMap = null;
     let globalTextures = null;
+    let vehiclePartsMap = null;
+    let vehicleTextures = null;
 
     let actorIndex = 0;
     let loadedActorKey = null;
+    let showVehicle = false;
 
     $: actorInfo = ActorInfoInit[actorIndex];
     $: actorName = ActorDisplayNames[actorIndex] || actorInfo?.name || 'Unknown';
     $: charState = slot?.characters?.[actorIndex];
+    $: vehicleInfo = ActorVehicles[actorIndex] || null;
+    $: vehicleName = vehicleInfo ? VehicleDisplayNames[vehicleInfo.vehicleModel] : null;
 
     $: isDefault = actorInfo && charState &&
         charState.sound === actorInfo.sound &&
@@ -39,8 +44,8 @@
         charState.leglftNameIndex === actorInfo.parts[8].nameIndex &&
         charState.legrtNameIndex === actorInfo.parts[9].nameIndex;
 
-    function actorKey(slotNumber, idx, cs) {
-        return `${slotNumber}-${idx}-${cs.hatPartNameIndex}-${cs.hatNameIndex}-${cs.infogronNameIndex}-${cs.armlftNameIndex}-${cs.armrtNameIndex}-${cs.leglftNameIndex}-${cs.legrtNameIndex}-${cs.mood}`;
+    function actorKey(slotNumber, idx, cs, vehicle) {
+        return `${slotNumber}-${idx}-${cs.hatPartNameIndex}-${cs.hatNameIndex}-${cs.infogronNameIndex}-${cs.armlftNameIndex}-${cs.armrtNameIndex}-${cs.leglftNameIndex}-${cs.legrtNameIndex}-${cs.mood}-${vehicle}`;
     }
 
     onMount(async () => {
@@ -65,6 +70,55 @@
                 throw new Error('No global parts found in WORLD.WDB');
             }
 
+            // Collect vehicle model names needed
+            const neededVehicles = new Set();
+            for (const v of Object.values(ActorVehicles)) {
+                neededVehicles.add(v.vehicleModel.toLowerCase());
+            }
+
+            // Vehicle geometries are stored as models (not parts) in WDB worlds.
+            // Scan worlds for matching model entries, parse model data, and
+            // collect all ROIs (root + children) with resolved LODs.
+            const vModelsMap = new Map();
+            const vTextures = [];
+            for (const world of wdbData.worlds) {
+                let worldPartsMap = null;
+                for (const model of world.models) {
+                    const modelKey = model.name.toLowerCase();
+                    if (!neededVehicles.has(modelKey) || vModelsMap.has(modelKey)) continue;
+                    const modelData = wdbParser.parseModelData(model.dataOffset);
+                    const roi = modelData.roi;
+                    if (!roi) continue;
+
+                    // Build world parts map lazily (needed for shared LOD resolution)
+                    if (!worldPartsMap) {
+                        worldPartsMap = buildPartsMap(wdbParser, world.parts);
+                    }
+
+                    // Collect all renderable ROIs (root + children recursively)
+                    const rois = [];
+                    const collectRois = (node) => {
+                        const lods = resolveLods(node, worldPartsMap);
+                        if (lods.length > 0) {
+                            rois.push({ name: node.name, lods });
+                        }
+                        for (const child of node.children || []) {
+                            collectRois(child);
+                        }
+                    };
+                    collectRois(roi);
+
+                    if (rois.length > 0) {
+                        vModelsMap.set(modelKey, rois);
+                    }
+                    if (modelData.textures) {
+                        vTextures.push(...modelData.textures);
+                    }
+                }
+            }
+            vehiclePartsMap = vModelsMap;
+            vehicleTextures = vTextures;
+
             renderer = new ActorRenderer(canvas);
             loadCurrentActor();
             renderer.start();
@@ -80,9 +134,9 @@
         renderer?.dispose();
     });
 
-    // Reload actor when index or character state changes
+    // Reload actor when index, character state, or vehicle toggle changes
     $: if (renderer && !loading && actorInfo && charState) {
-        if (actorKey(slot?.slotNumber, actorIndex, charState) !== loadedActorKey) {
+        if (actorKey(slot?.slotNumber, actorIndex, charState, showVehicle) !== loadedActorKey) {
             loadCurrentActor();
         }
     }
@@ -90,17 +144,25 @@
     function loadCurrentActor() {
         if (!renderer || !globalPartsMap || !slot?.characters) return;
 
-        renderer.loadActor(actorIndex, slot.characters, globalPartsMap, globalTextures);
-        loadedActorKey = actorKey(slot?.slotNumber, actorIndex, slot.characters[actorIndex]);
+        const activeVehicle = showVehicle ? vehicleInfo : null;
+        renderer.loadActor(
+            actorIndex, slot.characters, globalPartsMap, globalTextures,
+            activeVehicle ? vehiclePartsMap : null,
+            activeVehicle ? vehicleTextures : null,
+            activeVehicle
+        );
+        loadedActorKey = actorKey(slot?.slotNumber, actorIndex, slot.characters[actorIndex], showVehicle);
     }
 
     function prevActor() {
         actorIndex = actorIndex > 0 ? actorIndex - 1 : ActorInfoInit.length - 1;
+        showVehicle = false;
         loadedActorKey = null;
     }
 
     function nextActor() {
         actorIndex = actorIndex < ActorInfoInit.length - 1 ? actorIndex + 1 : 0;
+        showVehicle = false;
         loadedActorKey = null;
     }
 
@@ -255,6 +317,19 @@
             </div>
             <NavButton direction="right" onclick={nextActor} />
         </div>
+        {#if vehicleInfo}
+            <button
+                type="button"
+                class="vehicle-toggle-btn"
+                class:active={showVehicle}
+                onclick={() => { showVehicle = !showVehicle; }}
+                title={showVehicle ? 'Show without vehicle' : `Show with ${vehicleName}`}
+            >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M4 12.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm8 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5.5 11h5V9.5L13 8l-1-3H4L2.5 8l2.5 1.5V11h.5z"/>
+                </svg>
+            </button>
+        {/if}
     </div>
 
     <div class="reset-container">
@@ -320,6 +395,7 @@
     }
 
     .part-nav-wrapper {
+        position: relative;
         margin-top: 10px;
     }
 
@@ -346,6 +422,31 @@
         display: block;
         font-size: 0.9em;
         color: var(--color-text-light);
+    }
+
+    .vehicle-toggle-btn {
+        position: absolute;
+        right: -36px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        background: var(--color-bg-input);
+        border: 1px solid var(--color-border-medium);
+        border-radius: 6px;
+        color: var(--color-text-light);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .vehicle-toggle-btn:hover,
+    .vehicle-toggle-btn.active {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
     }
 
     .reset-container {
