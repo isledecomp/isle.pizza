@@ -105,6 +105,15 @@ const ANIMATIONS = [
   ['CNsx11Ni', 178, 879, '0e09f9119f37308af94956c38527e758'],
 ];
 
+// Click animations from SNDANIM.SI (objectId = m_move + 10)
+// [name, objectId, size, md5]
+const CLICK_ANIMATIONS = [
+  ['ClickAnim0', 10, 1898, 'e8bb524cc29c6bdc9416ae3a95727dd1'],
+  ['ClickAnim1', 11, 2038, '21444b8952df188cb338e830a8ee1e00'],
+  ['ClickAnim2', 12, 2606, '5b49aeb7dcd7e52f22febc6502b9f8a2'],
+  ['ClickAnim3', 13, 4218, 'e25f074d7012f89868011dc2bd5c0586'],
+];
+
 // [name, siFile, objectId, size, md5]
 const TEXTURES = [
   ['CHJETL1', 'Scripts/Build/COPTER.SI', 112, 4235, 'af5010e9de08240c1ff7ad08ae90087e'],
@@ -278,7 +287,28 @@ async function main() {
       failed++;
     }
   }
-  console.log(`  ${found}/${ANIMATIONS.length} animations found\n`);
+  console.log(`  ${found}/${ANIMATIONS.length} walking animations found\n`);
+
+  // --- Click Animations (in SNDANIM.SI) ---
+  const sndanimSI = await loadSI('Scripts/SNDANIM.SI');
+  console.log(`Loaded SNDANIM.SI (${(sndanimSI.length / 1024 / 1024).toFixed(1)} MB)`);
+
+  const clickObjectIds = new Set(CLICK_ANIMATIONS.map(([, objectId]) => objectId));
+  const clickRanges = findMxChByObjectId(sndanimSI, clickObjectIds);
+
+  let clickFound = 0;
+  for (const [name, objectId, size, expectedMd5] of CLICK_ANIMATIONS) {
+    const result = verifyRanges(sndanimSI, clickRanges.get(objectId), size, expectedMd5);
+    if (result) {
+      manifest.animations[name] = formatResult('Scripts/SNDANIM.SI', result);
+      clickFound++;
+      found++;
+    } else {
+      console.error(`  FAILED: ${name} (objectId ${objectId})`);
+      failed++;
+    }
+  }
+  console.log(`  ${clickFound}/${CLICK_ANIMATIONS.length} click animations found\n`);
 
   // --- Textures (across Build SI files) ---
   // Group textures by SI file so we scan each file once
@@ -345,7 +375,7 @@ async function main() {
 
   await fs.writeFile(OUTPUT_PATH, JSON.stringify(manifest));
   console.log(`Wrote ${OUTPUT_PATH}`);
-  console.log(`Total: ${found} assets (${ANIMATIONS.length} animations, ${TEXTURES.length} textures, ${BITMAPS.length} bitmaps)`);
+  console.log(`Total: ${found} assets (${ANIMATIONS.length} walking + ${CLICK_ANIMATIONS.length} click animations, ${TEXTURES.length} textures, ${BITMAPS.length} bitmaps)`);
 }
 
 main().catch(err => {

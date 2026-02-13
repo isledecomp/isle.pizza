@@ -108,23 +108,28 @@
         if (!renderer || !slot?.characters || !charState) return;
 
         const playerId = slot.header?.actorId;
+        let acted = false;
+        let clickMove = charState.move;
 
         switch (playerId) {
-            case Actor.PEPPER:
-                switchVariant();
-                break;
-            case Actor.MAMA:
-                switchSound();
-                break;
-            case Actor.PAPA:
-                switchMove();
-                break;
-            case Actor.NICK:
-                switchColor(event);
-                break;
-            case Actor.LAURA:
-                switchMood();
-                break;
+            case Actor.PEPPER: switchVariant(); acted = true; break;
+            case Actor.MAMA: switchSound(); acted = true; break;
+            case Actor.PAPA: clickMove = switchMove(); acted = true; break;
+            case Actor.NICK: acted = switchColor(event); break;
+            case Actor.LAURA: switchMood(); acted = true; break;
+        }
+
+        if (!acted) return;
+
+        // Queue click animation — consumed by loadAnimationForActor
+        renderer.queueClickAnimation(clickMove);
+
+        // Sound/move changes don't affect the actorKey, so the reactive block
+        // won't trigger a model reload. Play the click animation directly.
+        // For visual changes (hat/color/mood), the reactive block will call
+        // loadCurrentActor → loadAnimationForActor, which consumes the queue.
+        if (playerId === Actor.MAMA || playerId === Actor.PAPA) {
+            renderer.loadAnimationForActor(actorIndex, charState.mood);
         }
     }
 
@@ -152,11 +157,12 @@
         onUpdate({
             character: { characterIndex: actorIndex, field: 'move', value: nextMove }
         });
+        return nextMove;
     }
 
     function switchColor(event) {
         let partIdx = renderer.getClickedPart(event);
-        if (partIdx < 0) return;
+        if (partIdx < 0) return false;
 
         // Remap clicked part to the part that owns its color
         // (matches SwitchColor in legocharactermanager.cpp)
@@ -176,10 +182,10 @@
         };
 
         const field = fieldMap[partIdx];
-        if (!field) return;
+        if (!field) return false;
 
         const part = actorInfo.parts[partIdx];
-        if (!part.nameIndices) return;
+        if (!part.nameIndices) return false;
 
         const currentIdx = charState[field] ?? part.nameIndex;
         const maxIdx = part.nameIndices.length;
@@ -188,6 +194,7 @@
         onUpdate({
             character: { characterIndex: actorIndex, field, value: nextIdx }
         });
+        return true;
     }
 
     function switchMood() {

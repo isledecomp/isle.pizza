@@ -89,6 +89,7 @@ export class ActorRenderer extends BaseRenderer {
         this.mixer = null;
         this.currentAction = null;
         this.animationCache = new Map(); // suffix → parsed animation data
+        this._queuedClickMove = null; // queued click animation move index (0-3)
 
         this.camera.position.set(2, 0.8, 3.5);
         this.camera.lookAt(0, 0.2, 0);
@@ -370,15 +371,30 @@ export class ActorRenderer extends BaseRenderer {
     }
 
     /**
-     * Load and start walking animation for the given actor using g_cycles table.
-     * Loads the secondary (speed 4.0) animation which NPCs typically use in-game,
-     * falling back to primary (speed 0.7) if unavailable. Matches FUN_10063b90
-     * in legoanimationmanager.cpp. Pre-computes world-space transforms by evaluating
-     * the animation tree hierarchically, then plays via AnimationMixer.
+     * Queue a click animation to play after the next model load/reload.
+     * @param {number} move - The actor's m_move value (0-3)
+     */
+    queueClickAnimation(move) {
+        this._queuedClickMove = move;
+    }
+
+    /**
+     * Load and start the animation for the given actor. If a click animation
+     * is queued, plays it first (one-shot), then resumes the walking loop.
+     * Otherwise loads the walking animation from the g_cycles table using the
+     * secondary (speed 4.0) variant which NPCs typically use in-game.
      * Falls back to Y-axis rotation if unavailable.
      */
     async loadAnimationForActor(actorIndex, mood = 0) {
         if (!this.modelGroup) return;
+
+        // If a click animation is queued, play it first, then resume walking
+        if (this._queuedClickMove !== null) {
+            const move = this._queuedClickMove;
+            this._queuedClickMove = null;
+            await this.playClickAnimation(move, actorIndex, mood);
+            return;
+        }
 
         this.stopAnimation();
 
@@ -416,6 +432,59 @@ export class ActorRenderer extends BaseRenderer {
             this.currentAction.play();
         } catch (e) {
             // Animation unavailable — fall back to rotation (handled in updateAnimation())
+        }
+    }
+
+    /**
+     * Play a one-shot click animation (pose/gesture) determined by the actor's
+     * m_move value (0-3). After it finishes, the walking animation resumes.
+     * Matches LegoEntity::ClickAnimation which uses objectId = m_move + 10.
+     */
+    async playClickAnimation(move, actorIndex, mood) {
+        if (!this.modelGroup) return;
+
+        this.stopAnimation();
+
+        const animName = `ClickAnim${move}`;
+        try {
+            const animData = await this.fetchAnimationByName(animName);
+            if (!animData || !this.modelGroup) {
+                this.loadAnimationForActor(actorIndex, mood);
+                return;
+            }
+
+            const nodeToPartGroup = new Map();
+            for (let i = 0; i < this.partGroups.length; i++) {
+                const pg = this.partGroups[i];
+                if (!pg) continue;
+                const lodName = pg.userData.lodName;
+                const animNodeName = PART_NAME_TO_ANIM_NODE[lodName];
+                if (animNodeName) {
+                    nodeToPartGroup.set(animNodeName.toLowerCase(), pg);
+                }
+            }
+
+            const tracks = this.buildHierarchicalTracks(animData, nodeToPartGroup);
+            if (tracks.length === 0) {
+                this.loadAnimationForActor(actorIndex, mood);
+                return;
+            }
+
+            const clip = new THREE.AnimationClip('click', -1, tracks);
+            this.mixer = new THREE.AnimationMixer(this.modelGroup);
+            const action = this.mixer.clipAction(clip);
+            action.setLoop(THREE.LoopOnce);
+            action.clampWhenFinished = true;
+            this.currentAction = action;
+            action.play();
+
+            // When click animation finishes, resume walking
+            this.mixer.addEventListener('finished', () => {
+                this.loadAnimationForActor(actorIndex, mood);
+            });
+        } catch (e) {
+            console.error('ActorRenderer: click animation error', e);
+            this.loadAnimationForActor(actorIndex, mood);
         }
     }
 
@@ -495,6 +564,11 @@ export class ActorRenderer extends BaseRenderer {
         const data = node.data;
         let mat = new THREE.Matrix4();
 
+        // Strip XZ translation on the actor root to keep the actor in place (treadmill fix).
+        // Walking anims: the root node IS the actor (named "pepper", "mama", "actor_01", etc.)
+        // Click anims: actor_01 is nested under wrapper nodes like "-NPa001ns"
+        const isActorRoot = isRoot || data.name?.toLowerCase() === 'actor_01';
+
         // 1. Scale (applied first)
         if (data.scaleKeys.length > 0) {
             const scale = this.interpolateVertex(data.scaleKeys, time, false);
@@ -512,9 +586,9 @@ export class ActorRenderer extends BaseRenderer {
         if (data.translationKeys.length > 0) {
             const vertex = this.interpolateVertex(data.translationKeys, time, true);
             if (vertex) {
-                if (isRoot) {
-                    // Root: only apply vertical (Y) to preserve bounce,
-                    // strip horizontal (XZ) so the actor walks in place
+                if (isActorRoot) {
+                    // Actor_01: only apply vertical (Y) to preserve bounce,
+                    // strip horizontal (XZ) so the actor animates in place
                     mat.elements[13] += vertex.y;
                 } else {
                     mat.elements[12] += vertex.x;
