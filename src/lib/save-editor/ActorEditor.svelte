@@ -4,6 +4,7 @@
     import { WdbParser, buildGlobalPartsMap, buildPartsMap, resolveLods } from '../../core/formats/WdbParser.js';
     import { ActorInfoInit, ActorPart, ActorDisplayNames, ActorVehicles, VehicleDisplayNames } from '../../core/savegame/actorConstants.js';
     import { Actor } from '../../core/savegame/constants.js';
+    import { fetchSoundAsWav } from '../../core/assetLoader.js';
     import NavButton from '../NavButton.svelte';
     import ResetButton from '../ResetButton.svelte';
     import EditorTooltip from '../EditorTooltip.svelte';
@@ -25,6 +26,39 @@
     let actorIndex = 0;
     let loadedActorKey = null;
     let showVehicle = false;
+
+    let audioContext = null;
+    let gainNode = null;
+    const soundCache = new Map();
+
+    async function playSound(name) {
+        try {
+            if (!audioContext) {
+                audioContext = new AudioContext();
+                gainNode = audioContext.createGain();
+                gainNode.gain.value = 0.3;
+                gainNode.connect(audioContext.destination);
+            }
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+
+            let audioBuffer = soundCache.get(name);
+            if (!audioBuffer) {
+                const wav = await fetchSoundAsWav(name);
+                if (!wav) return;
+                audioBuffer = await audioContext.decodeAudioData(wav);
+                soundCache.set(name, audioBuffer);
+            }
+
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(gainNode);
+            source.start();
+        } catch (e) {
+            console.error(`Failed to play sound ${name}:`, e);
+        }
+    }
 
     $: actorInfo = ActorInfoInit[actorIndex];
     $: actorName = ActorDisplayNames[actorIndex] || actorInfo?.name || 'Unknown';
@@ -132,6 +166,7 @@
 
     onDestroy(() => {
         renderer?.dispose();
+        audioContext?.close();
     });
 
     // Reload actor when index, character state, or vehicle toggle changes
@@ -182,6 +217,17 @@
         }
 
         if (!acted) return;
+
+        // Play click sound (Mama plays the *new* sound after cycling)
+        const soundIdx = playerId === Actor.MAMA
+            ? (charState.sound + 1) % 9
+            : charState.sound;
+        playSound(`ClickSound${soundIdx}`);
+
+        // Laura additionally plays a mood sound
+        if (playerId === Actor.LAURA) {
+            playSound(`MoodSound${(charState.mood + 1) % 4}`);
+        }
 
         // Queue click animation — consumed by loadAnimationForActor
         renderer.queueClickAnimation(clickMove);

@@ -58,6 +58,49 @@ export async function fetchBitmap(name) {
   return fetchEntry(entry);
 }
 
+async function fetchSound(name) {
+  const m = await loadManifest();
+  const entry = m.sounds[name];
+  if (!entry) return null;
+  return fetchEntry(entry);
+}
+
+/**
+ * Build a WAV file from raw MxCh sound data.
+ * Layout: bytes 0-15 = PCMWAVEFORMAT, 16-19 = m_dataSize, 20-23 = m_flags, 24+ = PCM data.
+ * Uses actual available size since sector interleaving may clip the last chunk.
+ */
+function buildWav(buffer) {
+  const dataSize = buffer.byteLength - 24;
+  const wavSize = 44 + dataSize;
+  const wav = new ArrayBuffer(wavSize);
+  const view = new DataView(wav);
+  const bytes = new Uint8Array(wav);
+
+  // RIFF header
+  bytes.set([0x52, 0x49, 0x46, 0x46]); // "RIFF"
+  view.setUint32(4, wavSize - 8, true);
+  bytes.set([0x57, 0x41, 0x56, 0x45], 8); // "WAVE"
+
+  // fmt chunk — copy PCMWAVEFORMAT (16 bytes) directly from source header
+  bytes.set([0x66, 0x6D, 0x74, 0x20], 12); // "fmt "
+  view.setUint32(16, 16, true);
+  bytes.set(new Uint8Array(buffer, 0, 16), 20);
+
+  // data chunk
+  bytes.set([0x64, 0x61, 0x74, 0x61], 36); // "data"
+  view.setUint32(40, dataSize, true);
+  bytes.set(new Uint8Array(buffer, 24, dataSize), 44);
+
+  return wav;
+}
+
+export async function fetchSoundAsWav(name) {
+  const buffer = await fetchSound(name);
+  if (!buffer) return null;
+  return buildWav(buffer);
+}
+
 /**
  * Decode a raw Windows DIB (no BM file header) into RGBA ImageData.
  * Supports 8-bit indexed color only.

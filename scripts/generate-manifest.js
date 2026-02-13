@@ -114,6 +114,29 @@ const CLICK_ANIMATIONS = [
   ['ClickAnim3', 13, 4218, 'e25f074d7012f89868011dc2bd5c0586'],
 ];
 
+// Click sounds from SNDANIM.SI (objectId = m_sound + 50)
+// [name, objectId, size, md5]
+const CLICK_SOUNDS = [
+  ['ClickSound0', 50, 10078, '928eeb70f8dadbc400f5c150727fde69'],
+  ['ClickSound1', 51, 15988, '9c8aa04b0e4683976c3f2c2be868b37e'],
+  ['ClickSound2', 52, 4114, 'a94a6dc7ae24fc42b1b9be962bbf3bf1'],
+  ['ClickSound3', 53, 7741, '96bd26dc212ffd31da365ea1d088bfa3'],
+  ['ClickSound4', 54, 23705, 'ca79cc736729c12aed6da018725fb0e3'],
+  ['ClickSound5', 55, 24179, 'b7c97cb776f0afbba40f2e21fc0b309d'],
+  ['ClickSound6', 56, 17675, 'b69b07bba21c6667d0af651c89828815'],
+  ['ClickSound7', 57, 18953, '65d9cc0d09e3bfb831cee014a84085f7'],
+  ['ClickSound8', 58, 7344, '7bbc41251b750835989cb3b35c8546a4'],
+];
+
+// Mood sounds from SNDANIM.SI (objectId = m_mood + 66)
+// [name, objectId, size, md5]
+const MOOD_SOUNDS = [
+  ['MoodSound0', 66, 11534, '91379f36012f600a4b7432e003e16c3a'],
+  ['MoodSound1', 67, 11534, '91379f36012f600a4b7432e003e16c3a'],
+  ['MoodSound2', 68, 11534, '91379f36012f600a4b7432e003e16c3a'],
+  ['MoodSound3', 69, 11534, '91379f36012f600a4b7432e003e16c3a'],
+];
+
 // [name, siFile, objectId, size, md5]
 const TEXTURES = [
   ['CHJETL1', 'Scripts/Build/COPTER.SI', 112, 4235, 'af5010e9de08240c1ff7ad08ae90087e'],
@@ -266,7 +289,7 @@ function verifyRanges(siBuf, ranges, size, expectedMd5) {
 async function main() {
   console.log('Generating asset range manifest...\n');
 
-  const manifest = { animations: {}, textures: {}, bitmaps: {} };
+  const manifest = { animations: {}, sounds: {}, textures: {}, bitmaps: {} };
   let found = 0;
   let failed = 0;
 
@@ -309,6 +332,25 @@ async function main() {
     }
   }
   console.log(`  ${clickFound}/${CLICK_ANIMATIONS.length} click animations found\n`);
+
+  // --- Sounds (in SNDANIM.SI) ---
+  const allSounds = [...CLICK_SOUNDS, ...MOOD_SOUNDS];
+  const soundObjectIds = new Set(allSounds.map(([, objectId]) => objectId));
+  const soundRanges = findMxChByObjectId(sndanimSI, soundObjectIds);
+
+  let soundFound = 0;
+  for (const [name, objectId, size, expectedMd5] of allSounds) {
+    const result = verifyRanges(sndanimSI, soundRanges.get(objectId), size, expectedMd5);
+    if (result) {
+      manifest.sounds[name] = formatResult('Scripts/SNDANIM.SI', result);
+      soundFound++;
+      found++;
+    } else {
+      console.error(`  FAILED: ${name} (objectId ${objectId})`);
+      failed++;
+    }
+  }
+  console.log(`  ${soundFound}/${allSounds.length} sounds found\n`);
 
   // --- Textures (across Build SI files) ---
   // Group textures by SI file so we scan each file once
@@ -375,7 +417,7 @@ async function main() {
 
   await fs.writeFile(OUTPUT_PATH, JSON.stringify(manifest));
   console.log(`Wrote ${OUTPUT_PATH}`);
-  console.log(`Total: ${found} assets (${ANIMATIONS.length} walking + ${CLICK_ANIMATIONS.length} click animations, ${TEXTURES.length} textures, ${BITMAPS.length} bitmaps)`);
+  console.log(`Total: ${found} assets (${ANIMATIONS.length} walking + ${CLICK_ANIMATIONS.length} click animations, ${allSounds.length} sounds, ${TEXTURES.length} textures, ${BITMAPS.length} bitmaps)`);
 }
 
 main().catch(err => {
