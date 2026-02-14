@@ -101,6 +101,7 @@
 
     function handleClick(event) {
         if (!renderer || loading) return;
+        if (renderer.wasDragged()) return;
 
         const hit = renderer.raycast(event);
         if (hit) {
@@ -152,10 +153,14 @@
     }
 
     canvas {
-        cursor: pointer;
+        cursor: grab;
         border-radius: 8px;
         margin-bottom: 12px;
         max-width: 100%;
+    }
+
+    canvas:active {
+        cursor: grabbing;
     }
 
     canvas.hidden {
