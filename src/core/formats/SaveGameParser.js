@@ -150,10 +150,25 @@ export class SaveGameParser {
     }
 
     /**
-     * Skip building manager data (16 buildings * 10 bytes = 160 bytes + 1 byte variant)
+     * Parse building manager data (16 buildings * 10 bytes = 160 bytes + 1 byte variant)
+     * Each building: sound(U32) + move(U32) + mood(U8) + counter(S8)
      */
-    skipBuildings() {
-        this.reader.skip(16 * 10 + 1);
+    parseBuildings() {
+        this.parsed.buildingsOffset = this.reader.tell();
+        const buildings = [];
+
+        for (let i = 0; i < 16; i++) {
+            buildings.push({
+                sound: this.reader.readU32(),
+                move: this.reader.readU32(),
+                mood: this.reader.readU8(),
+                counter: this.reader.readS8()
+            });
+        }
+
+        this.parsed.buildings = buildings;
+        this.parsed.nextVariantOffset = this.reader.tell();
+        this.parsed.nextVariant = this.reader.readU8();
     }
 
     /**
@@ -441,7 +456,7 @@ export class SaveGameParser {
         this.parseVariables();
         this.parseCharacters();
         this.parsePlants();
-        this.skipBuildings();
+        this.parseBuildings();
         this.parseGameStates();
 
         return this.parsed;

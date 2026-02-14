@@ -8,6 +8,7 @@
     import VehicleEditor from './save-editor/VehicleEditor.svelte';
     import ActorEditor from './save-editor/ActorEditor.svelte';
     import PlantEditor from './save-editor/PlantEditor.svelte';
+    import BuildingEditor from './save-editor/BuildingEditor.svelte';
     import { fetchBitmapAsURL } from '../core/assetLoader.js';
     import { saveEditorState, currentPage } from '../stores.js';
     import { listSaveSlots, updateSaveSlot, updatePlayerName } from '../core/savegame/index.js';
@@ -28,7 +29,8 @@
         { id: 'island', label: 'Island', firstSection: 'skycolor' },
         { id: 'vehicles', label: 'Vehicles', firstSection: null },
         { id: 'actors', label: 'Actors', firstSection: null },
-        { id: 'plants', label: 'Plants', firstSection: null }
+        { id: 'plants', label: 'Plants', firstSection: null },
+        { id: 'buildings', label: 'Buildings', firstSection: null }
     ];
 
     // Reset state when navigating to this page
@@ -181,7 +183,7 @@
             if (updated) {
                 slots = slots.map(s =>
                     s.slotNumber === selectedSlot
-                        ? { ...s, variables: updated.variables, act1State: updated.act1State, characters: updated.characters, plants: updated.plants }
+                        ? { ...s, variables: updated.variables, act1State: updated.act1State, characters: updated.characters, plants: updated.plants, buildings: updated.buildings, buildingsOffset: updated.buildingsOffset, nextVariant: updated.nextVariant, nextVariantOffset: updated.nextVariantOffset }
                         : s
                 );
             }
@@ -484,6 +486,13 @@
                     <div class:hidden={activeTab !== 'plants'}>
                         {#if $currentPage === 'save-editor'}
                             <PlantEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
+                        {/if}
+                    </div>
+
+                    <!-- Buildings Tab -->
+                    <div class:hidden={activeTab !== 'buildings'}>
+                        {#if $currentPage === 'save-editor'}
+                            <BuildingEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
                         {/if}
                     </div>
                 </div>

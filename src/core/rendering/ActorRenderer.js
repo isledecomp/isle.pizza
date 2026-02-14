@@ -369,12 +369,13 @@ export class ActorRenderer extends AnimatedRenderer {
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
 
-        this.modelGroup.position.sub(center);
-
         const maxDim = Math.max(size.x, size.y, size.z);
         if (maxDim > 0) {
             const scale = scaleFactor / maxDim;
             this.modelGroup.scale.setScalar(scale);
+            this.modelGroup.position.copy(center).multiplyScalar(-scale);
+        } else {
+            this.modelGroup.position.sub(center);
         }
     }
 

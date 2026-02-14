@@ -145,6 +145,36 @@ const PLANT_ANIMATIONS = [
   ['PlantAnimP2', 41, 294, '5ddaff70e2b57fdb294769eaa14e42a0'],
 ];
 
+// Building animations from SNDANIM.SI (objectId = g_buildingAnimationId[idx] + move)
+// [name, objectId, size, md5]
+const BUILDING_ANIMATIONS = [
+  ['BuildingAnim9_0', 70, 452, '1292875d15dec79d2fe719f08e6f4b25'],
+  ['BuildingAnim9_1', 71, 356, '0285456907450609d820b0bbd923f3b8'],
+  ['BuildingAnim9_2', 72, 900, '91f87ce4bcb5d02854d0aa23929a4233'],
+  ['BuildingAnim10_0', 73, 502, 'a8c2a3b47aaf7f01ec831b6af2924c0d'],
+  ['BuildingAnim10_1', 74, 370, '8d39ae6fd092cf1586234e80ebe27815'],
+  ['BuildingAnim10_2', 75, 894, '0c59954cf2be82b4221ffb26dbc40d5c'],
+  ['BuildingAnim11_0', 76, 494, '926437967083a0eca288f7b3beba5c98'],
+  ['BuildingAnim11_1', 77, 334, '6899b0fe1510db35a76d04e677f415c1'],
+  ['BuildingAnim11_2', 78, 722, '98fc44fb00024c459e6e0808906f0f95'],
+  ['BuildingAnim12_0', 79, 932, '71e06ffe92b26fe6ceb139f04c8f9556'],
+  ['BuildingAnim12_1', 80, 916, '1fc7a77bff41496a7ca3eadf0681544e'],
+  ['BuildingAnim12_2', 81, 868, '085ca884f316c3436b7fdf9fc2505e57'],
+  ['BuildingAnim13_0', 82, 1024, '855b50251602ce8196bd4cc30f1ce1fa'],
+  ['BuildingAnim13_1', 83, 876, '3893d16e60f7dad4c724c18fdecaf49c'],
+  ['BuildingAnim13_2', 84, 888, '4681ff613c88b07c3a14c2e5b27edf21'],
+  ['BuildingAnim14_0', 85, 972, 'a73d9da4e1c7c2d586d22997b9781fe3'],
+  ['BuildingAnim14_1', 86, 948, 'ee469b2326c7d9e2f3b1fff6177842be'],
+  ['BuildingAnim14_2', 87, 868, '693423f24d6f371d522076ecf4c589d5'],
+];
+
+// Building sounds from SNDANIM.SI (objectId = sound + 60, sounds 4-5 only)
+// [name, objectId, size, md5]
+const BUILDING_SOUNDS = [
+  ['BuildingSound4', 64, 8215, '3066d58d6b26db751d0d0ded1055d886'],
+  ['BuildingSound5', 65, 11534, '91379f36012f600a4b7432e003e16c3a'],
+];
+
 // Plant sounds from SNDANIM.SI (objectId = sound + 56, sounds 3-7)
 // [name, objectId, size, md5]
 const PLANT_SOUNDS = [
@@ -351,7 +381,7 @@ async function main() {
   console.log(`  ${clickFound}/${CLICK_ANIMATIONS.length} click animations found\n`);
 
   // --- Sounds (in SNDANIM.SI) ---
-  const allSounds = [...CLICK_SOUNDS, ...MOOD_SOUNDS, ...PLANT_SOUNDS];
+  const allSounds = [...CLICK_SOUNDS, ...MOOD_SOUNDS, ...PLANT_SOUNDS, ...BUILDING_SOUNDS];
   const soundObjectIds = new Set(allSounds.map(([, objectId]) => objectId));
   const soundRanges = findMxChByObjectId(sndanimSI, soundObjectIds);
 
@@ -386,6 +416,24 @@ async function main() {
     }
   }
   console.log(`  ${plantAnimFound}/${PLANT_ANIMATIONS.length} plant animations found\n`);
+
+  // --- Building Animations (in SNDANIM.SI) ---
+  const buildingAnimObjectIds = new Set(BUILDING_ANIMATIONS.map(([, objectId]) => objectId));
+  const buildingAnimRanges = findMxChByObjectId(sndanimSI, buildingAnimObjectIds);
+
+  let buildingAnimFound = 0;
+  for (const [name, objectId, size, expectedMd5] of BUILDING_ANIMATIONS) {
+    const data = extractAndVerify(sndanimSI, buildingAnimRanges.get(objectId), size, expectedMd5);
+    if (data) {
+      fragments.push({ type: 'animations', name, data });
+      buildingAnimFound++;
+      found++;
+    } else {
+      console.error(`  FAILED: ${name} (objectId ${objectId})`);
+      failed++;
+    }
+  }
+  console.log(`  ${buildingAnimFound}/${BUILDING_ANIMATIONS.length} building animations found\n`);
 
   // --- Textures (across Build SI files) ---
   const texBySI = new Map();
@@ -465,7 +513,7 @@ async function main() {
   await fs.writeFile(BIN_PATH, bundle);
   console.log(`Wrote ${BIN_PATH} (${(bundle.length / 1024).toFixed(1)} KB, ${Object.keys(index).length} entries)`);
 
-  console.log(`Total: ${found} assets (${ANIMATIONS.length} walking + ${CLICK_ANIMATIONS.length} click + ${PLANT_ANIMATIONS.length} plant animations, ${allSounds.length} sounds, ${TEXTURES.length} textures, ${BITMAPS.length} bitmaps)`);
+  console.log(`Total: ${found} assets (${ANIMATIONS.length} walking + ${CLICK_ANIMATIONS.length} click + ${PLANT_ANIMATIONS.length} plant + ${BUILDING_ANIMATIONS.length} building animations, ${allSounds.length} sounds, ${TEXTURES.length} textures, ${BITMAPS.length} bitmaps)`);
 }
 
 main().catch(err => {

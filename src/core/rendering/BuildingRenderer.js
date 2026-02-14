@@ -1,48 +1,31 @@
 import * as THREE from 'three';
-import { PlantLodNames } from '../savegame/plantConstants.js';
 import { LegoColors } from '../savegame/constants.js';
 import { AnimatedRenderer } from './AnimatedRenderer.js';
 
-// Plant color → LEGO color mapping for fallback materials
-const PLANT_COLOR_MAP = ['lego white', 'lego black', 'lego yellow', 'lego red', 'lego green'];
-
-// Animation suffix per variant: flower→F, tree→T, bush→B, palm→P
-const VARIANT_ANIM_SUFFIX = ['F', 'T', 'B', 'P'];
-
-// Per-variant scale factors
-const VARIANT_SCALE = [1.6, 1.8, 1.6, 2.0];
-
 /**
- * Renderer for LEGO Island plants. Much simpler than ActorRenderer —
- * single model group, no multi-part assembly.
+ * Renderer for LEGO Island buildings. Buildings are WDB models with
+ * hierarchical ROIs (potentially multi-part like policsta, jail).
  */
-export class PlantRenderer extends AnimatedRenderer {
+export class BuildingRenderer extends AnimatedRenderer {
     constructor(canvas) {
         super(canvas);
         this._queuedClickAnim = null;
 
-        this.camera.position.set(1.5, 1.2, 2.5);
-        this.camera.lookAt(0, 0.2, 0);
+        this.camera.position.set(2.5, 2.0, 4.0);
+        this.camera.lookAt(0, -0.3, 0);
 
-        this.setupControls(new THREE.Vector3(0, 0.2, 0));
+        this.setupControls(new THREE.Vector3(0, -0.3, 0));
     }
 
     /**
-     * Load a plant model.
-     * @param {number} variant - Plant variant (0-3)
-     * @param {number} color - Plant color (0-4)
-     * @param {Map} partsMap - Name→part lookup from WDB
-     * @param {Array} textures - Texture list from WDB
+     * Load a building model from pre-collected ROIs.
+     * @param {Array} rois - Array of { name, lods } from WDB model
+     * @param {Array} textures - Texture list from the model + globals
      */
-    loadPlant(variant, color, partsMap, textures) {
+    loadBuilding(rois, textures) {
         this.clearModel();
 
-        const lodName = PlantLodNames[variant]?.[color];
-        if (!lodName) return;
-
-        // Find the part data (case-insensitive)
-        const partData = partsMap.get(lodName.toLowerCase());
-        if (!partData) return;
+        if (!rois || rois.length === 0) return;
 
         // Build texture lookup
         if (textures) {
@@ -55,50 +38,50 @@ export class PlantRenderer extends AnimatedRenderer {
 
         this.modelGroup = new THREE.Group();
 
-        const lods = partData.lods || [];
-        if (lods.length === 0) return;
+        for (const roi of rois) {
+            const lods = roi.lods || [];
+            if (lods.length === 0) continue;
 
-        const lod = lods[lods.length - 1]; // Highest quality
-        for (const mesh of lod.meshes) {
-            const geometry = this.createGeometry(mesh, lod);
-            if (!geometry) continue;
+            const lod = lods[lods.length - 1]; // Highest quality
+            for (const mesh of lod.meshes) {
+                const geometry = this.createGeometry(mesh, lod);
+                if (!geometry) continue;
 
-            let material;
-            const meshTexName = mesh.properties?.textureName?.toLowerCase();
-            if (meshTexName && this.textures.has(meshTexName)) {
-                material = new THREE.MeshLambertMaterial({
-                    map: this.textures.get(meshTexName),
-                    side: THREE.DoubleSide,
-                    color: 0xffffff
-                });
-            } else {
-                const meshColor = mesh.properties?.color;
-                if (meshColor) {
+                let material;
+                const meshTexName = mesh.properties?.textureName?.toLowerCase();
+                if (meshTexName && this.textures.has(meshTexName)) {
                     material = new THREE.MeshLambertMaterial({
-                        color: new THREE.Color(meshColor.r / 255, meshColor.g / 255, meshColor.b / 255),
-                        side: THREE.DoubleSide
+                        map: this.textures.get(meshTexName),
+                        side: THREE.DoubleSide,
+                        color: 0xffffff
                     });
                 } else {
-                    // Fallback to plant color
-                    const colorName = PLANT_COLOR_MAP[color] || 'lego green';
-                    const colorEntry = LegoColors[colorName] || LegoColors['lego green'];
-                    material = new THREE.MeshLambertMaterial({
-                        color: new THREE.Color(colorEntry.r / 255, colorEntry.g / 255, colorEntry.b / 255),
-                        side: THREE.DoubleSide
-                    });
+                    const meshColor = mesh.properties?.color;
+                    if (meshColor) {
+                        material = new THREE.MeshLambertMaterial({
+                            color: new THREE.Color(meshColor.r / 255, meshColor.g / 255, meshColor.b / 255),
+                            side: THREE.DoubleSide
+                        });
+                    } else {
+                        const colorEntry = LegoColors['lego white'] || { r: 255, g: 255, b: 255 };
+                        material = new THREE.MeshLambertMaterial({
+                            color: new THREE.Color(colorEntry.r / 255, colorEntry.g / 255, colorEntry.b / 255),
+                            side: THREE.DoubleSide
+                        });
+                    }
                 }
-            }
 
-            this.modelGroup.add(new THREE.Mesh(geometry, material));
+                this.modelGroup.add(new THREE.Mesh(geometry, material));
+            }
         }
 
-        this.centerAndScaleModel(VARIANT_SCALE[variant] ?? 2.0);
+        this.centerAndScaleModel(2.5);
         this.scene.add(this.modelGroup);
         this.renderer.render(this.scene, this.camera);
     }
 
     /**
-     * Check if the plant mesh was clicked.
+     * Check if the building mesh was clicked.
      * @returns {boolean} True if any mesh was hit
      */
     getClickedMesh(mouseEvent) {
@@ -124,36 +107,34 @@ export class PlantRenderer extends AnimatedRenderer {
 
     /**
      * Queue a click animation to play.
-     * @param {number} variant - Plant variant (0-3)
-     * @param {number} move - The plant's move value
+     * @param {number} buildingIndex - Building index (9-14)
+     * @param {number} move - The building's move value
      */
-    queueClickAnimation(variant, move) {
-        this._queuedClickAnim = { variant, move };
+    queueClickAnimation(buildingIndex, move) {
+        this._queuedClickAnim = { buildingIndex, move };
     }
 
     /**
      * Play a queued click animation if available.
-     * Called after model reload or directly for non-visual changes.
      */
     async playQueuedAnimation() {
         if (!this._queuedClickAnim || !this.modelGroup) return;
 
-        const { variant, move } = this._queuedClickAnim;
+        const { buildingIndex, move } = this._queuedClickAnim;
         this._queuedClickAnim = null;
 
-        const suffix = VARIANT_ANIM_SUFFIX[variant];
-        const animName = `PlantAnim${suffix}${move}`;
+        const animName = `BuildingAnim${buildingIndex}_${move}`;
 
         try {
             const animData = await this.fetchAnimationByName(animName);
             if (!animData || !this.modelGroup) return;
 
-            const tracks = this.buildPlantTracks(animData);
+            const tracks = this.buildBuildingTracks(animData);
             if (tracks.length === 0) return;
 
             this.stopAnimation();
 
-            const clip = new THREE.AnimationClip('plantClick', -1, tracks);
+            const clip = new THREE.AnimationClip('buildingClick', -1, tracks);
             this.mixer = new THREE.AnimationMixer(this.modelGroup);
             const action = this.mixer.clipAction(clip);
             action.setLoop(THREE.LoopOnce);
@@ -171,25 +152,22 @@ export class PlantRenderer extends AnimatedRenderer {
     }
 
     /**
-     * Build animation tracks for a plant. Maps animation tree nodes
-     * to the model group (the entire plant is a single group).
+     * Build animation tracks for a building. Same approach as PlantRenderer.
      */
-    buildPlantTracks(animData) {
+    buildBuildingTracks(animData) {
         const duration = animData.duration;
         const timesSet = new Set([0]);
         this.collectKeyframeTimes(animData.rootNode, timesSet);
         const times = [...timesSet].filter(t => t <= duration).sort((a, b) => a - b);
 
-        // Find the deepest non-root node that has animation data —
-        // map it to our modelGroup
-        const plantNode = this.findPlantNode(animData.rootNode);
-        if (!plantNode) return [];
+        const buildingNode = this.findAnimatedNode(animData.rootNode);
+        if (!buildingNode) return [];
 
         const quatValues = [];
         const timesSec = [];
 
         for (const time of times) {
-            const mat = this.evaluateNodeChain(animData.rootNode, plantNode, time);
+            const mat = this.evaluateNodeChain(animData.rootNode, buildingNode, time);
             const position = new THREE.Vector3();
             const quaternion = new THREE.Quaternion();
             const scale = new THREE.Vector3();
@@ -199,24 +177,16 @@ export class PlantRenderer extends AnimatedRenderer {
             quatValues.push(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
         }
 
-        // Only emit rotation tracks — position tracks would override the
-        // centering applied by centerAndScaleModel() since the animation
-        // uses the game's world-space coordinates.
         return [
             new THREE.QuaternionKeyframeTrack('.quaternion', timesSec, quatValues)
         ];
     }
 
-    /**
-     * Find the first leaf/deepest node with animation data in the tree.
-     */
-    findPlantNode(node) {
-        // Depth-first: prefer children
+    findAnimatedNode(node) {
         for (const child of node.children) {
-            const found = this.findPlantNode(child);
+            const found = this.findAnimatedNode(child);
             if (found) return found;
         }
-        // If this node has actual keyframe data, use it
         const d = node.data;
         if (d.translationKeys.length > 0 || d.rotationKeys.length > 0 || d.scaleKeys.length > 0) {
             return node;
@@ -224,9 +194,6 @@ export class PlantRenderer extends AnimatedRenderer {
         return null;
     }
 
-    /**
-     * Evaluate the composed matrix from root down to targetNode at a given time.
-     */
     evaluateNodeChain(node, targetNode, time) {
         const path = [];
         if (!this.findPath(node, targetNode, path)) {
