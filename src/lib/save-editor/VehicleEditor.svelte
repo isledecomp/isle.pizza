@@ -323,7 +323,7 @@
 
 </script>
 
-<EditorTooltip text="Click on the part to cycle through colors. Use the texture button to customize textures on supported parts (vehicle must be fully built first). Changes are automatically saved.">
+<EditorTooltip text="Click on the part to cycle through colors. Use the texture button to customize textures on supported parts (vehicle must be fully built first). Changes are automatically saved." onResetCamera={() => renderer?.resetView()}>
     <!-- 3D Preview (clickable to cycle color) -->
     <div class="preview-container">
         <canvas

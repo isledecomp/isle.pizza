@@ -96,6 +96,7 @@ export class ActorRenderer extends BaseRenderer {
 
         this.setupControls(new THREE.Vector3(0, 0.2, 0));
         this.controls.autoRotate = false;
+        this._initialAutoRotate = false;
 
         this.raycaster = new THREE.Raycaster();
     }

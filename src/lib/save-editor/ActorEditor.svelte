@@ -333,7 +333,7 @@
     }
 </script>
 
-<EditorTooltip text="Click to customize based on your current character. Navigate between all 66 game actors using the arrows. Changes are automatically saved.">
+<EditorTooltip text="Click to customize based on your current character. Navigate between all 66 game actors using the arrows. Changes are automatically saved." onResetCamera={() => renderer?.resetView()}>
     <div class="preview-container">
         <canvas
             bind:this={canvas}

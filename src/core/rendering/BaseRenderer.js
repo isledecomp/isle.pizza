@@ -41,8 +41,8 @@ export class BaseRenderer {
 
     setupControls(target) {
         this.controls = new OrbitControls(this.camera, this.canvas);
-        this.controls.enableZoom = false;
-        this.controls.enablePan = false;
+        this.controls.enableZoom = true;
+        this.controls.enablePan = true;
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.1;
         this.controls.autoRotate = true;
@@ -66,6 +66,15 @@ export class BaseRenderer {
 
         this.canvas.addEventListener('pointerdown', this._onPointerDown);
         this.canvas.addEventListener('pointermove', this._onPointerMove);
+
+        this._initialAutoRotate = this.controls.autoRotate;
+        this.controls.saveState();
+    }
+
+    resetView() {
+        if (!this.controls) return;
+        this.controls.reset();
+        this.controls.autoRotate = this._initialAutoRotate;
     }
 
     wasDragged() {

@@ -122,7 +122,7 @@
     }
 </script>
 
-<EditorTooltip text="Click on the cube to cycle high scores. Changes are automatically saved.">
+<EditorTooltip text="Click on the cube to cycle high scores. Changes are automatically saved." onResetCamera={() => renderer?.resetView()}>
     <div class="score-cube-container">
         <canvas
             bind:this={canvas}
