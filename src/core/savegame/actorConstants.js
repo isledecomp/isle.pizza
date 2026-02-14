@@ -713,18 +713,3 @@ export const CharacterFieldOffsets = Object.freeze({
 
 export const CHARACTER_RECORD_SIZE = 16;
 
-/**
- * Part labels for display
- */
-export const ActorPartLabels = Object.freeze({
-    0: 'Body',
-    1: 'Hat',
-    2: 'Torso Emblem',
-    3: 'Head',
-    4: 'Left Arm',
-    5: 'Right Arm',
-    6: 'Left Claw',
-    7: 'Right Claw',
-    8: 'Left Leg',
-    9: 'Right Leg'
-});

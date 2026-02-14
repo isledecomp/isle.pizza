@@ -493,17 +493,7 @@ export class ActorRenderer extends BaseRenderer {
             const animData = await this.fetchAnimationByName(animName);
             if (!animData || !this.modelGroup) return;
 
-            // Build animation node name → part group lookup
-            const nodeToPartGroup = new Map();
-            for (let i = 0; i < this.partGroups.length; i++) {
-                const pg = this.partGroups[i];
-                if (!pg) continue;
-                const lodName = pg.userData.lodName;
-                const animNodeName = PART_NAME_TO_ANIM_NODE[lodName];
-                if (animNodeName) {
-                    nodeToPartGroup.set(animNodeName.toLowerCase(), pg);
-                }
-            }
+            const nodeToPartGroup = this.buildNodeToPartGroupMap();
 
             // Map vehicle animation nodes if in vehicle mode
             if (vehicleInfo && this.vehicleGroup) {
@@ -520,6 +510,23 @@ export class ActorRenderer extends BaseRenderer {
         } catch (e) {
             // Animation unavailable — fall back to rotation (handled in updateAnimation())
         }
+    }
+
+    /**
+     * Build a lookup mapping animation node names to part groups.
+     */
+    buildNodeToPartGroupMap() {
+        const map = new Map();
+        for (let i = 0; i < this.partGroups.length; i++) {
+            const pg = this.partGroups[i];
+            if (!pg) continue;
+            const lodName = pg.userData.lodName;
+            const animNodeName = PART_NAME_TO_ANIM_NODE[lodName];
+            if (animNodeName) {
+                map.set(animNodeName.toLowerCase(), pg);
+            }
+        }
+        return map;
     }
 
     /**
@@ -566,16 +573,7 @@ export class ActorRenderer extends BaseRenderer {
                 return;
             }
 
-            const nodeToPartGroup = new Map();
-            for (let i = 0; i < this.partGroups.length; i++) {
-                const pg = this.partGroups[i];
-                if (!pg) continue;
-                const lodName = pg.userData.lodName;
-                const animNodeName = PART_NAME_TO_ANIM_NODE[lodName];
-                if (animNodeName) {
-                    nodeToPartGroup.set(animNodeName.toLowerCase(), pg);
-                }
-            }
+            const nodeToPartGroup = this.buildNodeToPartGroupMap();
 
             const tracks = this.buildHierarchicalTracks(animData, nodeToPartGroup);
             if (tracks.length === 0) {

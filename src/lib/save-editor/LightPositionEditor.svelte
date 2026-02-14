@@ -85,6 +85,8 @@
 
     .globe-btn {
         padding: 4px;
+        min-width: 56px;
+        min-height: 56px;
         background: var(--color-bg-input);
         border: 2px solid var(--color-border-medium);
         border-radius: 6px;
@@ -98,11 +100,6 @@
 
     .globe-btn.selected {
         border-color: var(--color-primary);
-    }
-
-    .globe-btn {
-        min-width: 56px;
-        min-height: 56px;
     }
 
     .globe-btn img {

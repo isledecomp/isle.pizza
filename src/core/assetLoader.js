@@ -36,7 +36,7 @@ export async function fetchTexture(name) {
   return getAsset('textures', name);
 }
 
-export async function fetchBitmap(name) {
+async function fetchBitmap(name) {
   await loadBundle();
   return getAsset('bitmaps', name);
 }
