@@ -23,14 +23,18 @@ export class WdbParser {
         }
 
         const globalTexturesSize = this.reader.readU32();
-        // Skip global textures for now - BIGCUBE.GIF is in model_data
-        this.reader.skip(globalTexturesSize);
+        let globalTextures = [];
+        if (globalTexturesSize > 0) {
+            globalTextures = this.parseTextureInfo();
+        }
 
         const globalPartsSize = this.reader.readU32();
-        // Skip global parts
-        this.reader.skip(globalPartsSize);
+        let globalParts = null;
+        if (globalPartsSize > 0) {
+            globalParts = this.parseGlobalParts(globalPartsSize);
+        }
 
-        return { worlds, globalTexturesSize, globalPartsSize };
+        return { worlds, globalTexturesSize, globalPartsSize, globalParts, globalTextures };
     }
 
     parseWorldEntry() {
@@ -123,6 +127,18 @@ export class WdbParser {
         const textures = this.parseTextureInfo();
 
         return { parts, textures };
+    }
+
+    /**
+     * Parse global parts block (same structure as parsePartData)
+     * @param {number} size - Size of global parts block
+     * @returns {{ parts: Array, textures: Array }}
+     */
+    parseGlobalParts(size) {
+        const startOffset = this.reader.tell();
+        const result = this.parsePartData(startOffset);
+        this.reader.seek(startOffset + size);
+        return result;
     }
 
     /**
@@ -508,6 +524,21 @@ export function resolveLods(roi, partsMap) {
     }
 
     return [];
+}
+
+/**
+ * Build a parts lookup map from global parts
+ * @param {{ parts: Array }} globalParts - Parsed global parts from WdbParser
+ * @returns {Map} - Map of part name (lowercase) -> part data
+ */
+export function buildGlobalPartsMap(globalParts) {
+    const partsMap = new Map();
+    if (!globalParts || !globalParts.parts) return partsMap;
+
+    for (const part of globalParts.parts) {
+        partsMap.set(part.name.toLowerCase(), part);
+    }
+    return partsMap;
 }
 
 /**

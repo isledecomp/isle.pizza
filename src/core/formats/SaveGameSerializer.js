@@ -5,6 +5,7 @@
 import { SaveGameParser } from './SaveGameParser.js';
 import { BinaryWriter } from './BinaryWriter.js';
 import { GameStateTypes, GameStateSizes, Actor, Act1TextureOrder } from '../savegame/constants.js';
+import { CharacterFieldOffsets, CHARACTER_RECORD_SIZE } from '../savegame/actorConstants.js';
 
 /**
  * Offsets for header fields
@@ -208,41 +209,9 @@ export class SaveGameSerializer {
             return null;
         }
 
-        const view = new DataView(workingBuffer);
-
-        // Calculate offset based on mission type
-        let offset;
-
-        if (missionType === 'pizza') {
-            // Pizza: 5 actors * 8 bytes (unk(2) + counter(2) + score(2) + hiScore(2))
-            const actorIndex = actorId - Actor.PEPPER; // 0-4
-            const entryOffset = stateLocation.dataOffset + (actorIndex * 8);
-            if (scoreType === 'score') {
-                offset = entryOffset + 4; // Skip unk + counter
-            } else {
-                offset = entryOffset + 6; // Skip unk + counter + score
-            }
-        } else if (missionType === 'carRace' || missionType === 'jetskiRace') {
-            // Race: 5 actors * 5 bytes (id(1) + lastScore(2) + highScore(2))
-            const actorIndex = actorId - Actor.PEPPER;
-            const entryOffset = stateLocation.dataOffset + (actorIndex * 5);
-            if (scoreType === 'score') {
-                offset = entryOffset + 1; // Skip id
-            } else {
-                offset = entryOffset + 3; // Skip id + lastScore
-            }
-        } else if (missionType === 'towTrack' || missionType === 'ambulance') {
-            // Score mission: 5 scores then 5 high scores (all S16)
-            const actorIndex = actorId - Actor.PEPPER;
-            if (scoreType === 'score') {
-                offset = stateLocation.dataOffset + (actorIndex * 2);
-            } else {
-                offset = stateLocation.dataOffset + 10 + (actorIndex * 2); // Skip 5 scores
-            }
-        }
-
-        if (offset !== undefined) {
-            view.setInt16(offset, value, true);
+        const offset = this.getMissionScoreOffset(missionType, actorId, scoreType);
+        if (offset !== null) {
+            new DataView(workingBuffer).setInt16(offset, value, true);
         }
 
         return workingBuffer;
@@ -459,6 +428,27 @@ export class SaveGameSerializer {
         newArray.set(srcArray.slice(afterOld), act1Location.dataOffset + newAct1Size);
 
         return newBuffer;
+    }
+
+    /**
+     * Update a character field in the save file
+     * @param {number} characterIndex - Character index (0-65)
+     * @param {string} field - Field name from CharacterFieldOffsets
+     * @param {number} value - New value
+     * @returns {ArrayBuffer} - Modified buffer
+     */
+    updateCharacter(characterIndex, field, value) {
+        const workingBuffer = this.createCopy();
+        const view = new DataView(workingBuffer);
+        const offset = this.parsed.charactersOffset + (characterIndex * CHARACTER_RECORD_SIZE) + CharacterFieldOffsets[field];
+
+        if (field === 'sound' || field === 'move') {
+            view.setInt32(offset, value, true);
+        } else {
+            view.setUint8(offset, value);
+        }
+
+        return workingBuffer;
     }
 
     /**

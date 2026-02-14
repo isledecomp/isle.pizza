@@ -37,7 +37,13 @@
             { type: 'New', text: 'Save Editor lets you view and modify save files — change your player name, character, and high scores directly from the browser' },
             { type: 'New', text: 'Sky Color Editor allows customizing the island sky gradient colors in your save file' },
             { type: 'New', text: 'Vehicle Part Editor enables modifying vehicle parts and colors with a 3D preview' },
-            { type: 'New', text: 'Vehicle Texture Editor lets you customize vehicle textures with default presets or your own uploaded images' }
+            { type: 'New', text: 'Vehicle Texture Editor lets you customize vehicle textures with default presets or your own uploaded images' },
+            { type: 'New', text: 'Actor Editor with animated 3D character preview — customize hats, colors, moods, sounds, and moves for all 66 game actors' },
+            { type: 'New', text: 'Vehicle rendering in Actor Editor — toggle to see actors with their assigned vehicles' },
+            { type: 'New', text: 'Click animations and sound effects in Actor Editor matching the original game behavior' },
+            { type: 'New', text: 'Drag-to-orbit, zoom, and pan controls on all 3D previews (vehicle, actor, and score cube editors)' },
+            { type: 'New', text: 'Camera reset button on 3D editors to restore the default view' },
+            { type: 'Fixed', text: 'Sticky hover highlights on touch devices for editor buttons' }
         ]},
         { id: 'cl1', title: 'January 2026', items: [
             { type: 'New', text: 'Debug menu for developers and power users. Tap the LEGO Island logo 5 times to unlock OGEL mode and access debug features like teleporting to locations, switching acts, and playing animations' },

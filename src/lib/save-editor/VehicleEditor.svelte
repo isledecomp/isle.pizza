@@ -13,6 +13,7 @@
     } from '../../core/savegame/constants.js';
     import { squareTexture } from '../../core/savegame/imageQuantizer.js';
     import { parseTex } from '../../core/formats/TexParser.js';
+    import { fetchTexture } from '../../core/assetLoader.js';
     import NavButton from '../NavButton.svelte';
     import ResetButton from '../ResetButton.svelte';
     import EditorTooltip from '../EditorTooltip.svelte';
@@ -224,9 +225,8 @@
 
     async function preloadDefaultTextures(info) {
         const results = await Promise.all(info.texFiles.map(async (texFile) => {
-            const response = await fetch(`/textures/${texFile}.tex`);
-            if (!response.ok) return null;
-            const buffer = await response.arrayBuffer();
+            const buffer = await fetchTexture(texFile);
+            if (!buffer) return null;
             const parsed = parseTex(buffer);
             if (parsed.textures.length > 0) {
                 return { name: texFile, ...parsed.textures[0] };
@@ -251,6 +251,7 @@
 
     function cycleColor() {
         if (!currentPart || partError) return;
+        if (renderer?.wasDragged()) return;
 
         // Find current color index and cycle to next
         const currentIdx = LegoColorNames.indexOf(currentColorValue);
@@ -322,7 +323,7 @@
 
 </script>
 
-<EditorTooltip text="Click on the part to cycle through colors. Use the texture button to customize textures on supported parts (vehicle must be fully built first). Changes are automatically saved.">
+<EditorTooltip text="Click on the part to cycle through colors. Use the texture button to customize textures on supported parts (vehicle must be fully built first). Changes are automatically saved." onResetCamera={() => renderer?.resetView()}>
     <!-- 3D Preview (clickable to cycle color) -->
     <div class="preview-container">
         <canvas
@@ -398,8 +399,12 @@
     canvas {
         display: block;
         border-radius: 8px;
-        cursor: pointer;
+        cursor: grab;
         max-width: 100%;
+    }
+
+    canvas:active {
+        cursor: grabbing;
     }
 
     canvas:focus {
@@ -498,9 +503,11 @@
         transition: all 0.2s ease;
     }
 
-    .texture-btn:hover:not(.disabled) {
-        border-color: var(--color-primary);
-        color: var(--color-primary);
+    @media (hover: hover) {
+        .texture-btn:hover:not(.disabled) {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
     }
 
     .texture-btn.disabled {

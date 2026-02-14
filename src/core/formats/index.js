@@ -7,7 +7,7 @@ export { BinaryReader } from './BinaryReader.js';
 export { BinaryWriter } from './BinaryWriter.js';
 
 // WDB format
-export { WdbParser, findRoi } from './WdbParser.js';
+export { WdbParser, findRoi, buildGlobalPartsMap } from './WdbParser.js';
 
 // Save game format
 export { SaveGameParser, parseSaveGame } from './SaveGameParser.js';
@@ -19,3 +19,6 @@ export { PlayersSerializer, createPlayersSerializer } from './PlayersSerializer.
 
 // Texture format
 export { parseTex } from './TexParser.js';
+
+// Animation format
+export { AnimationParser, parseAnimation } from './AnimationParser.js';

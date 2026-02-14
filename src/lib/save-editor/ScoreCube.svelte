@@ -101,6 +101,7 @@
 
     function handleClick(event) {
         if (!renderer || loading) return;
+        if (renderer.wasDragged()) return;
 
         const hit = renderer.raycast(event);
         if (hit) {
@@ -121,7 +122,7 @@
     }
 </script>
 
-<EditorTooltip text="Click on the cube to cycle high scores. Changes are automatically saved.">
+<EditorTooltip text="Click on the cube to cycle high scores. Changes are automatically saved." onResetCamera={() => renderer?.resetView()}>
     <div class="score-cube-container">
         <canvas
             bind:this={canvas}
@@ -152,10 +153,14 @@
     }
 
     canvas {
-        cursor: pointer;
+        cursor: grab;
         border-radius: 8px;
         margin-bottom: 12px;
         max-width: 100%;
+    }
+
+    canvas:active {
+        cursor: grabbing;
     }
 
     canvas.hidden {

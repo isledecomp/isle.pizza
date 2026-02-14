@@ -1,46 +1,23 @@
 import * as THREE from 'three';
+import { BaseRenderer } from './BaseRenderer.js';
 
 /**
- * Generic Three.js renderer for LEGO Island WDB models
- * Handles D3DRM packed vertex format and paletted textures
+ * Renderer for LEGO Island WDB models with mutable canvas textures.
+ * Extends BaseRenderer with model loading, canvas-based texture painting,
+ * and UV raycasting for click interaction.
  */
-export class WdbModelRenderer {
+export class WdbModelRenderer extends BaseRenderer {
     constructor(canvas) {
-        this.canvas = canvas;
-        this.animating = false;
-        this.modelGroup = null;
+        super(canvas);
         this.texturedMesh = null;
         this.texture = null;
         this.textureCanvas = null;
         this.baseImageData = null;
         this.palette = null;
 
-        this.scene = new THREE.Scene();
-
-        this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
         this.camera.position.set(0, 0.2, 7);
 
-        this.renderer = new THREE.WebGLRenderer({
-            canvas,
-            antialias: true,
-            alpha: true
-        });
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        this.renderer.setClearColor(0x000000, 0);
-
-        this.setupLighting();
-    }
-
-    /**
-     * Setup scene lighting - override to customize
-     */
-    setupLighting() {
-        const ambient = new THREE.AmbientLight(0xffffff, 0.8);
-        this.scene.add(ambient);
-
-        const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        sunLight.position.set(1, 2, 3);
-        this.scene.add(sunLight);
+        this.setupControls(new THREE.Vector3(0, 0.2, 0));
     }
 
     /**
@@ -52,29 +29,39 @@ export class WdbModelRenderer {
         this.palette = textureData.palette;
         this.modelGroup = new THREE.Group();
 
-        const { texturedGeometry, nonTexturedGeometries } = this.createGeometries(roiData);
+        if (!roiData.lods || roiData.lods.length === 0) {
+            this.scene.add(this.modelGroup);
+            return;
+        }
+
+        const lod = roiData.lods[0];
 
         this.textureCanvas = this.createTextureCanvas(textureData);
         this.texture = new THREE.CanvasTexture(this.textureCanvas);
         this.texture.minFilter = THREE.LinearFilter;
         this.texture.magFilter = THREE.LinearFilter;
 
-        if (texturedGeometry) {
-            const texturedMaterial = new THREE.MeshLambertMaterial({
-                map: this.texture,
-                side: THREE.DoubleSide
-            });
-            this.texturedMesh = new THREE.Mesh(texturedGeometry, texturedMaterial);
-            this.modelGroup.add(this.texturedMesh);
-        }
+        for (const mesh of lod.meshes) {
+            const geometry = this.createGeometry(mesh, lod);
+            if (!geometry) continue;
 
-        for (const { geometry, color } of nonTexturedGeometries) {
-            const material = new THREE.MeshLambertMaterial({
-                color: new THREE.Color(color.r / 255, color.g / 255, color.b / 255),
-                side: THREE.DoubleSide
-            });
-            const mesh = new THREE.Mesh(geometry, material);
-            this.modelGroup.add(mesh);
+            const hasTexture = mesh.textureIndices && mesh.textureIndices.length > 0;
+
+            if (hasTexture) {
+                const material = new THREE.MeshLambertMaterial({
+                    map: this.texture,
+                    side: THREE.DoubleSide
+                });
+                this.texturedMesh = new THREE.Mesh(geometry, material);
+                this.modelGroup.add(this.texturedMesh);
+            } else {
+                const color = mesh.properties?.color || { r: 128, g: 128, b: 128 };
+                const material = new THREE.MeshLambertMaterial({
+                    color: new THREE.Color(color.r / 255, color.g / 255, color.b / 255),
+                    side: THREE.DoubleSide
+                });
+                this.modelGroup.add(new THREE.Mesh(geometry, material));
+            }
         }
 
         this.scene.add(this.modelGroup);
@@ -82,107 +69,9 @@ export class WdbModelRenderer {
     }
 
     /**
-     * Create Three.js BufferGeometries from ROI LOD data
-     *
-     * D3DRM packed polygon index format (32-bit):
-     * - Bits 0-15: vertex index (16 bits) into positions array, OR destination index when reusing
-     * - Bits 16-30: normal index into normals array
-     * - Bit 31: "create new vertex" flag - when set, create a new mesh vertex;
-     *           when clear, bits 0-15 is the INDEX into the created mesh vertices array
-     *
-     * @param {object} roiData - ROI with lods array
-     * @returns {{ texturedGeometry: THREE.BufferGeometry|null, nonTexturedGeometries: Array }}
-     */
-    createGeometries(roiData) {
-        if (!roiData.lods || roiData.lods.length === 0) {
-            console.warn('ROI has no LODs');
-            return { texturedGeometry: null, nonTexturedGeometries: [] };
-        }
-
-        const lod = roiData.lods[0];
-        let texturedGeometry = null;
-        const nonTexturedGeometries = [];
-
-        for (const mesh of lod.meshes) {
-            const hasTexture = mesh.textureIndices && mesh.textureIndices.length > 0;
-
-            // Flatten polygon indices
-            const vertexIndicesPacked = [];
-            for (const poly of mesh.polygonIndices) {
-                vertexIndicesPacked.push(poly.a, poly.b, poly.c);
-            }
-
-            // Flatten texture indices if present
-            const textureIndicesFlat = [];
-            if (hasTexture) {
-                for (const texPoly of mesh.textureIndices) {
-                    textureIndicesFlat.push(texPoly.a, texPoly.b, texPoly.c);
-                }
-            }
-
-            const meshVertices = [];
-            const meshNormals = [];
-            const meshUvs = [];
-            const indices = [];
-
-            for (let i = 0; i < vertexIndicesPacked.length; i++) {
-                const packed = vertexIndicesPacked[i];
-
-                if ((packed & 0x80000000) !== 0) {
-                    // Create flag is set - create new mesh vertex
-                    indices.push(meshVertices.length);
-
-                    const gv = packed & 0xFFFF; // Vertex index (16 bits)
-                    const v = lod.vertices[gv] || { x: 0, y: 0, z: 0 };
-                    // Negate X for coordinate system conversion
-                    meshVertices.push([-v.x, v.y, v.z]);
-
-                    const gn = (packed >>> 16) & 0x7fff; // Normal index (15 bits)
-                    const n = lod.normals[gn] || { x: 0, y: 1, z: 0 };
-                    meshNormals.push([-n.x, n.y, n.z]);
-
-                    if (hasTexture && lod.textureVertices.length > 0) {
-                        const tex = textureIndicesFlat[i];
-                        const uv = lod.textureVertices[tex] || { u: 0, v: 0 };
-                        meshUvs.push([uv.u, 1 - uv.v]);
-                    }
-                } else {
-                    // Create flag NOT set - reuse existing mesh vertex by index
-                    indices.push(packed & 0xFFFF);
-                }
-            }
-
-            // Reverse face winding (swap indices 0 and 2 of each triangle)
-            for (let i = 0; i < indices.length; i += 3) {
-                const temp = indices[i];
-                indices[i] = indices[i + 2];
-                indices[i + 2] = temp;
-            }
-
-            // Create geometry
-            const geometry = new THREE.BufferGeometry();
-            const vertices = meshVertices.flat();
-            const normals = meshNormals.flat();
-
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-            geometry.setIndex(indices);
-
-            if (hasTexture) {
-                const uvs = meshUvs.flat();
-                geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-                texturedGeometry = geometry;
-            } else {
-                const color = mesh.properties?.color || { r: 128, g: 128, b: 128 };
-                nonTexturedGeometries.push({ geometry, color });
-            }
-        }
-
-        return { texturedGeometry, nonTexturedGeometries };
-    }
-
-    /**
-     * Create canvas texture from paletted LEGO texture data
+     * Create canvas texture from paletted LEGO texture data.
+     * Unlike BaseRenderer.createTexture(), this keeps a reference to the
+     * canvas and base image data so subclasses can paint over it (e.g. scores).
      * @param {object} textureData - { width, height, palette, pixels }
      * @returns {HTMLCanvasElement}
      */
@@ -234,63 +123,8 @@ export class WdbModelRenderer {
         return null;
     }
 
-    /**
-     * Start animation loop
-     */
-    start() {
-        this.animating = true;
-        this.animate();
-    }
-
-    /**
-     * Stop animation loop
-     */
-    stop() {
-        this.animating = false;
-    }
-
-    /**
-     * Animation loop - override to customize animation
-     */
-    animate = () => {
-        if (!this.animating) return;
-        requestAnimationFrame(this.animate);
-
-        if (this.modelGroup) {
-            this.modelGroup.rotation.y += 0.008;
-        }
-
-        this.renderer.render(this.scene, this.camera);
-    }
-
-    /**
-     * Resize renderer to match canvas size
-     * @param {number} width
-     * @param {number} height
-     */
-    resize(width, height) {
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(width, height, false);
-    }
-
-    /**
-     * Clean up resources
-     */
     dispose() {
-        this.animating = false;
-
-        if (this.modelGroup) {
-            this.modelGroup.traverse((child) => {
-                if (child instanceof THREE.Mesh) {
-                    child.geometry?.dispose();
-                    child.material?.dispose();
-                }
-            });
-            this.scene.remove(this.modelGroup);
-        }
-
         this.texture?.dispose();
-        this.renderer?.dispose();
+        super.dispose();
     }
 }

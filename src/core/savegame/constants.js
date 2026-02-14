@@ -197,7 +197,9 @@ export const LegoColors = Object.freeze({
     'lego green': { r: 0x00, g: 0x78, b: 0x2d },
     'lego red': { r: 0xcb, g: 0x12, b: 0x20 },
     'lego white': { r: 0xfa, g: 0xfa, b: 0xfa },
-    'lego yellow': { r: 0xff, g: 0xb9, b: 0x00 }
+    'lego yellow': { r: 0xff, g: 0xb9, b: 0x00 },
+    'lego brown': { r: 0x4a, g: 0x23, b: 0x00 },
+    'lego lt grey': { r: 0xc0, g: 0xc0, b: 0xc0 }
 });
 
 // LEGO color display names and order

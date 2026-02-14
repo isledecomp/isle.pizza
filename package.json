@@ -4,11 +4,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && cp isle.js isle.wasm dist/ && node scripts/workbox-inject.js",
+    "build": "vite build && cp isle.js isle.wasm save-editor.bin dist/ && node scripts/workbox-inject.js",
     "build:ci": "vite build && node scripts/workbox-inject.js",
     "check": "svelte-check --fail-on-warnings",
     "preview": "vite preview",
-    "prepare:assets": "node scripts/prepare.js"
+    "prepare:assets": "node scripts/prepare.js",
+    "generate:save-editor-assets": "node scripts/generate-save-editor-assets.js"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.7.5",

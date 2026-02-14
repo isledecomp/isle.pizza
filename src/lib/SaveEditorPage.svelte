@@ -1,11 +1,13 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import BackButton from './BackButton.svelte';
     import Carousel from './Carousel.svelte';
     import MissionScoresEditor from './save-editor/MissionScoresEditor.svelte';
     import SkyColorEditor from './save-editor/SkyColorEditor.svelte';
     import LightPositionEditor from './save-editor/LightPositionEditor.svelte';
     import VehicleEditor from './save-editor/VehicleEditor.svelte';
+    import ActorEditor from './save-editor/ActorEditor.svelte';
+    import { fetchBitmapAsURL } from '../core/assetLoader.js';
     import { saveEditorState, currentPage } from '../stores.js';
     import { listSaveSlots, updateSaveSlot, updatePlayerName } from '../core/savegame/index.js';
     import { Actor, ActorNames } from '../core/savegame/constants.js';
@@ -23,7 +25,8 @@
         { id: 'player', label: 'Player', firstSection: 'name' },
         { id: 'scores', label: 'Scores', firstSection: null },
         { id: 'island', label: 'Island', firstSection: 'skycolor' },
-        { id: 'vehicles', label: 'Vehicles', firstSection: null }
+        { id: 'vehicles', label: 'Vehicles', firstSection: null },
+        { id: 'actors', label: 'Actors', firstSection: null }
     ];
 
     // Reset state when navigating to this page
@@ -41,20 +44,36 @@
     let currentAct = 0;
     let actorId = 1;
 
-    // Character icons mapping
-    const characterIcons = {
-        [Actor.PEPPER]: { normal: 'images/pepper.webp', selected: 'images/pepper-selected.webp' },
-        [Actor.MAMA]: { normal: 'images/mama.webp', selected: 'images/mama-selected.webp' },
-        [Actor.PAPA]: { normal: 'images/papa.webp', selected: 'images/papa-selected.webp' },
-        [Actor.NICK]: { normal: 'images/nick.webp', selected: 'images/nick-selected.webp' },
-        [Actor.LAURA]: { normal: 'images/laura.webp', selected: 'images/laura-selected.webp' }
-    };
+    // Character icons — loaded from SI file bitmaps
+    const iconNames = ['pepper', 'mama', 'papa', 'nick', 'laura'];
+    let characterIcons = {};
+    let iconUrls = [];
 
     // Carousel state (bound from Carousel component)
     let carouselHasDragged = false;
 
     onMount(async () => {
         await loadSlots();
+
+        // Load character icons from SI file in background
+        const urls = await Promise.all(iconNames.flatMap(name => [
+            fetchBitmapAsURL(name),
+            fetchBitmapAsURL(`${name}-selected`)
+        ]));
+        iconUrls = urls;
+        characterIcons = {
+            [Actor.PEPPER]: { normal: urls[0], selected: urls[1] },
+            [Actor.MAMA]: { normal: urls[2], selected: urls[3] },
+            [Actor.PAPA]: { normal: urls[4], selected: urls[5] },
+            [Actor.NICK]: { normal: urls[6], selected: urls[7] },
+            [Actor.LAURA]: { normal: urls[8], selected: urls[9] }
+        };
+    });
+
+    onDestroy(() => {
+        for (const url of iconUrls) {
+            if (url) URL.revokeObjectURL(url);
+        }
     });
 
     async function loadSlots() {
@@ -120,7 +139,7 @@
             if (updated) {
                 slots = slots.map(s =>
                     s.slotNumber === selectedSlot
-                        ? { ...s, variables: updated.variables, act1State: updated.act1State }
+                        ? { ...s, variables: updated.variables, act1State: updated.act1State, characters: updated.characters }
                         : s
                 );
             }
@@ -270,12 +289,14 @@
                                 class:selected={selectedSlot === slot.slotNumber}
                                 onclick={() => handleSlotSelect(slot.slotNumber)}
                             >
-                                <img
-                                    src={characterIcons[slot.header?.actorId]?.selected || 'images/pepper-selected.webp'}
-                                    alt={ActorNames[slot.header?.actorId] || 'Character'}
-                                    class="slot-character-icon"
-                                    draggable="false"
-                                />
+                                {#if characterIcons[slot.header?.actorId]?.selected}
+                                    <img
+                                        src={characterIcons[slot.header?.actorId].selected}
+                                        alt={ActorNames[slot.header?.actorId] || 'Character'}
+                                        class="slot-character-icon"
+                                        draggable="false"
+                                    />
+                                {/if}
                                 <span class="slot-name">{slot.playerName}</span>
                             </button>
                         {/each}
@@ -356,12 +377,14 @@
                                                 onclick={() => handleActorSelect(actor.id)}
                                                 title={actor.name}
                                             >
-                                                <img
-                                                    src={actorId === actor.id
-                                                        ? characterIcons[actor.id].selected
-                                                        : characterIcons[actor.id].normal}
-                                                    alt={actor.name}
-                                                />
+                                                {#if characterIcons[actor.id]}
+                                                    <img
+                                                        src={actorId === actor.id
+                                                            ? characterIcons[actor.id].selected
+                                                            : characterIcons[actor.id].normal}
+                                                        alt={actor.name}
+                                                    />
+                                                {/if}
                                             </button>
                                         {/each}
                                     </div>
@@ -403,6 +426,13 @@
                     <div class:hidden={activeTab !== 'vehicles'}>
                         {#if $currentPage === 'save-editor'}
                             <VehicleEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
+                        {/if}
+                    </div>
+
+                    <!-- Actors Tab -->
+                    <div class:hidden={activeTab !== 'actors'}>
+                        {#if $currentPage === 'save-editor'}
+                            <ActorEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
                         {/if}
                     </div>
                 </div>

@@ -1,4 +1,6 @@
 <script>
+    import { onMount, onDestroy } from 'svelte';
+    import { fetchBitmapAsURL } from '../../core/assetLoader.js';
     import ResetButton from '../ResetButton.svelte';
 
     export let slot;
@@ -13,6 +15,22 @@
 
     // Globe images for each position (0-5 map to globe1-globe6)
     const positions = [0, 1, 2, 3, 4, 5];
+
+    // Blob URLs for globe images, loaded from SI file
+    let globeUrls = new Array(6).fill(null);
+
+    onMount(async () => {
+        const urls = await Promise.all(
+            positions.map(i => fetchBitmapAsURL(`globe${i + 1}`))
+        );
+        globeUrls = urls;
+    });
+
+    onDestroy(() => {
+        for (const url of globeUrls) {
+            if (url) URL.revokeObjectURL(url);
+        }
+    });
 
     function handleSelect(position) {
         onUpdate({
@@ -40,10 +58,12 @@
                 onclick={() => handleSelect(position)}
                 title="Position {position}"
             >
-                <img
-                    src="images/globe{position + 1}.webp"
-                    alt="Light position {position}"
-                />
+                {#if globeUrls[position]}
+                    <img
+                        src={globeUrls[position]}
+                        alt="Light position {position}"
+                    />
+                {/if}
             </button>
         {/each}
     </div>
@@ -65,6 +85,8 @@
 
     .globe-btn {
         padding: 4px;
+        min-width: 56px;
+        min-height: 56px;
         background: var(--color-bg-input);
         border: 2px solid var(--color-border-medium);
         border-radius: 6px;

@@ -91,6 +91,8 @@ export async function listSaveSlots() {
             missions: null,
             variables: null,
             act1State: null,
+            characters: null,
+            charactersOffset: null,
             playerName: null,
             buffer: null
         };
@@ -104,6 +106,8 @@ export async function listSaveSlots() {
                     slot.missions = parsed.missions;
                     slot.variables = parsed.variables;
                     slot.act1State = parsed.act1State || null;
+                    slot.characters = parsed.characters || null;
+                    slot.charactersOffset = parsed.charactersOffset || null;
                     slot.buffer = buffer;
 
                     // Try to get player name
@@ -168,6 +172,8 @@ export async function loadSaveSlot(slotNumber) {
         missions: parsed.missions,
         variables: parsed.variables,
         act1State: parsed.act1State || null,
+        characters: parsed.characters || null,
+        charactersOffset: parsed.charactersOffset || null,
         playerName,
         buffer
     };
@@ -235,6 +241,19 @@ export async function updateSaveSlot(slotNumber, updates) {
         if (result) {
             newBuffer = result;
             modified = true;
+        }
+    }
+
+    // Apply character update(s)
+    if (updates.character) {
+        const entries = Array.isArray(updates.character) ? updates.character : [updates.character];
+        for (const { characterIndex, field, value } of entries) {
+            const charSerializer = createSerializer(newBuffer);
+            const result = charSerializer.updateCharacter(characterIndex, field, value);
+            if (result) {
+                newBuffer = result;
+                modified = true;
+            }
         }
     }
 
