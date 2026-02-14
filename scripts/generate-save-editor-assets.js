@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Scans LEGO Island SI files to find byte offsets of embedded assets.
-// Writes public/asset-ranges.json consumed by the app for HTTP Range request fetching.
+// Scans LEGO Island SI files to extract embedded assets into a packed binary bundle.
+// Writes save-editor.bin: [U32LE index length][JSON index][fragment data].
 
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs/promises';
@@ -201,7 +201,7 @@ const MXCH_SIGNATURE = Buffer.from('MxCh');
 const MXCH_HEADER_SIZE = 22; // MxCh(4) + chunkSize(4) + flags(2) + objectId(4) + time(4) + dataSize(4)
 
 const LEGO_DIR = path.join(process.cwd(), 'LEGO');
-const OUTPUT_PATH = path.join(process.cwd(), 'asset-ranges.json');
+const BIN_PATH = path.join(process.cwd(), 'save-editor.bin');
 
 const siCache = new Map();
 
@@ -255,41 +255,31 @@ function findMxChByObjectId(siBuf, targetIds) {
   return result;
 }
 
-function formatResult(siFile, result) {
-  // result is [offset, size] for contiguous, or [[o,s], ...] for split
-  if (Array.isArray(result[0])) {
-    return { si: siFile, ranges: result };
-  }
-  return [siFile, result[0], result[1]];
-}
-
 /**
- * Verify assembled MxCh data against expected size and md5.
+ * Assemble MxCh data from ranges, verify against expected size and md5.
  * Only assembles up to `size` bytes (objectIds can be reused across streams).
- * Returns the used ranges for formatResult, or null on failure.
+ * Returns the assembled Buffer, or null on failure.
  */
-function verifyRanges(siBuf, ranges, size, expectedMd5) {
+function extractAndVerify(siBuf, ranges, size, expectedMd5) {
   if (!ranges || ranges.length === 0) return null;
 
   const assembled = Buffer.alloc(size);
-  const usedRanges = [];
   let writePos = 0;
   for (const [rOff, rLen] of ranges) {
     if (writePos >= size) break;
     const take = Math.min(rLen, size - writePos);
     siBuf.copy(assembled, writePos, rOff, rOff + take);
-    usedRanges.push([rOff, take]);
     writePos += take;
   }
 
   if (writePos !== size || md5(assembled) !== expectedMd5) return null;
-  return usedRanges.length === 1 ? usedRanges[0] : usedRanges;
+  return assembled;
 }
 
 async function main() {
-  console.log('Generating asset range manifest...\n');
+  console.log('Generating asset fragment bundle...\n');
 
-  const manifest = { animations: {}, sounds: {}, textures: {}, bitmaps: {} };
+  const fragments = []; // [{type, name, data: Buffer}, ...]
   let found = 0;
   let failed = 0;
 
@@ -301,9 +291,9 @@ async function main() {
   const aniRanges = findMxChByObjectId(isleSI, aniObjectIds);
 
   for (const [name, objectId, size, expectedMd5] of ANIMATIONS) {
-    const result = verifyRanges(isleSI, aniRanges.get(objectId), size, expectedMd5);
-    if (result) {
-      manifest.animations[name] = formatResult('Scripts/Isle/ISLE.SI', result);
+    const data = extractAndVerify(isleSI, aniRanges.get(objectId), size, expectedMd5);
+    if (data) {
+      fragments.push({ type: 'animations', name, data });
       found++;
     } else {
       console.error(`  FAILED: ${name}.ani (objectId ${objectId})`);
@@ -321,9 +311,9 @@ async function main() {
 
   let clickFound = 0;
   for (const [name, objectId, size, expectedMd5] of CLICK_ANIMATIONS) {
-    const result = verifyRanges(sndanimSI, clickRanges.get(objectId), size, expectedMd5);
-    if (result) {
-      manifest.animations[name] = formatResult('Scripts/SNDANIM.SI', result);
+    const data = extractAndVerify(sndanimSI, clickRanges.get(objectId), size, expectedMd5);
+    if (data) {
+      fragments.push({ type: 'animations', name, data });
       clickFound++;
       found++;
     } else {
@@ -340,9 +330,9 @@ async function main() {
 
   let soundFound = 0;
   for (const [name, objectId, size, expectedMd5] of allSounds) {
-    const result = verifyRanges(sndanimSI, soundRanges.get(objectId), size, expectedMd5);
-    if (result) {
-      manifest.sounds[name] = formatResult('Scripts/SNDANIM.SI', result);
+    const data = extractAndVerify(sndanimSI, soundRanges.get(objectId), size, expectedMd5);
+    if (data) {
+      fragments.push({ type: 'sounds', name, data });
       soundFound++;
       found++;
     } else {
@@ -353,7 +343,6 @@ async function main() {
   console.log(`  ${soundFound}/${allSounds.length} sounds found\n`);
 
   // --- Textures (across Build SI files) ---
-  // Group textures by SI file so we scan each file once
   const texBySI = new Map();
   for (const entry of TEXTURES) {
     const siFile = entry[1];
@@ -369,9 +358,9 @@ async function main() {
     console.log(`Loaded ${siFile} (${(siBuf.length / 1024).toFixed(0)} KB)`);
 
     for (const [name, , objectId, size, expectedMd5] of entries) {
-      const result = verifyRanges(siBuf, texRanges.get(objectId), size, expectedMd5);
-      if (result) {
-        manifest.textures[name] = formatResult(siFile, result);
+      const data = extractAndVerify(siBuf, texRanges.get(objectId), size, expectedMd5);
+      if (data) {
+        fragments.push({ type: 'textures', name, data });
         texFound++;
         found++;
       } else {
@@ -397,9 +386,9 @@ async function main() {
     const bmpRanges = findMxChByObjectId(siBuf, objectIds);
 
     for (const [name, , objectId, size, expectedMd5] of entries) {
-      const result = verifyRanges(siBuf, bmpRanges.get(objectId), size, expectedMd5);
-      if (result) {
-        manifest.bitmaps[name] = formatResult(siFile, result);
+      const data = extractAndVerify(siBuf, bmpRanges.get(objectId), size, expectedMd5);
+      if (data) {
+        fragments.push({ type: 'bitmaps', name, data });
         bmpFound++;
         found++;
       } else {
@@ -411,12 +400,26 @@ async function main() {
   console.log(`  ${bmpFound}/${BITMAPS.length} bitmaps found\n`);
 
   if (failed > 0) {
-    console.error(`Failed to find ${failed} assets. Manifest not written.`);
+    console.error(`Failed to find ${failed} assets. Bundle not written.`);
     process.exit(1);
   }
 
-  await fs.writeFile(OUTPUT_PATH, JSON.stringify(manifest));
-  console.log(`Wrote ${OUTPUT_PATH}`);
+  // --- Write single bundle: [U32LE indexLen][JSON index][data] ---
+  const index = {};
+  let offset = 0;
+  for (const { type, name, data } of fragments) {
+    index[`${type}/${name}`] = [offset, data.length];
+    offset += data.length;
+  }
+
+  const indexBuf = Buffer.from(JSON.stringify(index));
+  const header = Buffer.alloc(4);
+  header.writeUInt32LE(indexBuf.length);
+  const dataBuf = Buffer.concat(fragments.map(f => f.data));
+  const bundle = Buffer.concat([header, indexBuf, dataBuf]);
+  await fs.writeFile(BIN_PATH, bundle);
+  console.log(`Wrote ${BIN_PATH} (${(bundle.length / 1024).toFixed(1)} KB, ${Object.keys(index).length} entries)`);
+
   console.log(`Total: ${found} assets (${ANIMATIONS.length} walking + ${CLICK_ANIMATIONS.length} click animations, ${allSounds.length} sounds, ${TEXTURES.length} textures, ${BITMAPS.length} bitmaps)`);
 }
 
