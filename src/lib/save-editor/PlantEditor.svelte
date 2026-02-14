@@ -12,6 +12,7 @@
     import NavButton from '../NavButton.svelte';
     import ResetButton from '../ResetButton.svelte';
     import EditorTooltip from '../EditorTooltip.svelte';
+    import './editor-common.css';
 
     export let slot;
     export let onUpdate = () => {};
@@ -272,8 +273,8 @@
         <div class="part-nav">
             <NavButton direction="left" onclick={prevPlant} />
             <div class="part-info">
-                <span class="plant-index">{plantIndex + 1} / {PLANT_COUNT}</span>
-                <span class="plant-name">{colorName} {variantName}</span>
+                <span class="nav-index">{plantIndex + 1} / {PLANT_COUNT}</span>
+                <span class="nav-name">{colorName} {variantName}</span>
             </div>
             <NavButton direction="right" onclick={nextPlant} />
         </div>
@@ -286,95 +287,3 @@
     </div>
 </EditorTooltip>
 
-<style>
-    .preview-container {
-        position: relative;
-    }
-
-    canvas {
-        display: block;
-        border-radius: 8px;
-        cursor: grab;
-        max-width: 100%;
-    }
-
-    canvas:active {
-        cursor: grabbing;
-    }
-
-    canvas:focus {
-        outline: none;
-    }
-
-    canvas.hidden {
-        visibility: hidden;
-    }
-
-    .preview-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--color-bg-input);
-        border-radius: 8px;
-    }
-
-    .preview-overlay.error {
-        color: var(--color-error, #e74c3c);
-        font-size: 0.75em;
-        padding: 12px;
-        text-align: center;
-    }
-
-    .spinner {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background:
-            radial-gradient(transparent 55%, transparent 56%),
-            conic-gradient(var(--color-primary, #FFD700) 0deg 90deg, var(--color-border-dark, #333) 90deg 360deg);
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    .part-nav-wrapper {
-        margin-top: 10px;
-    }
-
-    .part-nav {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .part-info {
-        text-align: center;
-        min-width: 150px;
-    }
-
-    .plant-index {
-        display: block;
-        font-size: 0.7em;
-        color: var(--color-text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .plant-name {
-        display: block;
-        font-size: 0.9em;
-        color: var(--color-text-light);
-    }
-
-    .reset-container {
-        height: 1.6em;
-    }
-</style>

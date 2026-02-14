@@ -18,6 +18,7 @@
     import ResetButton from '../ResetButton.svelte';
     import EditorTooltip from '../EditorTooltip.svelte';
     import TexturePickerModal from './TexturePickerModal.svelte';
+    import './editor-common.css';
 
     export let slot;
     export let onUpdate = () => {};
@@ -353,15 +354,15 @@
         <div class="part-nav">
             <NavButton direction="left" onclick={prevPart} />
             <div class="part-info">
-                <span class="vehicle-name">{VehicleNames[vehicle]}</span>
-                <span class="part-name">{currentPart?.label || 'Unknown'}</span>
+                <span class="nav-index">{VehicleNames[vehicle]}</span>
+                <span class="nav-name">{currentPart?.label || 'Unknown'}</span>
             </div>
             <NavButton direction="right" onclick={nextPart} />
         </div>
         {#if textureInfo}
             <button
                 type="button"
-                class="texture-btn"
+                class="side-btn"
                 class:disabled={!canEditTexture}
                 onclick={openTexturePicker}
                 disabled={!canEditTexture}
@@ -391,127 +392,3 @@
     />
 {/if}
 
-<style>
-    .preview-container {
-        position: relative;
-    }
-
-    canvas {
-        display: block;
-        border-radius: 8px;
-        cursor: grab;
-        max-width: 100%;
-    }
-
-    canvas:active {
-        cursor: grabbing;
-    }
-
-    canvas:focus {
-        outline: none;
-    }
-
-    canvas.hidden {
-        visibility: hidden;
-    }
-
-    .preview-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--color-bg-input);
-        border-radius: 8px;
-    }
-
-    .preview-overlay.error {
-        color: var(--color-error, #e74c3c);
-        font-size: 0.75em;
-        padding: 12px;
-        text-align: center;
-    }
-
-    .spinner {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background:
-            radial-gradient(transparent 55%, transparent 56%),
-            conic-gradient(var(--color-primary, #FFD700) 0deg 90deg, var(--color-border-dark, #333) 90deg 360deg);
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    .part-nav-wrapper {
-        position: relative;
-        margin-top: 10px;
-    }
-
-    .part-nav {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .part-info {
-        text-align: center;
-        min-width: 100px;
-    }
-
-    .vehicle-name {
-        display: block;
-        font-size: 0.7em;
-        color: var(--color-text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .part-name {
-        display: block;
-        font-size: 0.9em;
-        color: var(--color-text-light);
-    }
-
-    .reset-container {
-        height: 1.6em;
-    }
-
-    .texture-btn {
-        position: absolute;
-        right: -36px;
-        top: 50%;
-        transform: translateY(-50%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        background: var(--color-bg-input);
-        border: 1px solid var(--color-border-medium);
-        border-radius: 6px;
-        color: var(--color-text-light);
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    @media (hover: hover) {
-        .texture-btn:hover:not(.disabled) {
-            border-color: var(--color-primary);
-            color: var(--color-primary);
-        }
-    }
-
-    .texture-btn.disabled {
-        opacity: 0.35;
-        cursor: not-allowed;
-    }
-</style>
