@@ -53,9 +53,6 @@ export const MAX_MOOD = 4;
 export const MAX_COLOR = 5;
 export const MAX_VARIANT = 4;
 
-// g_plantAnimationId[4] — base objectId for animations per variant
-export const PLANT_ANIM_IDS = Object.freeze([30, 33, 36, 39]);
-
 // g_plantSoundIdOffset — base objectId for click sounds (actual = sound + 56)
 export const PLANT_SOUND_OFFSET = 56;
 

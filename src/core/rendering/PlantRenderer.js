@@ -1,9 +1,7 @@
 import * as THREE from 'three';
 import { PlantLodNames } from '../savegame/plantConstants.js';
 import { LegoColors } from '../savegame/constants.js';
-import { parseAnimation } from '../formats/AnimationParser.js';
-import { fetchAnimation } from '../assetLoader.js';
-import { BaseRenderer } from './BaseRenderer.js';
+import { AnimatedRenderer } from './AnimatedRenderer.js';
 
 // Plant color → LEGO color mapping for fallback materials
 const PLANT_COLOR_MAP = ['lego white', 'lego black', 'lego yellow', 'lego red', 'lego green'];
@@ -24,21 +22,15 @@ const VARIANT_DISPLAY = [
  * Renderer for LEGO Island plants. Much simpler than ActorRenderer —
  * single model group, no multi-part assembly.
  */
-export class PlantRenderer extends BaseRenderer {
+export class PlantRenderer extends AnimatedRenderer {
     constructor(canvas) {
         super(canvas);
-        this.clock = new THREE.Clock();
-        this.mixer = null;
-        this.currentAction = null;
-        this.animationCache = new Map();
         this._queuedClickAnim = null;
 
         this.camera.position.set(1.5, 1.2, 2.5);
         this.camera.lookAt(0, 0.2, 0);
 
         this.setupControls(new THREE.Vector3(0, 0.2, 0));
-
-        this.raycaster = new THREE.Raycaster();
     }
 
     /**
@@ -59,7 +51,6 @@ export class PlantRenderer extends BaseRenderer {
         if (!partData) return;
 
         // Build texture lookup
-        this.textures.clear();
         if (textures) {
             for (const tex of textures) {
                 if (tex.name) {
@@ -272,7 +263,7 @@ export class PlantRenderer extends BaseRenderer {
         let mat = new THREE.Matrix4();
 
         if (data.scaleKeys.length > 0) {
-            const scale = this.interpolateVertex(data.scaleKeys, time);
+            const scale = this.interpolateVertex(data.scaleKeys, time, false);
             if (scale) mat.scale(scale);
         }
 
@@ -282,7 +273,7 @@ export class PlantRenderer extends BaseRenderer {
         }
 
         if (data.translationKeys.length > 0) {
-            const vertex = this.interpolateVertex(data.translationKeys, time);
+            const vertex = this.interpolateVertex(data.translationKeys, time, true);
             if (vertex) {
                 mat.elements[12] += vertex.x;
                 mat.elements[13] += vertex.y;
@@ -291,109 +282,5 @@ export class PlantRenderer extends BaseRenderer {
         }
 
         return mat;
-    }
-
-    collectKeyframeTimes(node, timesSet) {
-        const data = node.data;
-        for (const key of data.translationKeys) timesSet.add(key.time);
-        for (const key of data.rotationKeys) timesSet.add(key.time);
-        for (const key of data.scaleKeys) timesSet.add(key.time);
-        for (const child of node.children) {
-            this.collectKeyframeTimes(child, timesSet);
-        }
-    }
-
-    evaluateRotation(keys, time) {
-        const { before, after } = this.getBeforeAndAfter(keys, time);
-        const toQuat = (key) => new THREE.Quaternion(-key.x, key.y, key.z, key.w);
-
-        if (!after) {
-            if (before.flags & 0x01) {
-                return new THREE.Matrix4().makeRotationFromQuaternion(toQuat(before));
-            }
-            return new THREE.Matrix4();
-        }
-
-        if ((before.flags & 0x01) || (after.flags & 0x01)) {
-            const beforeQ = toQuat(before);
-            if (after.flags & 0x04) {
-                return new THREE.Matrix4().makeRotationFromQuaternion(beforeQ);
-            }
-            let afterQ = toQuat(after);
-            if (after.flags & 0x02) {
-                afterQ.set(-afterQ.x, -afterQ.y, -afterQ.z, -afterQ.w);
-            }
-            const t = (time - before.time) / (after.time - before.time);
-            const result = new THREE.Quaternion().slerpQuaternions(beforeQ, afterQ, t);
-            return new THREE.Matrix4().makeRotationFromQuaternion(result);
-        }
-
-        return new THREE.Matrix4();
-    }
-
-    interpolateVertex(keys, time) {
-        const { before, after } = this.getBeforeAndAfter(keys, time);
-        const toVec = (key) => new THREE.Vector3(-key.x, key.y, key.z);
-
-        if (!after) return toVec(before);
-
-        const t = (time - before.time) / (after.time - before.time);
-        return new THREE.Vector3().lerpVectors(toVec(before), toVec(after), t);
-    }
-
-    getBeforeAndAfter(keys, time) {
-        let idx = keys.findIndex(k => k.time > time);
-        if (idx < 0) idx = keys.length;
-        const before = keys[Math.max(0, idx - 1)];
-        return { before, after: keys[idx] || null };
-    }
-
-    async fetchAnimationByName(animName) {
-        if (this.animationCache.has(animName)) {
-            return this.animationCache.get(animName);
-        }
-        const buffer = await fetchAnimation(animName);
-        if (!buffer) return null;
-        const animData = parseAnimation(buffer);
-        this.animationCache.set(animName, animData);
-        return animData;
-    }
-
-    stopAnimation() {
-        if (this.currentAction) {
-            this.currentAction.stop();
-            this.currentAction = null;
-        }
-        if (this.mixer) {
-            this.mixer.stopAllAction();
-            this.mixer = null;
-        }
-    }
-
-    // ─── Scene Management ────────────────────────────────────────────
-
-    clearModel() {
-        this.stopAnimation();
-        super.clearModel();
-    }
-
-    start() {
-        this.animating = true;
-        this.clock.start();
-        this.animate();
-    }
-
-    updateAnimation() {
-        const delta = this.clock.getDelta();
-        if (this.mixer) {
-            this.mixer.update(delta);
-        }
-        this.controls?.update();
-    }
-
-    dispose() {
-        this.stopAnimation();
-        super.dispose();
-        this.animationCache.clear();
     }
 }

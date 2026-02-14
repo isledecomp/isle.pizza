@@ -3,12 +3,12 @@
     import { PlantRenderer } from '../../core/rendering/PlantRenderer.js';
     import { WdbParser, buildGlobalPartsMap, buildPartsMap } from '../../core/formats/WdbParser.js';
     import {
-        PlantInfoInit, PlantLodNames, PlantVariantNames, PlantColorNames,
+        PlantInfoInit, PlantVariantNames, PlantColorNames,
         PLANT_COUNT, MAX_SOUND, MAX_MOVE, MAX_MOOD, MAX_COLOR, MAX_VARIANT,
         PLANT_SOUND_OFFSET
     } from '../../core/savegame/plantConstants.js';
     import { Actor } from '../../core/savegame/constants.js';
-    import { fetchSoundAsWav } from '../../core/assetLoader.js';
+    import { createSoundPlayer } from '../../core/audio.js';
     import NavButton from '../NavButton.svelte';
     import ResetButton from '../ResetButton.svelte';
     import EditorTooltip from '../EditorTooltip.svelte';
@@ -28,38 +28,7 @@
     let plantIndex = 0;
     let loadedPlantKey = null;
 
-    let audioContext = null;
-    let gainNode = null;
-    const soundCache = new Map();
-
-    async function playSound(name) {
-        try {
-            if (!audioContext) {
-                audioContext = new AudioContext();
-                gainNode = audioContext.createGain();
-                gainNode.gain.value = 0.3;
-                gainNode.connect(audioContext.destination);
-            }
-            if (audioContext.state === 'suspended') {
-                await audioContext.resume();
-            }
-
-            let audioBuffer = soundCache.get(name);
-            if (!audioBuffer) {
-                const wav = await fetchSoundAsWav(name);
-                if (!wav) return;
-                audioBuffer = await audioContext.decodeAudioData(wav);
-                soundCache.set(name, audioBuffer);
-            }
-
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(gainNode);
-            source.start();
-        } catch (e) {
-            console.error(`Failed to play sound ${name}:`, e);
-        }
-    }
+    const soundPlayer = createSoundPlayer();
 
     $: plantState = slot?.plants?.[plantIndex];
     $: variantName = plantState ? PlantVariantNames[plantState.variant] || 'Unknown' : '';
@@ -137,7 +106,7 @@
 
     onDestroy(() => {
         renderer?.dispose();
-        audioContext?.close();
+        soundPlayer.dispose();
     });
 
     // Reload plant when index or state changes
@@ -191,14 +160,14 @@
         const soundObjectId = soundIdx + PLANT_SOUND_OFFSET;
         // ClickSound6/7/8 cover objectIds 56-58, PlantSound3-7 cover 59-63
         if (soundObjectId <= 58) {
-            playSound(`ClickSound${soundObjectId - 50}`);
+            soundPlayer.play(`ClickSound${soundObjectId - 50}`);
         } else {
-            playSound(`PlantSound${soundIdx}`);
+            soundPlayer.play(`PlantSound${soundIdx}`);
         }
 
         // Laura additionally plays a mood sound
         if (playerId === Actor.LAURA) {
-            playSound(`MoodSound${((plantState.mood + 1) % MAX_MOOD) & 1}`);
+            soundPlayer.play(`MoodSound${((plantState.mood + 1) % MAX_MOOD) & 1}`);
         }
 
         // Queue click animation for visual changes
