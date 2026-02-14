@@ -94,6 +94,9 @@ export class ActorRenderer extends BaseRenderer {
         this.camera.position.set(2, 0.8, 3.5);
         this.camera.lookAt(0, 0.2, 0);
 
+        this.setupControls(new THREE.Vector3(0, 0.2, 0));
+        this.controls.autoRotate = false;
+
         this.raycaster = new THREE.Raycaster();
     }
 
@@ -887,17 +890,13 @@ export class ActorRenderer extends BaseRenderer {
 
         if (this.mixer) {
             this.mixer.update(delta);
-        } else if (this.modelGroup) {
-            // Fallback: rotate if no animation loaded
-            this.modelGroup.rotation.y += 0.01;
         }
+        this.controls?.update();
     }
 
     dispose() {
-        this.animating = false;
         this.stopAnimation();
-        this.clearModel();
-        this.renderer?.dispose();
+        super.dispose();
         this.animationCache.clear();
     }
 }

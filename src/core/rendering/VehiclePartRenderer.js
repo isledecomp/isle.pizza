@@ -14,6 +14,8 @@ export class VehiclePartRenderer extends BaseRenderer {
 
         this.camera.position.set(0, 0, 3);
         this.camera.lookAt(0, 0, 0);
+
+        this.setupControls(new THREE.Vector3(0, 0, 0));
     }
 
     /**
@@ -56,6 +58,7 @@ export class VehiclePartRenderer extends BaseRenderer {
         this.centerAndScaleModel(1.5);
 
         this.scene.add(this.modelGroup);
+        this.controls.autoRotate = true;
         this.renderer.render(this.scene, this.camera);
     }
 

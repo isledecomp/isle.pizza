@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /**
  * Base renderer providing shared Three.js setup, lighting, texture creation,
@@ -24,6 +25,9 @@ export class BaseRenderer {
         this.renderer.setClearColor(0x000000, 0);
 
         this.setupLighting();
+
+        this.controls = null;
+        this._didDrag = false;
     }
 
     setupLighting() {
@@ -33,6 +37,39 @@ export class BaseRenderer {
         const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
         sunLight.position.set(1, 2, 3);
         this.scene.add(sunLight);
+    }
+
+    setupControls(target) {
+        this.controls = new OrbitControls(this.camera, this.canvas);
+        this.controls.enableZoom = false;
+        this.controls.enablePan = false;
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.1;
+        this.controls.autoRotate = true;
+        this.controls.autoRotateSpeed = 4.0;
+        this.controls.target.copy(target);
+
+        this.controls.addEventListener('start', () => {
+            this.controls.autoRotate = false;
+        });
+
+        this._onPointerDown = (e) => {
+            this._didDrag = false;
+            this._pointerStart = { x: e.clientX, y: e.clientY };
+        };
+        this._onPointerMove = (e) => {
+            if (!this._pointerStart) return;
+            const dx = e.clientX - this._pointerStart.x;
+            const dy = e.clientY - this._pointerStart.y;
+            if (dx * dx + dy * dy > 9) this._didDrag = true;
+        };
+
+        this.canvas.addEventListener('pointerdown', this._onPointerDown);
+        this.canvas.addEventListener('pointermove', this._onPointerMove);
+    }
+
+    wasDragged() {
+        return this._didDrag;
     }
 
     /**
@@ -190,9 +227,7 @@ export class BaseRenderer {
      * Called each frame before rendering.
      */
     updateAnimation() {
-        if (this.modelGroup) {
-            this.modelGroup.rotation.y += 0.01;
-        }
+        this.controls?.update();
     }
 
     resize(width, height) {
@@ -203,6 +238,11 @@ export class BaseRenderer {
 
     dispose() {
         this.animating = false;
+        if (this.controls) {
+            this.controls.dispose();
+            this.canvas.removeEventListener('pointerdown', this._onPointerDown);
+            this.canvas.removeEventListener('pointermove', this._onPointerMove);
+        }
         this.clearModel();
         this.renderer?.dispose();
     }

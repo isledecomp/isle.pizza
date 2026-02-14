@@ -203,6 +203,7 @@
 
     function handleCanvasClick(event) {
         if (!renderer || !slot?.characters || !charState) return;
+        if (renderer.wasDragged()) return;
 
         const playerId = slot.header?.actorId;
         let acted = false;
@@ -393,8 +394,12 @@
     canvas {
         display: block;
         border-radius: 8px;
-        cursor: pointer;
+        cursor: grab;
         max-width: 100%;
+    }
+
+    canvas:active {
+        cursor: grabbing;
     }
 
     canvas:focus {

@@ -251,6 +251,7 @@
 
     function cycleColor() {
         if (!currentPart || partError) return;
+        if (renderer?.wasDragged()) return;
 
         // Find current color index and cycle to next
         const currentIdx = LegoColorNames.indexOf(currentColorValue);
@@ -398,8 +399,12 @@
     canvas {
         display: block;
         border-radius: 8px;
-        cursor: pointer;
+        cursor: grab;
         max-width: 100%;
+    }
+
+    canvas:active {
+        cursor: grabbing;
     }
 
     canvas:focus {
