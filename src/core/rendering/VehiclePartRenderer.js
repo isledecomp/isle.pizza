@@ -42,12 +42,7 @@ export class VehiclePartRenderer extends BaseRenderer {
         this.colorableMeshes = [];
         this.partsMap = partsMap;
 
-        // Build texture lookup map (case-insensitive)
-        for (const tex of textureList) {
-            if (tex.name) {
-                this.textures.set(tex.name.toLowerCase(), this.createTexture(tex));
-            }
-        }
+        this.loadTextures(textureList);
 
         const legoColor = LegoColors[colorName] || LegoColors['lego red'];
         const threeLegoColor = new THREE.Color(legoColor.r / 255, legoColor.g / 255, legoColor.b / 255);

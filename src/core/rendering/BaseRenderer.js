@@ -110,6 +110,48 @@ export class BaseRenderer {
     }
 
     /**
+     * Build the texture lookup map from an array of texture data objects.
+     * @param {Array} textures - Texture data with name, width, height, palette, pixels
+     * @param {boolean} overwrite - If false, skip textures already in the map
+     */
+    loadTextures(textures, overwrite = true) {
+        if (!textures) return;
+        for (const tex of textures) {
+            if (!tex.name) continue;
+            const key = tex.name.toLowerCase();
+            if (overwrite || !this.textures.has(key)) {
+                this.textures.set(key, this.createTexture(tex));
+            }
+        }
+    }
+
+    /**
+     * Create a material for a mesh using its texture or color properties.
+     * @param {object} mesh - Mesh with properties (textureName, color)
+     * @param {THREE.Color} [fallbackColor] - Color when mesh has no texture or color
+     */
+    createMeshMaterial(mesh, fallbackColor = null) {
+        const meshTexName = mesh.properties?.textureName?.toLowerCase();
+        if (meshTexName && this.textures.has(meshTexName)) {
+            return new THREE.MeshLambertMaterial({
+                map: this.textures.get(meshTexName),
+                side: THREE.DoubleSide,
+                color: 0xffffff
+            });
+        }
+
+        const meshColor = mesh.properties?.color;
+        const color = meshColor
+            ? new THREE.Color(meshColor.r / 255, meshColor.g / 255, meshColor.b / 255)
+            : (fallbackColor || new THREE.Color(0.5, 0.5, 0.5));
+
+        return new THREE.MeshLambertMaterial({
+            color,
+            side: THREE.DoubleSide
+        });
+    }
+
+    /**
      * Create a single geometry from mesh data
      */
     createGeometry(mesh, lod) {

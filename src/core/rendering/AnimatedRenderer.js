@@ -16,6 +16,7 @@ export class AnimatedRenderer extends BaseRenderer {
         this.currentAction = null;
         this.animationCache = new Map();
         this.raycaster = new THREE.Raycaster();
+        this._queuedClickAnim = null;
     }
 
     // ─── Animation Utilities ─────────────────────────────────────────
@@ -136,6 +137,185 @@ export class AnimatedRenderer extends BaseRenderer {
         if (idx < 0) idx = keys.length;
         const before = keys[Math.max(0, idx - 1)];
         return { before, after: keys[idx] || null };
+    }
+
+    // ─── Click Animation ─────────────────────────────────────────────
+
+    /**
+     * Queue a click animation by name. Subclasses may override to
+     * accept domain-specific arguments and construct the name.
+     * @param {string} animName - Animation asset name
+     */
+    queueClickAnimation(animName) {
+        this._queuedClickAnim = animName;
+    }
+
+    /**
+     * Play the queued click animation (one-shot), then resume auto-rotate.
+     */
+    async playQueuedAnimation() {
+        if (!this._queuedClickAnim || !this.modelGroup) return;
+
+        const animName = this._queuedClickAnim;
+        this._queuedClickAnim = null;
+
+        try {
+            const animData = await this.fetchAnimationByName(animName);
+            if (!animData || !this.modelGroup) return;
+
+            const tracks = this.buildRotationTracks(animData);
+            if (tracks.length === 0) return;
+
+            this.stopAnimation();
+
+            const clip = new THREE.AnimationClip('clickAnim', -1, tracks);
+            this.mixer = new THREE.AnimationMixer(this.modelGroup);
+            const action = this.mixer.clipAction(clip);
+            action.setLoop(THREE.LoopOnce);
+            action.clampWhenFinished = false;
+            this.currentAction = action;
+            action.play();
+
+            this.mixer.addEventListener('finished', () => {
+                this.stopAnimation();
+                this.controls.autoRotate = true;
+            });
+        } catch (e) {
+            // Animation unavailable — ignore
+        }
+    }
+
+    // ─── Raycast Hit Testing ─────────────────────────────────────────
+
+    /**
+     * Check if any mesh in the model was clicked.
+     * @returns {boolean} True if any mesh was hit
+     */
+    getClickedMesh(mouseEvent) {
+        if (!this.modelGroup) return false;
+
+        const rect = this.canvas.getBoundingClientRect();
+        const mouse = new THREE.Vector2(
+            ((mouseEvent.clientX - rect.left) / rect.width) * 2 - 1,
+            -((mouseEvent.clientY - rect.top) / rect.height) * 2 + 1
+        );
+
+        this.raycaster.setFromCamera(mouse, this.camera);
+
+        const meshes = [];
+        this.modelGroup.traverse((child) => {
+            if (child instanceof THREE.Mesh) meshes.push(child);
+        });
+
+        return this.raycaster.intersectObjects(meshes).length > 0;
+    }
+
+    // ─── Simple Animation Tree Utilities ─────────────────────────────
+
+    /**
+     * Build rotation-only keyframe tracks by finding the deepest animated
+     * node and evaluating the composed transform chain at each keyframe time.
+     * Used by plant and building animations (single-group models).
+     */
+    buildRotationTracks(animData) {
+        const duration = animData.duration;
+        const timesSet = new Set([0]);
+        this.collectKeyframeTimes(animData.rootNode, timesSet);
+        const times = [...timesSet].filter(t => t <= duration).sort((a, b) => a - b);
+
+        const targetNode = this.findAnimatedNode(animData.rootNode);
+        if (!targetNode) return [];
+
+        const quatValues = [];
+        const timesSec = [];
+
+        for (const time of times) {
+            const mat = this.evaluateNodeChain(animData.rootNode, targetNode, time);
+            const position = new THREE.Vector3();
+            const quaternion = new THREE.Quaternion();
+            const scale = new THREE.Vector3();
+            mat.decompose(position, quaternion, scale);
+
+            timesSec.push(time / 1000);
+            quatValues.push(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+        }
+
+        return [
+            new THREE.QuaternionKeyframeTrack('.quaternion', timesSec, quatValues)
+        ];
+    }
+
+    /**
+     * Find the deepest node in the animation tree that has keyframe data.
+     */
+    findAnimatedNode(node) {
+        for (const child of node.children) {
+            const found = this.findAnimatedNode(child);
+            if (found) return found;
+        }
+        const d = node.data;
+        if (d.translationKeys.length > 0 || d.rotationKeys.length > 0 || d.scaleKeys.length > 0) {
+            return node;
+        }
+        return null;
+    }
+
+    /**
+     * Evaluate the composed transform matrix from root down to targetNode.
+     */
+    evaluateNodeChain(node, targetNode, time) {
+        const path = [];
+        if (!this.findNodePath(node, targetNode, path)) {
+            return new THREE.Matrix4();
+        }
+
+        let mat = new THREE.Matrix4();
+        for (const n of path) {
+            const local = this.evaluateLocalTransform(n.data, time);
+            mat.multiply(local);
+        }
+        return mat;
+    }
+
+    /**
+     * Build the path from current node to target via depth-first search.
+     */
+    findNodePath(current, target, path) {
+        path.push(current);
+        if (current === target) return true;
+        for (const child of current.children) {
+            if (this.findNodePath(child, target, path)) return true;
+        }
+        path.pop();
+        return false;
+    }
+
+    /**
+     * Evaluate the local transform matrix for an animation node at a given time.
+     */
+    evaluateLocalTransform(data, time) {
+        let mat = new THREE.Matrix4();
+
+        if (data.scaleKeys.length > 0) {
+            const scale = this.interpolateVertex(data.scaleKeys, time, false);
+            if (scale) mat.scale(scale);
+        }
+
+        if (data.rotationKeys.length > 0) {
+            const rotMat = this.evaluateRotation(data.rotationKeys, time);
+            mat = rotMat.multiply(mat);
+        }
+
+        if (data.translationKeys.length > 0) {
+            const vertex = this.interpolateVertex(data.translationKeys, time, true);
+            if (vertex) {
+                mat.elements[12] += vertex.x;
+                mat.elements[13] += vertex.y;
+                mat.elements[14] += vertex.z;
+            }
+        }
+
+        return mat;
     }
 
     // ─── Scene Management ────────────────────────────────────────────
