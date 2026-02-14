@@ -4,6 +4,13 @@
 
     export let gap = 10;
 
+    // Optional selection-based navigation. When provided, nav buttons
+    // change the selected item instead of scrolling.
+    export let onPrev = null;
+    export let onNext = null;
+    export let hasPrev = undefined;
+    export let hasNext = undefined;
+
     let trackRef;
     let canScrollLeft = false;
     let canScrollRight = false;
@@ -14,6 +21,9 @@
     // Exposed so parent can check if a drag occurred (to prevent click handling)
     export let hasDragged = false;
 
+    $: leftDisabled = hasPrev !== undefined ? !hasPrev : !canScrollLeft;
+    $: rightDisabled = hasNext !== undefined ? !hasNext : !canScrollRight;
+
     function updateArrows() {
         if (!trackRef) return;
         const { scrollLeft, scrollWidth, clientWidth } = trackRef;
@@ -21,12 +31,40 @@
         canScrollRight = scrollLeft + clientWidth < scrollWidth - 1;
     }
 
-    function scrollLeft() {
-        trackRef?.scrollBy({ left: -200, behavior: 'smooth' });
+    function handleLeft() {
+        if (onPrev) {
+            onPrev();
+        } else {
+            trackRef?.scrollBy({ left: -200, behavior: 'smooth' });
+        }
     }
 
-    function scrollRight() {
-        trackRef?.scrollBy({ left: 200, behavior: 'smooth' });
+    function handleRight() {
+        if (onNext) {
+            onNext();
+        } else {
+            trackRef?.scrollBy({ left: 200, behavior: 'smooth' });
+        }
+    }
+
+    function scrollChildIntoView(child) {
+        const trackRect = trackRef.getBoundingClientRect();
+        const childRect = child.getBoundingClientRect();
+        const isFullyVisible = childRect.left >= trackRect.left && childRect.right <= trackRect.right;
+
+        if (!isFullyVisible) {
+            const scrollTarget = childRect.left < trackRect.left
+                ? trackRef.scrollLeft - (trackRect.left - childRect.left)
+                : trackRef.scrollLeft + (childRect.right - trackRect.right);
+            trackRef.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+        }
+    }
+
+    /** Scroll the nth child (0-indexed) into view */
+    export function scrollToIndex(index) {
+        if (!trackRef) return;
+        const child = trackRef.children[index];
+        if (child) scrollChildIntoView(child);
     }
 
     function handleMouseDown(e) {
@@ -55,24 +93,9 @@
     }
 
     function handleClick(e) {
-        // Find the direct child element that was clicked
         const clickedCard = e.target.closest('.carousel-track > *');
         if (!clickedCard || hasDragged) return;
-
-        const trackRect = trackRef.getBoundingClientRect();
-        const cardRect = clickedCard.getBoundingClientRect();
-
-        // Check if card is fully visible
-        const isFullyVisible = cardRect.left >= trackRect.left && cardRect.right <= trackRect.right;
-
-        if (!isFullyVisible) {
-            // Scroll to bring card into view
-            const scrollLeft = cardRect.left < trackRect.left
-                ? trackRef.scrollLeft - (trackRect.left - cardRect.left)
-                : trackRef.scrollLeft + (cardRect.right - trackRect.right);
-
-            trackRef.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-        }
+        scrollChildIntoView(clickedCard);
     }
 
     onMount(() => {
@@ -86,7 +109,7 @@
 </script>
 
 <div class="carousel">
-    <NavButton direction="left" onclick={scrollLeft} disabled={!canScrollLeft} />
+    <NavButton direction="left" onclick={handleLeft} disabled={leftDisabled} />
     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions a11y_no_noninteractive_element_interactions -->
     <div
         class="carousel-track"
@@ -103,7 +126,7 @@
     >
         <slot />
     </div>
-    <NavButton direction="right" onclick={scrollRight} disabled={!canScrollRight} />
+    <NavButton direction="right" onclick={handleRight} disabled={rightDisabled} />
 </div>
 
 <style>

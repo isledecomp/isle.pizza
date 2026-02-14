@@ -43,7 +43,6 @@ export class VehiclePartRenderer extends BaseRenderer {
         this.partsMap = partsMap;
 
         // Build texture lookup map (case-insensitive)
-        this.textures.clear();
         for (const tex of textureList) {
             if (tex.name) {
                 this.textures.set(tex.name.toLowerCase(), this.createTexture(tex));

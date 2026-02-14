@@ -1,9 +1,7 @@
 import * as THREE from 'three';
 import { ActorLODs, ActorLODFlags, ActorInfoInit } from '../savegame/actorConstants.js';
 import { LegoColors } from '../savegame/constants.js';
-import { parseAnimation } from '../formats/AnimationParser.js';
-import { fetchAnimation } from '../assetLoader.js';
-import { BaseRenderer } from './BaseRenderer.js';
+import { AnimatedRenderer } from './AnimatedRenderer.js';
 
 /**
  * Map actor index to animation suffix index (from g_characters[].m_unk0x16).
@@ -81,14 +79,10 @@ const PART_NAME_TO_ANIM_NODE = {
  * Renderer for full LEGO characters assembled from WDB global parts.
  * Mirrors the game's LegoCharacterManager::CreateActorROI logic.
  */
-export class ActorRenderer extends BaseRenderer {
+export class ActorRenderer extends AnimatedRenderer {
     constructor(canvas) {
         super(canvas);
         this.partGroups = []; // 10 part groups for click targeting
-        this.clock = new THREE.Clock();
-        this.mixer = null;
-        this.currentAction = null;
-        this.animationCache = new Map(); // suffix → parsed animation data
         this._queuedClickMove = null; // queued click animation move index (0-3)
 
         this.camera.position.set(2, 0.8, 3.5);
@@ -97,8 +91,6 @@ export class ActorRenderer extends BaseRenderer {
         this.setupControls(new THREE.Vector3(0, 0.2, 0));
         this.controls.autoRotate = false;
         this._initialAutoRotate = false;
-
-        this.raycaster = new THREE.Raycaster();
     }
 
     /**
@@ -118,7 +110,6 @@ export class ActorRenderer extends BaseRenderer {
         const charState = characters[actorIndex];
 
         // Build texture lookup
-        this.textures.clear();
         for (const tex of globalTextures) {
             if (tex.name) {
                 this.textures.set(tex.name.toLowerCase(), this.createTexture(tex));
@@ -604,21 +595,6 @@ export class ActorRenderer extends BaseRenderer {
     }
 
     /**
-     * Fetch and parse an animation file by name (e.g. "CNs001xx"), with caching.
-     */
-    async fetchAnimationByName(animName) {
-        if (this.animationCache.has(animName)) {
-            return this.animationCache.get(animName);
-        }
-
-        const buffer = await fetchAnimation(animName);
-        if (!buffer) return null;
-        const animData = parseAnimation(buffer);
-        this.animationCache.set(animName, animData);
-        return animData;
-    }
-
-    /**
      * Build world-space keyframe tracks by evaluating the animation tree
      * hierarchically. At each unique keyframe time, walks the tree composing
      * parent * child transforms via matrix multiplication, then decomposes
@@ -653,20 +629,6 @@ export class ActorRenderer extends BaseRenderer {
             }
         }
         return tracks;
-    }
-
-    /**
-     * Recursively collect all unique keyframe times from the animation tree.
-     */
-    collectKeyframeTimes(node, timesSet) {
-        const data = node.data;
-        for (const key of data.translationKeys) timesSet.add(key.time);
-        for (const key of data.rotationKeys) timesSet.add(key.time);
-        for (const key of data.scaleKeys) timesSet.add(key.time);
-        for (const key of data.morphKeys) timesSet.add(key.time);
-        for (const child of node.children) {
-            this.collectKeyframeTimes(child, timesSet);
-        }
     }
 
     /**
@@ -749,88 +711,6 @@ export class ActorRenderer extends BaseRenderer {
     }
 
     /**
-     * Evaluate rotation keyframes at a given time.
-     * Handles slerp interpolation between keyframes with flag-based control.
-     * Coordinate conversion: game (w,x,y,z) → Three.js with X negated.
-     */
-    evaluateRotation(keys, time) {
-        const { before, after } = this.getBeforeAndAfter(keys, time);
-
-        const toQuat = (key) => new THREE.Quaternion(-key.x, key.y, key.z, key.w);
-
-        if (!after) {
-            if (before.flags & 0x01) {
-                return new THREE.Matrix4().makeRotationFromQuaternion(toQuat(before));
-            }
-            return new THREE.Matrix4();
-        }
-
-        if ((before.flags & 0x01) || (after.flags & 0x01)) {
-            const beforeQ = toQuat(before);
-
-            // Flag 0x04: skip interpolation, use before value
-            if (after.flags & 0x04) {
-                return new THREE.Matrix4().makeRotationFromQuaternion(beforeQ);
-            }
-
-            let afterQ = toQuat(after);
-            // Flag 0x02: negate the after quaternion before slerp
-            if (after.flags & 0x02) {
-                afterQ.set(-afterQ.x, -afterQ.y, -afterQ.z, -afterQ.w);
-            }
-
-            const t = (time - before.time) / (after.time - before.time);
-            const result = new THREE.Quaternion().slerpQuaternions(beforeQ, afterQ, t);
-            return new THREE.Matrix4().makeRotationFromQuaternion(result);
-        }
-
-        return new THREE.Matrix4();
-    }
-
-    /**
-     * Interpolate translation or scale keyframes at a given time.
-     * For translation: negates X for coordinate system conversion.
-     * For scale: no negation.
-     */
-    interpolateVertex(keys, time, isTranslation) {
-        const { before, after } = this.getBeforeAndAfter(keys, time);
-
-        const toVec = (key) => isTranslation
-            ? new THREE.Vector3(-key.x, key.y, key.z)
-            : new THREE.Vector3(key.x, key.y, key.z);
-
-        if (!after) {
-            if (isTranslation && !(before.flags & 0x01)) {
-                // Check if vertex is non-zero (matching reference behavior)
-                if (Math.abs(before.x) < 1e-5 && Math.abs(before.y) < 1e-5 && Math.abs(before.z) < 1e-5) {
-                    return null;
-                }
-            }
-            return toVec(before);
-        }
-
-        if (isTranslation && !(before.flags & 0x01) && !(after.flags & 0x01)) {
-            // Both inactive — check if vertices are non-zero
-            const bNonZero = Math.abs(before.x) > 1e-5 || Math.abs(before.y) > 1e-5 || Math.abs(before.z) > 1e-5;
-            const aNonZero = Math.abs(after.x) > 1e-5 || Math.abs(after.y) > 1e-5 || Math.abs(after.z) > 1e-5;
-            if (!bNonZero && !aNonZero) return null;
-        }
-
-        const t = (time - before.time) / (after.time - before.time);
-        return new THREE.Vector3().lerpVectors(toVec(before), toVec(after), t);
-    }
-
-    /**
-     * Find the keyframes immediately before and after the given time.
-     */
-    getBeforeAndAfter(keys, time) {
-        let idx = keys.findIndex(k => k.time > time);
-        if (idx < 0) idx = keys.length;
-        const before = keys[Math.max(0, idx - 1)];
-        return { before, after: keys[idx] || null };
-    }
-
-    /**
      * Evaluate visibility from morph keys at a given time.
      * Matches game's GetVisibility: returns true (visible) by default,
      * or the last morph key's visible flag at or before the given time.
@@ -859,45 +739,12 @@ export class ActorRenderer extends BaseRenderer {
         }
     }
 
-    stopAnimation() {
-        if (this.currentAction) {
-            this.currentAction.stop();
-            this.currentAction = null;
-        }
-        if (this.mixer) {
-            this.mixer.stopAllAction();
-            this.mixer = null;
-        }
-    }
-
     // ─── Scene Management ────────────────────────────────────────────
 
     clearModel() {
-        this.stopAnimation();
         super.clearModel();
         this.partGroups = [];
         this.vehicleGroup = null;
         this.vehicleInfo = null;
-    }
-
-    start() {
-        this.animating = true;
-        this.clock.start();
-        this.animate();
-    }
-
-    updateAnimation() {
-        const delta = this.clock.getDelta();
-
-        if (this.mixer) {
-            this.mixer.update(delta);
-        }
-        this.controls?.update();
-    }
-
-    dispose() {
-        this.stopAnimation();
-        super.dispose();
-        this.animationCache.clear();
     }
 }

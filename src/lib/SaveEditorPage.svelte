@@ -7,6 +7,7 @@
     import LightPositionEditor from './save-editor/LightPositionEditor.svelte';
     import VehicleEditor from './save-editor/VehicleEditor.svelte';
     import ActorEditor from './save-editor/ActorEditor.svelte';
+    import PlantEditor from './save-editor/PlantEditor.svelte';
     import { fetchBitmapAsURL } from '../core/assetLoader.js';
     import { saveEditorState, currentPage } from '../stores.js';
     import { listSaveSlots, updateSaveSlot, updatePlayerName } from '../core/savegame/index.js';
@@ -26,7 +27,8 @@
         { id: 'scores', label: 'Scores', firstSection: null },
         { id: 'island', label: 'Island', firstSection: 'skycolor' },
         { id: 'vehicles', label: 'Vehicles', firstSection: null },
-        { id: 'actors', label: 'Actors', firstSection: null }
+        { id: 'actors', label: 'Actors', firstSection: null },
+        { id: 'plants', label: 'Plants', firstSection: null }
     ];
 
     // Reset state when navigating to this page
@@ -51,6 +53,46 @@
 
     // Carousel state (bound from Carousel component)
     let carouselHasDragged = false;
+    let slotCarousel;
+    let tabCarousel;
+
+    // Slot carousel navigation
+    $: selectedSlotIndex = existingSlots.findIndex(s => s.slotNumber === selectedSlot);
+    $: hasSlotPrev = selectedSlotIndex > 0;
+    $: hasSlotNext = selectedSlotIndex >= 0 && selectedSlotIndex < existingSlots.length - 1;
+
+    function selectPrevSlot() {
+        if (!hasSlotPrev) return;
+        const newIdx = selectedSlotIndex - 1;
+        handleSlotSelect(existingSlots[newIdx].slotNumber);
+        slotCarousel?.scrollToIndex(newIdx);
+    }
+
+    function selectNextSlot() {
+        if (!hasSlotNext) return;
+        const newIdx = selectedSlotIndex + 1;
+        handleSlotSelect(existingSlots[newIdx].slotNumber);
+        slotCarousel?.scrollToIndex(newIdx);
+    }
+
+    // Tab carousel navigation
+    $: activeTabIndex = saveTabs.findIndex(t => t.id === activeTab);
+    $: hasTabPrev = activeTabIndex > 0;
+    $: hasTabNext = activeTabIndex < saveTabs.length - 1;
+
+    function selectPrevTab() {
+        if (!hasTabPrev) return;
+        const newIdx = activeTabIndex - 1;
+        switchTab(saveTabs[newIdx]);
+        tabCarousel?.scrollToIndex(newIdx);
+    }
+
+    function selectNextTab() {
+        if (!hasTabNext) return;
+        const newIdx = activeTabIndex + 1;
+        switchTab(saveTabs[newIdx]);
+        tabCarousel?.scrollToIndex(newIdx);
+    }
 
     onMount(async () => {
         await loadSlots();
@@ -139,7 +181,7 @@
             if (updated) {
                 slots = slots.map(s =>
                     s.slotNumber === selectedSlot
-                        ? { ...s, variables: updated.variables, act1State: updated.act1State, characters: updated.characters }
+                        ? { ...s, variables: updated.variables, act1State: updated.act1State, characters: updated.characters, plants: updated.plants }
                         : s
                 );
             }
@@ -276,7 +318,7 @@
         </div>
         <div class="config-main">
             {#if loading || error || existingSlots.length > 0}
-                <Carousel bind:hasDragged={carouselHasDragged}>
+                <Carousel bind:this={slotCarousel} bind:hasDragged={carouselHasDragged} onPrev={selectPrevSlot} onNext={selectNextSlot} hasPrev={hasSlotPrev} hasNext={hasSlotNext}>
                     {#if loading}
                         <span class="save-status-text">Loading save files...</span>
                     {:else if error}
@@ -324,16 +366,18 @@
 
             {#if currentSlot && currentSlot.exists}
                 <div class="config-tabs">
-                    <div class="config-tab-buttons">
-                        {#each saveTabs as tab}
-                            <button
-                                class="config-tab-btn"
-                                class:active={activeTab === tab.id}
-                                onclick={() => switchTab(tab)}
-                            >
-                                {tab.label}
-                            </button>
-                        {/each}
+                    <div class="config-tab-buttons tab-carousel-wrapper">
+                        <Carousel bind:this={tabCarousel} gap={5} onPrev={selectPrevTab} onNext={selectNextTab} hasPrev={hasTabPrev} hasNext={hasTabNext}>
+                            {#each saveTabs as tab}
+                                <button
+                                    class="config-tab-btn"
+                                    class:active={activeTab === tab.id}
+                                    onclick={() => switchTab(tab)}
+                                >
+                                    {tab.label}
+                                </button>
+                            {/each}
+                        </Carousel>
                     </div>
 
                     <!-- Player Tab -->
@@ -433,6 +477,13 @@
                     <div class:hidden={activeTab !== 'actors'}>
                         {#if $currentPage === 'save-editor'}
                             <ActorEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
+                        {/if}
+                    </div>
+
+                    <!-- Plants Tab -->
+                    <div class:hidden={activeTab !== 'plants'}>
+                        {#if $currentPage === 'save-editor'}
+                            <PlantEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
                         {/if}
                     </div>
                 </div>
@@ -596,6 +647,42 @@
         height: 46px;
         display: block;
         image-rendering: pixelated;
+    }
+
+    .tab-carousel-wrapper {
+        display: block;
+    }
+
+    .tab-carousel-wrapper :global(.carousel) {
+        gap: 4px;
+    }
+
+    .tab-carousel-wrapper :global(.carousel-track) {
+        cursor: default;
+    }
+
+    .tab-carousel-wrapper :global(.carousel-track.dragging) {
+        cursor: default;
+    }
+
+    @media (max-width: 768px) {
+        .tab-carousel-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+        }
+
+        .tab-carousel-wrapper :global(.carousel) {
+            display: contents;
+        }
+
+        .tab-carousel-wrapper :global(.nav-btn) {
+            display: none;
+        }
+
+        .tab-carousel-wrapper :global(.carousel-track) {
+            display: contents;
+        }
     }
 
     @media (max-width: 400px) {

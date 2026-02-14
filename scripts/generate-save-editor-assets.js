@@ -128,6 +128,33 @@ const CLICK_SOUNDS = [
   ['ClickSound8', 58, 7344, '7bbc41251b750835989cb3b35c8546a4'],
 ];
 
+// Plant animations from SNDANIM.SI (objectId = g_plantAnimationId[variant] + move)
+// [name, objectId, size, md5]
+const PLANT_ANIMATIONS = [
+  ['PlantAnimF0', 30, 911, 'cbc2f4d870099238a79130268e48f981'],
+  ['PlantAnimF1', 31, 539, '1df6d082935ffa780f5867d0018870a1'],
+  ['PlantAnimF2', 32, 451, 'f541f69207d849179704c55956bbf883'],
+  ['PlantAnimT0', 33, 1719, 'ac41608766049001502a70f655cdf731'],
+  ['PlantAnimT1', 34, 1022, '778c0c7fb646d85a2e056f430f21562f'],
+  ['PlantAnimT2', 35, 794, '89f16250457fdd3a732fdd6030d92e2c'],
+  ['PlantAnimB0', 36, 1066, 'c00ca3e2566846d94ce75ff7700f5a5b'],
+  ['PlantAnimB1', 37, 850, '97d86074a3aa606e1fe3f3bd01690ae7'],
+  ['PlantAnimB2', 38, 502, '7f08bf6093478c653ff82d058d86f900'],
+  ['PlantAnimP0', 39, 978, '4f9af3721ba3a49e478da5566a4923de'],
+  ['PlantAnimP1', 40, 682, '41d0ca14af41cc4cd7f737d7b0e74ef2'],
+  ['PlantAnimP2', 41, 294, '5ddaff70e2b57fdb294769eaa14e42a0'],
+];
+
+// Plant sounds from SNDANIM.SI (objectId = sound + 56, sounds 3-7)
+// [name, objectId, size, md5]
+const PLANT_SOUNDS = [
+  ['PlantSound3', 59, 12184, '31a837c2420056e0a4f431d06801e746'],
+  ['PlantSound4', 60, 10409, 'd8e8eb75668c57fcb45ba7a75e4612e5'],
+  ['PlantSound5', 61, 12107, 'd60acd5c0962e15cc7c25de95553357f'],
+  ['PlantSound6', 62, 15900, 'acfba6e91b047a43b673b0e2087bd3f5'],
+  ['PlantSound7', 63, 11545, '53cfd93d7e81c85d5c39b4af624bc370'],
+];
+
 // Mood sounds from SNDANIM.SI (objectId = m_mood + 66)
 // [name, objectId, size, md5]
 const MOOD_SOUNDS = [
@@ -324,7 +351,7 @@ async function main() {
   console.log(`  ${clickFound}/${CLICK_ANIMATIONS.length} click animations found\n`);
 
   // --- Sounds (in SNDANIM.SI) ---
-  const allSounds = [...CLICK_SOUNDS, ...MOOD_SOUNDS];
+  const allSounds = [...CLICK_SOUNDS, ...MOOD_SOUNDS, ...PLANT_SOUNDS];
   const soundObjectIds = new Set(allSounds.map(([, objectId]) => objectId));
   const soundRanges = findMxChByObjectId(sndanimSI, soundObjectIds);
 
@@ -341,6 +368,24 @@ async function main() {
     }
   }
   console.log(`  ${soundFound}/${allSounds.length} sounds found\n`);
+
+  // --- Plant Animations (in SNDANIM.SI) ---
+  const plantAnimObjectIds = new Set(PLANT_ANIMATIONS.map(([, objectId]) => objectId));
+  const plantAnimRanges = findMxChByObjectId(sndanimSI, plantAnimObjectIds);
+
+  let plantAnimFound = 0;
+  for (const [name, objectId, size, expectedMd5] of PLANT_ANIMATIONS) {
+    const data = extractAndVerify(sndanimSI, plantAnimRanges.get(objectId), size, expectedMd5);
+    if (data) {
+      fragments.push({ type: 'animations', name, data });
+      plantAnimFound++;
+      found++;
+    } else {
+      console.error(`  FAILED: ${name} (objectId ${objectId})`);
+      failed++;
+    }
+  }
+  console.log(`  ${plantAnimFound}/${PLANT_ANIMATIONS.length} plant animations found\n`);
 
   // --- Textures (across Build SI files) ---
   const texBySI = new Map();
@@ -420,7 +465,7 @@ async function main() {
   await fs.writeFile(BIN_PATH, bundle);
   console.log(`Wrote ${BIN_PATH} (${(bundle.length / 1024).toFixed(1)} KB, ${Object.keys(index).length} entries)`);
 
-  console.log(`Total: ${found} assets (${ANIMATIONS.length} walking + ${CLICK_ANIMATIONS.length} click animations, ${allSounds.length} sounds, ${TEXTURES.length} textures, ${BITMAPS.length} bitmaps)`);
+  console.log(`Total: ${found} assets (${ANIMATIONS.length} walking + ${CLICK_ANIMATIONS.length} click + ${PLANT_ANIMATIONS.length} plant animations, ${allSounds.length} sounds, ${TEXTURES.length} textures, ${BITMAPS.length} bitmaps)`);
 }
 
 main().catch(err => {

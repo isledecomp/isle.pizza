@@ -6,6 +6,7 @@ import { SaveGameParser } from './SaveGameParser.js';
 import { BinaryWriter } from './BinaryWriter.js';
 import { GameStateTypes, GameStateSizes, Actor, Act1TextureOrder } from '../savegame/constants.js';
 import { CharacterFieldOffsets, CHARACTER_RECORD_SIZE } from '../savegame/actorConstants.js';
+import { PlantFieldOffsets, PLANT_RECORD_SIZE } from '../savegame/plantConstants.js';
 
 /**
  * Offsets for header fields
@@ -444,6 +445,29 @@ export class SaveGameSerializer {
 
         if (field === 'sound' || field === 'move') {
             view.setInt32(offset, value, true);
+        } else {
+            view.setUint8(offset, value);
+        }
+
+        return workingBuffer;
+    }
+
+    /**
+     * Update a plant field in the save file
+     * @param {number} plantIndex - Plant index (0-80)
+     * @param {string} field - Field name from PlantFieldOffsets
+     * @param {number} value - New value
+     * @returns {ArrayBuffer} - Modified buffer
+     */
+    updatePlant(plantIndex, field, value) {
+        const workingBuffer = this.createCopy();
+        const view = new DataView(workingBuffer);
+        const offset = this.parsed.plantsOffset + (plantIndex * PLANT_RECORD_SIZE) + PlantFieldOffsets[field];
+
+        if (field === 'sound' || field === 'move') {
+            view.setUint32(offset, value, true);
+        } else if (field === 'counter') {
+            view.setInt8(offset, value);
         } else {
             view.setUint8(offset, value);
         }

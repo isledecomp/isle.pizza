@@ -93,6 +93,8 @@ export async function listSaveSlots() {
             act1State: null,
             characters: null,
             charactersOffset: null,
+            plants: null,
+            plantsOffset: null,
             playerName: null,
             buffer: null
         };
@@ -108,6 +110,8 @@ export async function listSaveSlots() {
                     slot.act1State = parsed.act1State || null;
                     slot.characters = parsed.characters || null;
                     slot.charactersOffset = parsed.charactersOffset || null;
+                    slot.plants = parsed.plants || null;
+                    slot.plantsOffset = parsed.plantsOffset || null;
                     slot.buffer = buffer;
 
                     // Try to get player name
@@ -174,6 +178,8 @@ export async function loadSaveSlot(slotNumber) {
         act1State: parsed.act1State || null,
         characters: parsed.characters || null,
         charactersOffset: parsed.charactersOffset || null,
+        plants: parsed.plants || null,
+        plantsOffset: parsed.plantsOffset || null,
         playerName,
         buffer
     };
@@ -250,6 +256,19 @@ export async function updateSaveSlot(slotNumber, updates) {
         for (const { characterIndex, field, value } of entries) {
             const charSerializer = createSerializer(newBuffer);
             const result = charSerializer.updateCharacter(characterIndex, field, value);
+            if (result) {
+                newBuffer = result;
+                modified = true;
+            }
+        }
+    }
+
+    // Apply plant update(s)
+    if (updates.plant) {
+        const entries = Array.isArray(updates.plant) ? updates.plant : [updates.plant];
+        for (const { plantIndex, field, value } of entries) {
+            const plantSerializer = createSerializer(newBuffer);
+            const result = plantSerializer.updatePlant(plantIndex, field, value);
             if (result) {
                 newBuffer = result;
                 modified = true;
