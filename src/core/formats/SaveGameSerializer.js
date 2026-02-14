@@ -7,6 +7,7 @@ import { BinaryWriter } from './BinaryWriter.js';
 import { GameStateTypes, GameStateSizes, Actor, Act1TextureOrder } from '../savegame/constants.js';
 import { CharacterFieldOffsets, CHARACTER_RECORD_SIZE } from '../savegame/actorConstants.js';
 import { PlantFieldOffsets, PLANT_RECORD_SIZE } from '../savegame/plantConstants.js';
+import { BuildingFieldOffsets, BUILDING_RECORD_SIZE } from '../savegame/buildingConstants.js';
 
 /**
  * Offsets for header fields
@@ -472,6 +473,41 @@ export class SaveGameSerializer {
             view.setUint8(offset, value);
         }
 
+        return workingBuffer;
+    }
+
+    /**
+     * Update a building field in the save file
+     * @param {number} buildingIndex - Building index (0-15)
+     * @param {string} field - Field name from BuildingFieldOffsets
+     * @param {number} value - New value
+     * @returns {ArrayBuffer} - Modified buffer
+     */
+    updateBuilding(buildingIndex, field, value) {
+        const workingBuffer = this.createCopy();
+        const view = new DataView(workingBuffer);
+        const offset = this.parsed.buildingsOffset + (buildingIndex * BUILDING_RECORD_SIZE) + BuildingFieldOffsets[field];
+
+        if (field === 'sound' || field === 'move') {
+            view.setUint32(offset, value, true);
+        } else if (field === 'counter') {
+            view.setInt8(offset, value);
+        } else {
+            view.setUint8(offset, value);
+        }
+
+        return workingBuffer;
+    }
+
+    /**
+     * Update the nextVariant field in the save file
+     * @param {number} value - New variant value (0-4)
+     * @returns {ArrayBuffer} - Modified buffer
+     */
+    updateNextVariant(value) {
+        const workingBuffer = this.createCopy();
+        const view = new DataView(workingBuffer);
+        view.setUint8(this.parsed.nextVariantOffset, value);
         return workingBuffer;
     }
 

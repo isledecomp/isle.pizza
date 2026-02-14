@@ -95,6 +95,10 @@ export async function listSaveSlots() {
             charactersOffset: null,
             plants: null,
             plantsOffset: null,
+            buildings: null,
+            buildingsOffset: null,
+            nextVariant: null,
+            nextVariantOffset: null,
             playerName: null,
             buffer: null
         };
@@ -112,6 +116,10 @@ export async function listSaveSlots() {
                     slot.charactersOffset = parsed.charactersOffset || null;
                     slot.plants = parsed.plants || null;
                     slot.plantsOffset = parsed.plantsOffset || null;
+                    slot.buildings = parsed.buildings || null;
+                    slot.buildingsOffset = parsed.buildingsOffset || null;
+                    slot.nextVariant = parsed.nextVariant ?? null;
+                    slot.nextVariantOffset = parsed.nextVariantOffset || null;
                     slot.buffer = buffer;
 
                     // Try to get player name
@@ -180,6 +188,10 @@ export async function loadSaveSlot(slotNumber) {
         charactersOffset: parsed.charactersOffset || null,
         plants: parsed.plants || null,
         plantsOffset: parsed.plantsOffset || null,
+        buildings: parsed.buildings || null,
+        buildingsOffset: parsed.buildingsOffset || null,
+        nextVariant: parsed.nextVariant ?? null,
+        nextVariantOffset: parsed.nextVariantOffset || null,
         playerName,
         buffer
     };
@@ -273,6 +285,29 @@ export async function updateSaveSlot(slotNumber, updates) {
                 newBuffer = result;
                 modified = true;
             }
+        }
+    }
+
+    // Apply building update(s)
+    if (updates.building) {
+        const entries = Array.isArray(updates.building) ? updates.building : [updates.building];
+        for (const { buildingIndex, field, value } of entries) {
+            const buildingSerializer = createSerializer(newBuffer);
+            const result = buildingSerializer.updateBuilding(buildingIndex, field, value);
+            if (result) {
+                newBuffer = result;
+                modified = true;
+            }
+        }
+    }
+
+    // Apply nextVariant update
+    if (updates.nextVariant !== undefined) {
+        const variantSerializer = createSerializer(newBuffer);
+        const result = variantSerializer.updateNextVariant(updates.nextVariant);
+        if (result) {
+            newBuffer = result;
+            modified = true;
         }
     }
 

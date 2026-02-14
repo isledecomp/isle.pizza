@@ -109,21 +109,9 @@ export class ActorRenderer extends AnimatedRenderer {
         const actorInfo = ActorInfoInit[actorIndex];
         const charState = characters[actorIndex];
 
-        // Build texture lookup
-        for (const tex of globalTextures) {
-            if (tex.name) {
-                this.textures.set(tex.name.toLowerCase(), this.createTexture(tex));
-            }
-        }
-
-        // Merge vehicle textures (if present)
-        if (vehicleInfo && vehicleTextures) {
-            for (const tex of vehicleTextures) {
-                if (tex.name && !this.textures.has(tex.name.toLowerCase())) {
-                    this.textures.set(tex.name.toLowerCase(), this.createTexture(tex));
-                }
-            }
-        }
+        // Build texture lookup (vehicle textures don't overwrite global ones)
+        this.loadTextures(globalTextures);
+        if (vehicleInfo) this.loadTextures(vehicleTextures, false);
 
         this.modelGroup = new THREE.Group();
         this.partGroups = [];
@@ -321,24 +309,7 @@ export class ActorRenderer extends AnimatedRenderer {
             for (const mesh of lod.meshes) {
                 const geometry = this.createGeometry(mesh, lod);
                 if (!geometry) continue;
-
-                let material;
-                const meshTexName = mesh.properties?.textureName?.toLowerCase();
-                if (meshTexName && this.textures.has(meshTexName)) {
-                    material = new THREE.MeshLambertMaterial({
-                        map: this.textures.get(meshTexName),
-                        side: THREE.DoubleSide,
-                        color: 0xffffff
-                    });
-                } else {
-                    const meshColor = mesh.properties?.color || { r: 128, g: 128, b: 128 };
-                    material = new THREE.MeshLambertMaterial({
-                        color: new THREE.Color(meshColor.r / 255, meshColor.g / 255, meshColor.b / 255),
-                        side: THREE.DoubleSide
-                    });
-                }
-
-                this.vehicleGroup.add(new THREE.Mesh(geometry, material));
+                this.vehicleGroup.add(new THREE.Mesh(geometry, this.createMeshMaterial(mesh)));
             }
         }
 
@@ -369,12 +340,13 @@ export class ActorRenderer extends AnimatedRenderer {
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
 
-        this.modelGroup.position.sub(center);
-
         const maxDim = Math.max(size.x, size.y, size.z);
         if (maxDim > 0) {
             const scale = scaleFactor / maxDim;
             this.modelGroup.scale.setScalar(scale);
+            this.modelGroup.position.copy(center).multiplyScalar(-scale);
+        } else {
+            this.modelGroup.position.sub(center);
         }
     }
 

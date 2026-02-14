@@ -40,6 +40,7 @@
             { type: 'New', text: 'Vehicle Texture Editor lets you customize vehicle textures with default presets or your own uploaded images' },
             { type: 'New', text: 'Actor Editor with animated 3D character preview — customize hats, colors, moods, sounds, and moves for all 66 game actors' },
             { type: 'New', text: 'Plant Editor lets you browse and customize all 81 island plants — change variants, colors, moods, sounds, and moves with click interactions that match the original in-game behavior per character' },
+            { type: 'New', text: 'Building Editor lets you browse and customize all island buildings — change variants, sounds, and moves with a 3D preview' },
             { type: 'New', text: 'Vehicle rendering in Actor Editor — toggle to see actors with their assigned vehicles' },
             { type: 'New', text: 'Click animations and sound effects in Actor and Plant Editors matching the original game behavior' },
             { type: 'New', text: 'Drag-to-orbit, zoom, and pan controls on all 3D previews (vehicle, actor, plant, and score cube editors)' },
