@@ -503,9 +503,11 @@
         transition: all 0.2s ease;
     }
 
-    .texture-btn:hover:not(.disabled) {
-        border-color: var(--color-primary);
-        color: var(--color-primary);
+    @media (hover: hover) {
+        .texture-btn:hover:not(.disabled) {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
     }
 
     .texture-btn.disabled {

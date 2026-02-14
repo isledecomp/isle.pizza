@@ -494,10 +494,16 @@
         transition: all 0.2s ease;
     }
 
-    .vehicle-toggle-btn:hover,
     .vehicle-toggle-btn.active {
         border-color: var(--color-primary);
         color: var(--color-primary);
+    }
+
+    @media (hover: hover) {
+        .vehicle-toggle-btn:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
     }
 
     .reset-container {
