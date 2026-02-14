@@ -7,6 +7,7 @@
     import LightPositionEditor from './save-editor/LightPositionEditor.svelte';
     import VehicleEditor from './save-editor/VehicleEditor.svelte';
     import ActorEditor from './save-editor/ActorEditor.svelte';
+    import PlantEditor from './save-editor/PlantEditor.svelte';
     import { fetchBitmapAsURL } from '../core/assetLoader.js';
     import { saveEditorState, currentPage } from '../stores.js';
     import { listSaveSlots, updateSaveSlot, updatePlayerName } from '../core/savegame/index.js';
@@ -26,7 +27,8 @@
         { id: 'scores', label: 'Scores', firstSection: null },
         { id: 'island', label: 'Island', firstSection: 'skycolor' },
         { id: 'vehicles', label: 'Vehicles', firstSection: null },
-        { id: 'actors', label: 'Actors', firstSection: null }
+        { id: 'actors', label: 'Actors', firstSection: null },
+        { id: 'plants', label: 'Plants', firstSection: null }
     ];
 
     // Reset state when navigating to this page
@@ -139,7 +141,7 @@
             if (updated) {
                 slots = slots.map(s =>
                     s.slotNumber === selectedSlot
-                        ? { ...s, variables: updated.variables, act1State: updated.act1State, characters: updated.characters }
+                        ? { ...s, variables: updated.variables, act1State: updated.act1State, characters: updated.characters, plants: updated.plants }
                         : s
                 );
             }
@@ -433,6 +435,13 @@
                     <div class:hidden={activeTab !== 'actors'}>
                         {#if $currentPage === 'save-editor'}
                             <ActorEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
+                        {/if}
+                    </div>
+
+                    <!-- Plants Tab -->
+                    <div class:hidden={activeTab !== 'plants'}>
+                        {#if $currentPage === 'save-editor'}
+                            <PlantEditor slot={currentSlot} onUpdate={handleVariableUpdate} />
                         {/if}
                     </div>
                 </div>

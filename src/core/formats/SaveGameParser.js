@@ -128,10 +128,25 @@ export class SaveGameParser {
     }
 
     /**
-     * Skip plant manager data (81 plants * 12 bytes = 972 bytes)
+     * Parse plant manager data (81 plants * 12 bytes = 972 bytes)
+     * Each plant: variant(U8) + sound(U32LE) + move(U32LE) + mood(U8) + color(U8) + counter(S8)
      */
-    skipPlants() {
-        this.reader.skip(81 * 12);
+    parsePlants() {
+        this.parsed.plantsOffset = this.reader.tell();
+        const plants = [];
+
+        for (let i = 0; i < 81; i++) {
+            plants.push({
+                variant: this.reader.readU8(),
+                sound: this.reader.readU32(),
+                move: this.reader.readU32(),
+                mood: this.reader.readU8(),
+                color: this.reader.readU8(),
+                counter: this.reader.readS8()
+            });
+        }
+
+        this.parsed.plants = plants;
     }
 
     /**
@@ -425,7 +440,7 @@ export class SaveGameParser {
         this.parseHeader();
         this.parseVariables();
         this.parseCharacters();
-        this.skipPlants();
+        this.parsePlants();
         this.skipBuildings();
         this.parseGameStates();
 
