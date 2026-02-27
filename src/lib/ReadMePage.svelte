@@ -16,7 +16,8 @@
         { id: 'system', label: 'System', icon: 'images/sysinfo.webp' },
         { id: 'faq', label: 'FAQ', icon: 'images/getinfo.webp' },
         { id: 'changelog', label: 'Changelog', icon: 'images/callfail.webp' },
-        { id: 'manual', label: 'Manual', icon: 'images/bonus.webp' }
+        { id: 'manual', label: 'Manual', icon: 'images/bonus.webp' },
+        { id: 'voices', label: 'Voices', icon: 'images/send.webp' }
     ];
 
     const faqItems = [
@@ -33,7 +34,10 @@
     ];
 
     const changelogItems = [
-        { id: 'cl0', title: 'February 2026', items: [
+        { id: 'cl0', title: 'March 2026', items: [
+            { type: 'New', text: 'Voices tab on the Read Me page showcases reactions from the original LEGO Island development team' }
+        ]},
+        { id: 'cl1', title: 'February 2026', items: [
             { type: 'New', text: 'Save Editor lets you view and modify save files — change your player name, character, and high scores directly from the browser' },
             { type: 'New', text: 'Sky Color Editor allows customizing the island sky gradient colors in your save file' },
             { type: 'New', text: 'Vehicle Part Editor enables modifying vehicle parts and colors with a 3D preview' },
@@ -48,14 +52,14 @@
             { type: 'Improved', text: 'Save Editor tabs now use a carousel with arrow navigation for easier browsing on small screens' },
             { type: 'Fixed', text: 'Sticky hover highlights on touch devices for editor buttons' }
         ]},
-        { id: 'cl1', title: 'January 2026', items: [
+        { id: 'cl2', title: 'January 2026', items: [
             { type: 'New', text: 'Debug menu for developers and power users. Tap the LEGO Island logo 5 times to unlock OGEL mode and access debug features like teleporting to locations, switching acts, and playing animations' },
             { type: 'Improved', text: 'Configure page redesigned with tabbed navigation, collapsible sections, quick presets (Classic/Modern Mode), and modern toggle switches' },
             { type: 'Improved', text: 'Read Me page reorganized into tabs (About, System, FAQ, Changelog, Manual) with the original instruction manual now viewable in-browser' },
             { type: 'Fixed', text: 'Safari audio not playing on first toggle' },
             { type: 'Fixed', text: 'Tooltips not working correctly on mobile devices' }
         ]},
-        { id: 'cl2', title: 'December 2025', items: [
+        { id: 'cl3', title: 'December 2025', items: [
             { type: 'New', text: '"Active in Background" option keeps the game running when the tab loses focus' },
             { type: 'New', text: 'WASD navigation controls as an alternative to arrow keys' },
             { type: 'Fixed', text: 'Act 3 helicopter ammo now correctly sticks to targets and finishes animations' },
@@ -64,17 +68,17 @@
             { type: 'Fixed', text: 'Touch controls now properly support widescreen aspect ratios' },
             { type: 'Improved', text: 'Default anisotropic filtering increased to 16x for sharper textures' }
         ]},
-        { id: 'cl3', title: 'November 2025', items: [
+        { id: 'cl4', title: 'November 2025', items: [
             { type: 'Fixed', text: 'Dictionary loading failure no longer causes crashes' },
             { type: 'Fixed', text: 'INI configuration now properly applies defaults when values are missing' }
         ]},
-        { id: 'cl4', title: 'September 2025', items: [
+        { id: 'cl5', title: 'September 2025', items: [
             { type: 'New', text: 'Additional widescreen background images' },
             { type: 'Fixed', text: 'Jukebox state now correctly restored when using HD Music extension' },
             { type: 'Fixed', text: 'Background audio no longer gets stuck when starting audio fails' },
             { type: 'Improved', text: 'SI Loader actions now start at the correct time during world loading' }
         ]},
-        { id: 'cl5', title: 'August 2025', items: [
+        { id: 'cl6', title: 'August 2025', items: [
             { type: 'New', text: 'Extended Bad Ending FMV extension shows the uncut beta animation' },
             { type: 'New', text: 'HD Music extension with high-quality audio' },
             { type: 'New', text: 'Widescreen backgrounds extension eliminates 3D edges on wide displays' },
@@ -83,7 +87,7 @@
             { type: 'Fixed', text: 'Purple edges no longer appear on scaled transparent 2D elements' },
             { type: 'Fixed', text: 'Transparent pixels now render correctly with alpha channel support' }
         ]},
-        { id: 'cl6', title: 'July 2025', items: [
+        { id: 'cl7', title: 'July 2025', items: [
             { type: 'New', text: 'HD Textures extension with enhanced visuals' },
             { type: 'New', text: 'MSAA anti-aliasing support for smoother edges' },
             { type: 'New', text: 'Anisotropic filtering for sharper textures at angles' },
@@ -105,7 +109,7 @@
             { type: 'Improved', text: 'Mosaic transition animation is faster and cleaner' },
             { type: 'Improved', text: 'Loading UX for HD Textures with progress indicators' }
         ]},
-        { id: 'cl7', title: 'June 2025 — Initial Release', items: [
+        { id: 'cl8', title: 'June 2025 — Initial Release', items: [
             { type: 'New', text: 'Emscripten web port — play LEGO Island directly in your browser!' },
             { type: 'New', text: 'WebGL rendering for hardware-accelerated 3D graphics' },
             { type: 'New', text: 'Software renderer fallback for devices without WebGL' },
@@ -253,7 +257,6 @@
                 </div>
             </div>
 
-            <!-- Hidden Voices tab - not shown in tab buttons but content preserved -->
             <div class="tab-panel" class:active={activeTab === 'voices'} id="tab-voices">
                 <p class="voices-intro">Reactions from the original LEGO Island development team:</p>
                 <div class="voices-grid">
@@ -261,7 +264,11 @@
                         <p>This is just fantastic! What an endeavor! It is a wonderful tribute to a team that was
                             unparalleled in talent, and we should now include you and your team in that august group.
                             I really wish Wes was around to see it. Keep us posted on updates...</p>
-                        <footer>Scott Anderson</footer>
+                        <footer>
+                            <span class="voice-name">Scott Anderson</span>
+                            <span class="voice-role">Sr. Producer / Senior Project Manager / Co-Creator</span>
+                            <span class="voice-tagline">Honorary Mayor of LEGO Island</span>
+                        </footer>
                     </blockquote>
                     <blockquote class="voice-card">
                         <p>Wow; what a trip. My first trial was on my mac; which had problems displaying any of the
@@ -269,30 +276,50 @@
                             navigation frustrations. But being delivered over the web means any fix you make goes out
                             immediately. I want you all to know it was a joy to work on and how grateful I am to have
                             been a part of the origin. I hope you are getting joy from working on it and keeping it alive.</p>
-                        <footer>Dennis Goodrow</footer>
+                        <footer>
+                            <span class="voice-name">Dennis Goodrow</span>
+                            <span class="voice-role">Director of Development / Lead Programmer / Co-Creator</span>
+                            <span class="voice-tagline">Voted "Best Neighbor on LEGO Island" for two years in a row</span>
+                        </footer>
                     </blockquote>
                     <blockquote class="voice-card">
                         <p>This is pretty neat. At least as responsive over the web as the game was on the target
                             machines of the time! I hadn't heard of WebAssembly until now. What kind of changes to
                             the source were needed to get it working under WebAssembly? I foresee many hours of my
                             time being used up experimenting with this tool!</p>
-                        <footer>Jim Brown</footer>
+                        <footer>
+                            <span class="voice-name">Jim Brown</span>
+                            <span class="voice-role">Programming Wizard / The Godfather of Code</span>
+                        </footer>
                     </blockquote>
                     <blockquote class="voice-card">
                         <p>Well done and such fun tapping back into such fond creative memories.</p>
-                        <footer>Paul Melmed</footer>
+                        <footer>
+                            <span class="voice-name">Paul J. Melmed, Ph.D.</span>
+                            <span class="voice-role">Director of Education and Research / Co-Creator</span>
+                            <span class="voice-tagline">Resident Shrink and Friend to all on LEGO Island</span>
+                        </footer>
                     </blockquote>
                     <blockquote class="voice-card">
                         <p>That's awesome!</p>
-                        <footer>Randy Chou</footer>
+                        <footer>
+                            <span class="voice-name">Randy Yen-pang Chou</span>
+                            <span class="voice-role">3D Programming / Emperor of Quoternia</span>
+                        </footer>
                     </blockquote>
                     <blockquote class="voice-card">
                         <p>Fantastic! Love it.</p>
-                        <footer>Kevin Byall</footer>
+                        <footer>
+                            <span class="voice-name">Kevin Byall</span>
+                            <span class="voice-role">Highly Caffeinated Artist, Animator</span>
+                        </footer>
                     </blockquote>
                     <blockquote class="voice-card">
                         <p>Great stuff!</p>
-                        <footer>Dave Cherry</footer>
+                        <footer>
+                            <span class="voice-name">Dave Cherry</span>
+                            <span class="voice-role">Artist, Animator. Works on Sundaes, too!</span>
+                        </footer>
                     </blockquote>
                 </div>
             </div>
