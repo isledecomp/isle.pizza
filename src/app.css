@@ -1237,51 +1237,85 @@ select:focus {
 
 /* Voices Section */
 .voices-intro {
-    color: var(--color-text-muted);
-    font-size: 0.95em;
-    font-style: italic;
-    margin-bottom: 20px;
+    color: var(--color-text-medium);
+    font-size: 1em;
+    margin-bottom: 24px;
     text-align: center;
+    line-height: 1.6;
 }
 
 .voices-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
 }
 
 .voice-card {
-    background-color: var(--color-bg-card);
+    background: linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-bg-elevated) 100%);
     border: 1px solid var(--color-border-dark);
-    border-left: 3px solid var(--color-primary);
-    border-radius: 0 8px 8px 0;
-    padding: 18px 20px;
+    border-radius: 12px;
+    padding: 24px 24px 20px;
     margin: 0;
-    transition: background-color 0.2s ease, transform 0.2s ease;
+    position: relative;
+    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.voice-card::before {
+    content: '\201C';
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    font-size: 3em;
+    line-height: 1;
+    color: var(--color-primary);
+    opacity: 0.25;
+    font-family: Georgia, serif;
 }
 
 .voice-card:hover {
-    background-color: #252525;
-    transform: translateY(-2px);
+    border-color: var(--color-primary);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(255, 215, 0, 0.08);
 }
 
 .voice-card p {
     color: var(--color-text-medium);
     font-size: 0.95em;
-    line-height: 1.6;
-    margin: 0 0 12px 0;
+    line-height: 1.7;
+    margin: 8px 0 16px 0;
     font-style: italic;
 }
 
 .voice-card footer {
-    color: var(--color-primary);
-    font-size: 0.9em;
-    font-weight: bold;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border-dark);
     text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
 }
 
-.voice-card footer::before {
+.voice-name {
+    color: var(--color-primary);
+    font-size: 0.95em;
+    font-weight: bold;
+}
+
+.voice-name::before {
     content: '— ';
+}
+
+.voice-role {
+    color: var(--color-text-muted);
+    font-size: 0.8em;
+}
+
+.voice-tagline {
+    color: var(--color-text-muted);
+    font-size: 0.75em;
+    font-style: italic;
+    opacity: 0.8;
 }
 
 /* Requirements Section */
