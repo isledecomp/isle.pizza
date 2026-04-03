@@ -1,6 +1,15 @@
 <script>
+    import { currentPage } from '../stores.js';
+
     function goBack() {
-        history.back();
+        // If there's a prior app page in history, go back to it.
+        // Otherwise (direct landing on a deep link), navigate home.
+        if (history.state?.fromApp) {
+            history.back();
+        } else {
+            currentPage.set('main');
+            history.pushState({ page: 'main', fromApp: true }, '', '/');
+        }
     }
 </script>
 

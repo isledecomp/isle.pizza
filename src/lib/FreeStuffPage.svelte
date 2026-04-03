@@ -44,3 +44,100 @@
         </div>
     </div>
 </div>
+
+<style>
+.resource-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+}
+
+.resource-item {
+    display: block;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border-dark);
+    border-radius: 8px;
+    padding: 20px;
+    text-decoration: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.resource-item:hover {
+    background-color: #252525;
+    border-color: var(--color-border-light);
+}
+
+.resource-item h3 {
+    margin: 0 0 8px 0;
+    color: var(--color-primary);
+    font-size: 1.2em;
+}
+
+.resource-item p {
+    margin: 0;
+    color: #b0b0b0;
+    font-size: 0.9em;
+    line-height: 1.5;
+}
+
+/* Quote panel with side art */
+.quote-panel {
+    display: flex;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border-dark);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.quote-panel-art {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: #111;
+}
+
+.quote-panel-art img {
+    width: auto;
+    height: auto;
+    max-width: 180px;
+    border-radius: 4px;
+    display: block;
+}
+
+.quote-panel-content {
+    flex: 1;
+    padding: 20px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.quote-panel-content p {
+    color: var(--color-text-medium);
+    font-size: 0.95em;
+    line-height: 1.6;
+    margin: 0 0 12px 0;
+    font-style: italic;
+}
+
+.quote-panel-content footer {
+    color: var(--color-primary);
+    font-size: 0.9em;
+    font-weight: bold;
+    text-align: right;
+}
+
+.quote-panel-content footer::before {
+    content: '— ';
+}
+
+@media (max-width: 768px) {
+    .quote-panel-art {
+        display: none;
+    }
+}
+</style>

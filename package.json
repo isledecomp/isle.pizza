@@ -9,18 +9,27 @@
     "check": "svelte-check --fail-on-warnings",
     "preview": "vite preview",
     "prepare:assets": "node scripts/prepare.js",
-    "generate:save-editor-assets": "node scripts/generate-save-editor-assets.js"
+    "generate:save-editor-assets": "node scripts/generate-save-editor-assets.js",
+    "deploy": "bash scripts/deploy.sh",
+    "deploy:assets": "bash scripts/deploy.sh --include-assets",
+    "deploy:prod": "bash scripts/deploy.sh production",
+    "deploy:prod:assets": "bash scripts/deploy.sh production --include-assets"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.7.5",
-    "three": "^0.182.0"
+    "better-auth": "^1.5.5",
+    "ogl": "^1.0.11"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^4.0.0",
-    "svelte": "^5.0.0",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "svelte": "^5.46.4",
     "svelte-check": "^4.0.0",
-    "typescript": "^5.0.0",
-    "vite": "^5.4.0",
-    "workbox-cli": "^7.3.0"
+    "typescript": "^6.0.0",
+    "vite": "^8.0.0",
+    "workbox-cli": "^7.4.0"
+  },
+  "overrides": {
+    "serialize-javascript": "^7.0.3",
+    "tmp": "^0.2.4"
   }
 }

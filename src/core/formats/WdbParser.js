@@ -542,6 +542,27 @@ export function buildGlobalPartsMap(globalParts) {
 }
 
 /**
+ * Recursively collect all renderable ROIs (root + children) with resolved LODs.
+ * @param {object} roi - Root ROI node from model data
+ * @param {Map} partsMap - Parts map for shared LOD resolution
+ * @returns {Array<{ name: string, lods: Array }>}
+ */
+export function collectAllRois(roi, partsMap) {
+    const result = [];
+    const walk = (node) => {
+        const lods = resolveLods(node, partsMap);
+        if (lods.length > 0) {
+            result.push({ name: node.name, lods });
+        }
+        for (const child of node.children || []) {
+            walk(child);
+        }
+    };
+    walk(roi);
+    return result;
+}
+
+/**
  * Build a parts lookup map from a world's parts array
  * @param {WdbParser} parser - Parser instance for reading part data
  * @param {Array} worldParts - Array of part references from world entry

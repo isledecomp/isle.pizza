@@ -5,3 +5,7 @@ isle.wasm.map
 isle.js
 LEGO
 save-editor.bin
+.dev.vars
+.env
+.env.*
+.env.local

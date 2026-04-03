@@ -9,6 +9,7 @@
     border-radius: 8px;
     cursor: grab;
     max-width: 100%;
+    aspect-ratio: 1;
 }
 
 .preview-container canvas:active {
@@ -50,12 +51,7 @@
     background:
         radial-gradient(transparent 55%, transparent 56%),
         conic-gradient(var(--color-primary, #FFD700) 0deg 90deg, var(--color-border-dark, #333) 90deg 360deg);
-    animation: editor-spin 1s linear infinite;
-}
-
-@keyframes editor-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    animation: spin 1s linear infinite;
 }
 
 .part-nav-wrapper {

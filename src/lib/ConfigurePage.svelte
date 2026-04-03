@@ -2,11 +2,12 @@
     import { onMount, tick } from 'svelte';
 
     import BackButton from './BackButton.svelte';
+    import OpfsDisabledBanner from './OpfsDisabledBanner.svelte';
     import DisplayTab from './config/DisplayTab.svelte';
     import ControlsTab from './config/ControlsTab.svelte';
     import AudioTab from './config/AudioTab.svelte';
     import ExtrasTab from './config/ExtrasTab.svelte';
-    import { installState, currentPage } from '../stores.js';
+    import { installState, currentPage, opfsDisabled, configVersion } from '../stores.js';
     import { loadConfig, saveConfig, getFileHandle } from '../core/opfs.js';
     import { checkCacheStatus, startInstall, startUninstall, getSiFilesForCache } from '../core/service-worker.js';
     import { getMsaaSamples, getMaxAnisotropy, populateMsaaSelect, populateAfSelect } from '../core/webgl.js';
@@ -20,8 +21,18 @@
         openSection = 'game';
     }
 
+    // Reload config from OPFS when navigating to this page
+    $: if ($currentPage === 'configure' && configForm && !$opfsDisabled) {
+        loadConfig(configForm);
+    }
+
+    // Reload config from OPFS after cloud sync (even if not on config page),
+    // so that saveConfigFromDOM() before game launch won't overwrite it with stale form values
+    $: if ($configVersion && configForm && !$opfsDisabled) {
+        loadConfig(configForm);
+    }
+
     let configForm;
-    let opfsDisabled = false;
     let msaaSupported = false;
     let afSupported = false;
     let isTouchDevice = false;
@@ -61,12 +72,17 @@
         // Load config from OPFS
         const handle = await getFileHandle();
         if (!handle) {
-            opfsDisabled = true;
+            opfsDisabled.set(true);
         } else {
-            const config = await loadConfig(configForm);
-            if (!config) {
-                // Save defaults silently (no toast on initial creation)
-                await saveConfig(configForm, getSiFiles, true);
+            try {
+                const config = await loadConfig(configForm);
+                if (!config) {
+                    // Save defaults silently (no toast on initial creation)
+                    await saveConfig(configForm, getSiFiles, true);
+                }
+            } catch (e) {
+                // Read error — do NOT overwrite config with defaults
+                console.error('Config read failed, keeping existing data:', e);
             }
             showOrHideGraphicsOptions();
         }
@@ -111,7 +127,7 @@
     }
 
     function handleFormChange() {
-        if (!opfsDisabled) {
+        if (!$opfsDisabled) {
             saveConfig(configForm, getSiFiles);
         }
         showOrHideGraphicsOptions();
@@ -142,11 +158,7 @@
             document.getElementById('tex-high').checked = true;
             document.getElementById('max-lod').value = '3.6';
             document.getElementById('max-allowed-extras').value = '20';
-            document.getElementById('check-hd-textures').checked = false;
-            document.getElementById('check-hd-music').checked = false;
-            document.getElementById('check-widescreen-bgs').checked = false;
-            document.getElementById('check-outro').checked = false;
-            document.getElementById('check-ending').checked = false;
+            document.querySelectorAll('#config-tab-extras .toggle-group input[type="checkbox"]').forEach(cb => cb.checked = false);
         } else if (preset === 'modern') {
             document.getElementById('aspect-wide').checked = true;
             document.getElementById('resolution-wide').checked = true;
@@ -188,20 +200,15 @@
 
 <div id="configure-page" class="page-content">
     <BackButton />
-    {#if opfsDisabled}
-        <blockquote id="opfs-disabled" class="error-box">
-            <p>OPFS is disabled in this browser. Default configuration will apply. If you are using a Private/Incognito
-                window, please change to a regular window instead to change configuration.</p>
-        </blockquote>
-    {/if}
+    <OpfsDisabledBanner />
     <div class="page-inner-content config-layout">
         <div class="config-art-panel">
             <img src="images/shark.webp" alt="LEGO Island Shark and Brickster">
         </div>
         <div class="config-main">
             <div class="config-presets">
-                <button type="button" class="preset-btn" disabled={opfsDisabled} onclick={() => applyPreset('classic')}>Classic Mode</button>
-                <button type="button" class="preset-btn" disabled={opfsDisabled} onclick={() => applyPreset('modern')}>Modern Mode</button>
+                <button type="button" class="preset-btn" disabled={$opfsDisabled} onclick={() => applyPreset('classic')}>Classic Mode</button>
+                <button type="button" class="preset-btn" disabled={$opfsDisabled} onclick={() => applyPreset('modern')}>Modern Mode</button>
             </div>
             <div class="config-tabs">
                 <div class="config-tab-buttons">
@@ -214,7 +221,7 @@
                 <form id="config-form" class="config-form" bind:this={configForm} onchange={handleFormChange}>
                     <div class:hidden={activeTab !== 'display'}>
                         <DisplayTab
-                            {opfsDisabled}
+                            opfsDisabled={$opfsDisabled}
                             {openSection}
                             {toggleSection}
                             {fullscreenSupported}
@@ -226,7 +233,7 @@
                     </div>
                     <div class:hidden={activeTab !== 'controls'}>
                         <ControlsTab
-                            {opfsDisabled}
+                            opfsDisabled={$opfsDisabled}
                             {openSection}
                             {toggleSection}
                             {isTouchDevice}
@@ -234,14 +241,14 @@
                     </div>
                     <div class:hidden={activeTab !== 'audio'}>
                         <AudioTab
-                            {opfsDisabled}
+                            opfsDisabled={$opfsDisabled}
                             {openSection}
                             {toggleSection}
                         />
                     </div>
                     <div class:hidden={activeTab !== 'extras'}>
                         <ExtrasTab
-                            {opfsDisabled}
+                            opfsDisabled={$opfsDisabled}
                             {openSection}
                             {toggleSection}
                             {handleExtensionChange}

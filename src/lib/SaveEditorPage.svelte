@@ -1,6 +1,7 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import BackButton from './BackButton.svelte';
+    import OpfsDisabledBanner from './OpfsDisabledBanner.svelte';
     import Carousel from './Carousel.svelte';
     import MissionScoresEditor from './save-editor/MissionScoresEditor.svelte';
     import SkyColorEditor from './save-editor/SkyColorEditor.svelte';
@@ -10,7 +11,8 @@
     import PlantEditor from './save-editor/PlantEditor.svelte';
     import BuildingEditor from './save-editor/BuildingEditor.svelte';
     import { fetchBitmapAsURL } from '../core/assetLoader.js';
-    import { saveEditorState, currentPage } from '../stores.js';
+    import { saveEditorState, currentPage, opfsDisabled, savesVersion } from '../stores.js';
+    import { getOpfsRoot } from '../core/opfs.js';
     import { listSaveSlots, updateSaveSlot, updatePlayerName } from '../core/savegame/index.js';
     import { Actor, ActorNames } from '../core/savegame/constants.js';
 
@@ -38,6 +40,12 @@
         selectedSlot = null;
         activeTab = 'player';
         openSection = 'name';
+    }
+
+    // Reload saves from OPFS when navigating to this page or after cloud sync
+    $: if ($currentPage === 'save-editor' && !$opfsDisabled) {
+        $savesVersion;
+        loadSlots();
     }
 
     // Name editing state (7 characters)
@@ -97,6 +105,13 @@
     }
 
     onMount(async () => {
+        const root = await getOpfsRoot();
+        if (!root) {
+            opfsDisabled.set(true);
+            loading = false;
+            return;
+        }
+
         await loadSlots();
 
         // Load character icons from SI file in background
@@ -314,6 +329,7 @@
 
 <div id="save-editor" class="page-content">
     <BackButton />
+    <OpfsDisabledBanner />
     <div class="page-inner-content config-layout">
         <div class="config-art-panel">
             <img src="images/save.webp" alt="LEGO Island Save Editor">
@@ -529,7 +545,6 @@
     .no-saves-image {
         width: 100px;
         height: auto;
-        image-rendering: pixelated;
         margin-bottom: 16px;
         border-radius: 8px;
     }
@@ -576,7 +591,6 @@
     .slot-character-icon {
         width: 32px;
         height: 37px;
-        image-rendering: pixelated;
     }
 
     .slot-name {
@@ -655,7 +669,6 @@
         width: 40px;
         height: 46px;
         display: block;
-        image-rendering: pixelated;
     }
 
     .tab-carousel-wrapper {

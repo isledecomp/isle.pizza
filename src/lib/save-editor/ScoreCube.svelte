@@ -1,7 +1,8 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import { ScoreCubeRenderer } from '../../core/rendering/ScoreCubeRenderer.js';
-    import { WdbParser, findRoi } from '../../core/formats/WdbParser.js';
+    import { findRoi } from '../../core/formats/WdbParser.js';
+    import { getWdb } from '../../core/wdbCache.js';
     import EditorTooltip from '../EditorTooltip.svelte';
 
     export let missions = {};
@@ -18,15 +19,7 @@
 
     onMount(async () => {
         try {
-            // Load and parse WDB
-            const response = await fetch('/LEGO/data/WORLD.WDB');
-            if (!response.ok) {
-                throw new Error(`Failed to load WORLD.WDB: ${response.status}`);
-            }
-
-            const buffer = await response.arrayBuffer();
-            const parser = new WdbParser(buffer);
-            const wdb = parser.parse();
+            const { wdbParser: parser, wdbData: wdb } = await getWdb();
 
             // Find ICUBE world and scormain model
             const icubeWorld = wdb.worlds.find(w => w.name === 'ICUBE');
@@ -126,8 +119,8 @@
     <div class="score-cube-container">
         <canvas
             bind:this={canvas}
-            width="200"
-            height="200"
+            width="300"
+            height="300"
             onclick={handleClick}
             class:hidden={loading || error}
             role="button"
@@ -157,6 +150,7 @@
         border-radius: 8px;
         margin-bottom: 12px;
         max-width: 100%;
+        aspect-ratio: 1;
     }
 
     canvas:active {

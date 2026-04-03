@@ -54,6 +54,8 @@ A custom web frontend for the Emscripten port of [isle-portable](https://github.
 | `npm run dev` | Start development server with hot reload |
 | `npm run build` | Build for production (outputs to `dist/`) |
 | `npm run preview` | Preview the production build locally |
+| `npm run deploy` | Deploy to dev environment (R2) |
+| `npm run deploy -- production` | Deploy to production environment (R2) |
 
 ## Project Structure
 
@@ -65,13 +67,14 @@ isle.pizza/
 │   ├── stores.js          # Svelte stores for state management
 │   ├── core/
 │   │   ├── formats/       # Binary file parsers/serializers (WDB, save games, animations, textures)
-│   │   ├── rendering/     # Three.js renderers (BaseRenderer, VehiclePartRenderer, ActorRenderer, etc.)
+│   │   ├── rendering/     # OGL renderers (BaseRenderer, VehiclePartRenderer, ActorRenderer, etc.)
 │   │   ├── savegame/      # Save game constants, actor data, color tables
-│   │   └── ...            # Audio, OPFS, service worker, asset loading
-│   └── lib/               # UI components and pages (save editor, configure, etc.)
+│   │   └── ...            # Audio, OPFS, cloud sync, auth, service worker, asset loading
+│   └── lib/               # UI components and pages (save editor, multiplayer, scene player, etc.)
+├── server/                # Cloudflare Workers backend (auth, cloud sync, crash reports, memories)
 ├── public/
 │   └── images/            # UI images (menu buttons, tab icons)
-├── scripts/               # Build and asset generation scripts
+├── scripts/               # Build, asset generation, and deploy scripts
 ├── src-sw/                # Service worker source
 ├── index.html             # HTML entry point
 ├── isle.js                # Emscripten JS (not in repo, build from isle-portable)
@@ -92,9 +95,11 @@ Alternatively, a [Docker image that bundles the runtime with this frontend](http
 ## Tech Stack
 
 - [Svelte 5](https://svelte.dev/) - UI framework
-- [Three.js](https://threejs.org/) - 3D rendering for save editor previews
+- [OGL](https://ogl.dev/) - 3D rendering for save editor previews
 - [Vite](https://vitejs.dev/) - Build tool and dev server
 - [Workbox](https://developer.chrome.com/docs/workbox/) - Service worker and offline support
+- [Hono](https://hono.dev/) - Backend API framework (Cloudflare Workers)
+- [better-auth](https://www.better-auth.com/) - Authentication (Discord)
 
 ## License
 

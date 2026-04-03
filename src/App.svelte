@@ -1,20 +1,32 @@
 <script>
     import { onMount } from 'svelte';
     import { computePosition, flip, shift, offset } from '@floating-ui/dom';
-    import { currentPage, debugEnabled } from './stores.js';
-    import { registerServiceWorker, checkCacheStatus } from './core/service-worker.js';
+    import { currentPage, debugEnabled, gameRunning, multiplayerRoom, scenePlayerEventId, scenePlayerData, matchPathRoute, parseRoute, tryDecodeSceneData, initialInvalidRoom } from './stores.js';
+    import { showToast } from './core/toast.js';
+    import { registerServiceWorker, checkCacheStatus, requestPersistentStorage } from './core/service-worker.js';
     import { setupCanvasEvents } from './core/emscripten.js';
+    import { initMemories } from './core/memories.js';
+    import { initCloudSync } from './core/cloud-sync.js';
+    import { initAuth } from './core/auth.js';
+    import { initThumbnails } from './core/thumbnails.js';
     import TopContent from './lib/TopContent.svelte';
+    import AccountIndicator from './lib/AccountIndicator.svelte';
+    import MemoriesPage from './lib/MemoriesPage.svelte';
     import Controls from './lib/Controls.svelte';
     import ReadMePage from './lib/ReadMePage.svelte';
     import ConfigurePage from './lib/ConfigurePage.svelte';
     import FreeStuffPage from './lib/FreeStuffPage.svelte';
     import SaveEditorPage from './lib/SaveEditorPage.svelte';
+    import MultiplayerPage from './lib/MultiplayerPage.svelte';
     import UpdatePopup from './lib/UpdatePopup.svelte';
     import GoodbyePopup from './lib/GoodbyePopup.svelte';
     import ConfigToast from './lib/ConfigToast.svelte';
     import DebugPanel from './lib/DebugPanel.svelte';
+    import ScenePlayerPage from './lib/ScenePlayerPage.svelte';
+    import MultiplayerOverlay from './lib/multiplayer/MultiplayerOverlay.svelte';
+    import WhatsNewBanner from './lib/WhatsNewBanner.svelte';
     import CanvasWrapper from './lib/CanvasWrapper.svelte';
+    import CrashOverlay from './lib/CrashOverlay.svelte';
 
     async function positionTooltip(trigger) {
         const tooltip = trigger.querySelector('.tooltip-content');
@@ -87,28 +99,70 @@
             checkCacheStatus();
         }
 
+        // Request persistent storage to protect OPFS data from browser eviction
+        requestPersistentStorage();
+
         // Setup canvas events
         setupCanvasEvents();
+
+        // Initialize memory persistence (IndexedDB), cloud sync, auth, and building thumbnails
+        initMemories();
+        initCloudSync();
+        initAuth();
+        initThumbnails();
 
         // Setup global tooltip positioning
         setupTooltips();
 
         // Initialize history state based on current page
+        const initialPath = window.location.pathname;
         const initialHash = window.location.hash;
-        if (initialHash) {
-            // Set up proper history state for the current hash
+        const state = { page: $currentPage };
+        const pathRoute = matchPathRoute(initialPath);
+
+        if (pathRoute) {
+            Object.assign(state, pathRoute);
+        } else if (initialHash.startsWith('#r/') && $multiplayerRoom) {
+            state.room = $multiplayerRoom;
+        }
+
+        if (initialInvalidRoom) {
+            history.replaceState(state, '', '#multiplayer');
+        } else if (pathRoute) {
+            history.replaceState(state, '', initialPath);
+        } else if (initialHash) {
             history.replaceState({ page: 'main' }, '', window.location.pathname);
-            history.pushState({ page: $currentPage }, '', initialHash);
+            history.pushState({ ...state, fromApp: true }, '', initialHash);
         } else {
-            history.replaceState({ page: 'main' }, '', window.location.pathname);
+            history.replaceState(state, '', window.location.pathname);
+        }
+
+        // Show error toast if initial URL had an invalid room
+        if (initialInvalidRoom) {
+            showToast('Invalid island URL', { error: true, duration: 3000 });
         }
 
         // Handle browser back/forward
         window.addEventListener('popstate', (e) => {
-            if (e.state && e.state.page && e.state.page !== 'main') {
+            if (e.state && e.state.page === 'multiplayer') {
+                multiplayerRoom.set(e.state.room || null);
+                currentPage.set('multiplayer');
+            } else if (e.state && e.state.page === 'scene-player') {
+                scenePlayerEventId.set(e.state.eventId || null);
+                scenePlayerData.set(tryDecodeSceneData(e.state.sceneData));
+                currentPage.set('scene-player');
+            } else if (e.state && e.state.page && e.state.page !== 'main') {
                 currentPage.set(e.state.page);
             } else {
-                currentPage.set('main');
+                // No state (e.g. URL pasted in address bar) — parse route from URL
+                const result = parseRoute();
+                multiplayerRoom.set(result.room);
+                if (result.eventId) scenePlayerEventId.set(result.eventId);
+                scenePlayerData.set(tryDecodeSceneData(result.sceneData));
+                currentPage.set(result.page);
+                if (result.invalidRoom) {
+                    showToast('Invalid island URL', { error: true, duration: 3000 });
+                }
             }
         });
     });
@@ -122,9 +176,14 @@
     <source src="audio/install.mp3" type="audio/mpeg">
 </audio>
 
+<WhatsNewBanner />
 <GoodbyePopup />
 <UpdatePopup />
 <ConfigToast />
+
+{#if !$gameRunning}
+    <AccountIndicator />
+{/if}
 
 <main id="main-container">
     <div class="page-wrapper" class:active={$currentPage === 'main'}>
@@ -143,7 +202,15 @@
     <div class="page-wrapper" class:active={$currentPage === 'save-editor'}>
         <SaveEditorPage />
     </div>
-
+    <div class="page-wrapper" class:active={$currentPage === 'multiplayer'}>
+        <MultiplayerPage />
+    </div>
+    <div class="page-wrapper" class:active={$currentPage === 'memories'}>
+        <MemoriesPage />
+    </div>
+    <div class="page-wrapper" class:active={$currentPage === 'scene-player'}>
+        <ScenePlayerPage />
+    </div>
     <div class="footer-disclaimer">
         <p>LEGO® and LEGO Island™ are trademarks of The LEGO Group.</p>
         <p>This is an unofficial fan project and is not affiliated with or endorsed by The LEGO Group.</p>
@@ -151,7 +218,7 @@
 
     <div class="app-footer">
         {#if __BUILD_TIME__}
-            <p>Last updated: {__BUILD_TIME__}</p>
+            <p>Last updated: {__BUILD_TIME__}{#if __BUILD_VERSION__}&nbsp;({__BUILD_VERSION__}){/if}</p>
         {:else}
             <p><strong>DEVELOPMENT MODE</strong></p>
         {/if}
@@ -159,6 +226,9 @@
 </main>
 
 <CanvasWrapper />
+<CrashOverlay />
+
+<MultiplayerOverlay />
 
 {#if $debugEnabled}
     <DebugPanel />

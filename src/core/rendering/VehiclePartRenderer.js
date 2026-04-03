@@ -1,69 +1,55 @@
-import * as THREE from 'three';
+import { Transform, Mesh } from 'ogl';
+import { Vec3 } from 'ogl/src/math/Vec3.js';
 import { LegoColors } from '../savegame/constants.js';
 import { resolveLods } from '../formats/WdbParser.js';
 import { BaseRenderer } from './BaseRenderer.js';
 
 /**
- * Specialized renderer for LEGO vehicle parts
- * Renders ROI with proper textures - only colors meshes with INH prefix in textureName/materialName
+ * Specialized renderer for LEGO vehicle parts.
+ * Renders ROI with proper textures - only colors meshes with INH prefix.
  */
 export class VehiclePartRenderer extends BaseRenderer {
     constructor(canvas) {
         super(canvas);
-        this.colorableMeshes = []; // Meshes with INH prefix
+        this.colorableMeshes = [];
 
         this.camera.position.set(0, 0, 3);
-        this.camera.lookAt(0, 0, 0);
+        this.camera.lookAt([0, 0, 0]);
 
-        this.setupControls(new THREE.Vector3(0, 0, 0));
+        this.setupControls(new Vec3(0, 0, 0));
     }
 
-    /**
-     * Check if a mesh has INH prefix in textureName or materialName
-     * This indicates the mesh should inherit color from the ROI
-     */
     hasInhPrefix(mesh) {
         const texName = mesh.properties?.textureName?.toLowerCase() || '';
         const matName = mesh.properties?.materialName?.toLowerCase() || '';
         return texName.startsWith('inh') || matName.startsWith('inh');
     }
 
-    /**
-     * Load part geometry with proper textures and colorable mesh detection
-     * @param {object} roiData - Parsed ROI data with lods
-     * @param {string} colorName - LEGO color name for colorable parts
-     * @param {object[]} textureList - Array of texture data from model
-     * @param {Map} partsMap - Map of part name -> part data for shared LOD resolution
-     */
     loadPartWithColor(roiData, colorName, textureList = [], partsMap = new Map()) {
         this.clearModel();
 
-        this.modelGroup = new THREE.Group();
+        this.modelGroup = new Transform();
         this.colorableMeshes = [];
         this.partsMap = partsMap;
 
         this.loadTextures(textureList);
 
         const legoColor = LegoColors[colorName] || LegoColors['lego red'];
-        const threeLegoColor = new THREE.Color(legoColor.r / 255, legoColor.g / 255, legoColor.b / 255);
+        const legoColorArr = [legoColor.r / 255, legoColor.g / 255, legoColor.b / 255];
 
-        this.createMeshesFromROI(roiData, threeLegoColor);
+        this.createMeshesFromROI(roiData, legoColorArr);
 
         this.centerAndScaleModel(1.5);
 
-        this.scene.add(this.modelGroup);
+        this.scene.addChild(this.modelGroup);
         this.controls.autoRotate = true;
-        this.renderer.render(this.scene, this.camera);
+        this.glRenderer.render({ scene: this.scene, camera: this.camera });
     }
 
-    /**
-     * Recursively create meshes from ROI and its children
-     */
     createMeshesFromROI(roiData, legoColor) {
         const lods = resolveLods(roiData, this.partsMap);
 
         if (lods.length > 0) {
-            // Use highest quality LOD (last in array has most vertices)
             const lod = lods[lods.length - 1];
 
             for (const mesh of lod.meshes) {
@@ -74,106 +60,82 @@ export class VehiclePartRenderer extends BaseRenderer {
                 const hasUVs = mesh.textureIndices && mesh.textureIndices.length > 0;
                 const meshTextureName = mesh.properties?.textureName?.toLowerCase();
 
-                let material;
-
-                // Get alpha from mesh properties
-                // In the original game: alpha = 0 means opaque, alpha > 0 means transparent
                 const meshAlpha = mesh.properties?.alpha || 0;
                 const isTransparent = meshAlpha > 0;
                 const opacity = isTransparent ? meshAlpha : 1;
 
+                const transparencyOpts = {
+                    transparent: isTransparent,
+                    depthWrite: !isTransparent,
+                };
+
+                let program;
+
                 if (isColorable) {
-                    // Mesh has INH prefix - use the LEGO color
-                    material = new THREE.MeshLambertMaterial({
-                        color: legoColor,
-                        side: THREE.DoubleSide,
-                        transparent: isTransparent,
-                        opacity: opacity,
-                        depthWrite: !isTransparent
-                    });
-                    this.colorableMeshes.push(null); // Placeholder, will set after mesh creation
+                    program = this.createColoredProgram([...legoColor], opacity, transparencyOpts);
+                    this.colorableMeshes.push(null);
                 } else if (hasUVs && meshTextureName && this.textures.has(meshTextureName)) {
-                    // Mesh has its own texture
-                    material = new THREE.MeshLambertMaterial({
-                        map: this.textures.get(meshTextureName),
-                        side: THREE.DoubleSide,
-                        transparent: isTransparent,
-                        opacity: opacity,
-                        depthWrite: !isTransparent
-                    });
+                    program = this.createTexturedProgram(this.textures.get(meshTextureName), opacity, transparencyOpts);
                 } else {
-                    // Fallback to mesh's vertex color
                     const meshColor = mesh.properties?.color || { r: 128, g: 128, b: 128 };
-                    material = new THREE.MeshLambertMaterial({
-                        color: new THREE.Color(meshColor.r / 255, meshColor.g / 255, meshColor.b / 255),
-                        side: THREE.DoubleSide,
-                        transparent: isTransparent,
-                        opacity: opacity,
-                        depthWrite: !isTransparent
-                    });
+                    program = this.createColoredProgram([meshColor.r / 255, meshColor.g / 255, meshColor.b / 255], opacity, transparencyOpts);
                 }
 
-                const threeMesh = new THREE.Mesh(geometry, material);
+                const oglMesh = new Mesh(this.gl, { geometry, program });
                 if (meshTextureName) {
-                    threeMesh.userData.textureName = meshTextureName;
+                    oglMesh._textureName = meshTextureName;
                 }
-                this.modelGroup.add(threeMesh);
+                this.modelGroup.addChild(oglMesh);
 
-                // Track colorable meshes
                 if (isColorable) {
-                    this.colorableMeshes[this.colorableMeshes.length - 1] = threeMesh;
+                    this.colorableMeshes[this.colorableMeshes.length - 1] = oglMesh;
                 }
             }
         }
 
-        // Process children recursively
         for (const child of roiData.children || []) {
             this.createMeshesFromROI(child, legoColor);
         }
     }
 
-    /**
-     * Update texture on meshes matching a given texture name
-     * @param {string} textureName - Texture name to match (case-insensitive)
-     * @param {{ width: number, height: number, palette: Array<{r,g,b}>, pixels: Uint8Array }} textureData
-     */
     updateTexture(textureName, textureData) {
         if (!this.modelGroup) return;
 
-        const newTexture = this.createTexture(textureData);
         const targetName = textureName.toLowerCase();
+        const newTexture = this.createTexture(textureData);
+
+        // Clean up old texture if it exists
+        const oldTexture = this.textures.get(targetName);
+        if (oldTexture) {
+            this.gl.deleteTexture(oldTexture.texture);
+        }
+        this.textures.set(targetName, newTexture);
 
         this.modelGroup.traverse((child) => {
-            if (!(child instanceof THREE.Mesh)) return;
-            if (child.userData.textureName !== targetName) return;
+            if (!(child instanceof Mesh)) return;
+            if (child._textureName !== targetName) return;
 
-            const oldMap = child.material.map;
-            child.material.map = newTexture;
-            // Set color to white so texture isn't tinted by the fallback color
-            child.material.color.setRGB(1, 1, 1);
-            child.material.needsUpdate = true;
-            if (oldMap && oldMap !== newTexture) oldMap.dispose();
+            child.program.uniforms.tMap.value = newTexture;
+            child.program.uniforms.uUseTexture.value = 1;
+            child.program.uniforms.uColor.value = [1, 1, 1];
         });
 
-        this.renderer.render(this.scene, this.camera);
+        this.glRenderer.render({ scene: this.scene, camera: this.camera });
     }
 
-    /**
-     * Update color of colorable meshes without reloading geometry
-     */
     updateColor(colorName) {
         if (!this.modelGroup || this.colorableMeshes.length === 0) return;
 
         const legoColor = LegoColors[colorName] || LegoColors['lego red'];
-        const threeColor = new THREE.Color(legoColor.r / 255, legoColor.g / 255, legoColor.b / 255);
+        const colorArr = [legoColor.r / 255, legoColor.g / 255, legoColor.b / 255];
 
         for (const mesh of this.colorableMeshes) {
-            if (mesh && mesh.material) {
-                mesh.material.color = threeColor;
+            if (mesh && mesh.program) {
+                mesh.program.uniforms.uColor.value = colorArr;
             }
         }
 
-        this.renderer.render(this.scene, this.camera);
+        this.glRenderer.render({ scene: this.scene, camera: this.camera });
     }
 
     clearModel() {

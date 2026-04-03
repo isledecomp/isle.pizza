@@ -1,7 +1,8 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import { PlantRenderer } from '../../core/rendering/PlantRenderer.js';
-    import { WdbParser, buildGlobalPartsMap, buildPartsMap } from '../../core/formats/WdbParser.js';
+    import { buildGlobalPartsMap, buildPartsMap } from '../../core/formats/WdbParser.js';
+    import { getWdb } from '../../core/wdbCache.js';
     import {
         PlantInfoInit, PlantVariantNames, PlantColorNames,
         PLANT_COUNT, MAX_SOUND, MAX_MOVE, MAX_MOOD, MAX_COLOR, MAX_VARIANT,
@@ -9,10 +10,7 @@
     } from '../../core/savegame/plantConstants.js';
     import { Actor } from '../../core/savegame/constants.js';
     import { createSoundPlayer } from '../../core/audio.js';
-    import NavButton from '../NavButton.svelte';
-    import ResetButton from '../ResetButton.svelte';
-    import EditorTooltip from '../EditorTooltip.svelte';
-    import './editor-common.css';
+    import EditorPreview from './EditorPreview.svelte';
 
     export let slot;
     export let onUpdate = () => {};
@@ -53,14 +51,7 @@
 
     onMount(async () => {
         try {
-            const response = await fetch('/LEGO/data/WORLD.WDB');
-            if (!response.ok) {
-                throw new Error(`Failed to load WORLD.WDB: ${response.status}`);
-            }
-
-            const buffer = await response.arrayBuffer();
-            const wdbParser = new WdbParser(buffer);
-            const wdbData = wdbParser.parse();
+            const { wdbParser, wdbData } = await getWdb();
 
             // Plant LODs are stored in ISLE world parts and/or global parts
             const partsMap = new Map();
@@ -247,43 +238,19 @@
     }
 </script>
 
-<EditorTooltip text="Click to customize based on your current character. Navigate between all 81 plants using the arrows. Changes are automatically saved." onResetCamera={() => renderer?.resetView()}>
-    <div class="preview-container">
-        <canvas
-            bind:this={canvas}
-            width="190"
-            height="190"
-            class:hidden={loading || error}
-            onclick={handleCanvasClick}
-            role="button"
-            tabindex="0"
-            aria-label="Customize plant"
-        ></canvas>
-
-        {#if loading}
-            <div class="preview-overlay">
-                <div class="spinner"></div>
-            </div>
-        {:else if error}
-            <div class="preview-overlay error">{error}</div>
-        {/if}
-    </div>
-
-    <div class="part-nav-wrapper">
-        <div class="part-nav">
-            <NavButton direction="left" onclick={prevPlant} />
-            <div class="part-info">
-                <span class="nav-index">{plantIndex + 1} / {PLANT_COUNT}</span>
-                <span class="nav-name">{colorName} {variantName}</span>
-            </div>
-            <NavButton direction="right" onclick={nextPlant} />
-        </div>
-    </div>
-
-    <div class="reset-container">
-        {#if !isDefault && !loading && !error}
-            <ResetButton onclick={resetPlant} />
-        {/if}
-    </div>
-</EditorTooltip>
+<EditorPreview
+    tooltipText="Click to customize based on your current character. Navigate between all 81 plants using the arrows. Changes are automatically saved."
+    onResetCamera={() => renderer?.resetView()}
+    onCanvasReady={(el) => canvas = el}
+    {loading}
+    {error}
+    onCanvasClick={handleCanvasClick}
+    canvasLabel="Customize plant"
+    onPrev={prevPlant}
+    onNext={nextPlant}
+    indexDisplay="{plantIndex + 1} / {PLANT_COUNT}"
+    nameDisplay="{colorName} {variantName}"
+    showReset={!isDefault && !loading && !error}
+    onReset={resetPlant}
+/>
 

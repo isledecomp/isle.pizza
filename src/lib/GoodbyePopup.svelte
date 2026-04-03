@@ -57,3 +57,23 @@
         <img src="images/later.webp" alt="Goodbye" class="update-character" width="150" height="187">
     </div>
 {/if}
+
+<style>
+/* Goodbye popup progress bar */
+.goodbye-progress {
+    width: 100%;
+    height: 4px;
+    background: var(--color-border-dark);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.goodbye-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--color-primary);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+}
+</style>

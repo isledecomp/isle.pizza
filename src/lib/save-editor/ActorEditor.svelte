@@ -1,14 +1,12 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import { ActorRenderer } from '../../core/rendering/ActorRenderer.js';
-    import { WdbParser, buildGlobalPartsMap, buildPartsMap, resolveLods } from '../../core/formats/WdbParser.js';
+    import { buildGlobalPartsMap, buildPartsMap, collectAllRois } from '../../core/formats/WdbParser.js';
+    import { getWdb } from '../../core/wdbCache.js';
     import { ActorInfoInit, ActorPart, ActorDisplayNames, ActorVehicles, VehicleDisplayNames } from '../../core/savegame/actorConstants.js';
     import { Actor } from '../../core/savegame/constants.js';
     import { createSoundPlayer } from '../../core/audio.js';
-    import NavButton from '../NavButton.svelte';
-    import ResetButton from '../ResetButton.svelte';
-    import EditorTooltip from '../EditorTooltip.svelte';
-    import './editor-common.css';
+    import EditorPreview from './EditorPreview.svelte';
 
     export let slot;
     export let onUpdate = () => {};
@@ -54,14 +52,7 @@
 
     onMount(async () => {
         try {
-            const response = await fetch('/LEGO/data/WORLD.WDB');
-            if (!response.ok) {
-                throw new Error(`Failed to load WORLD.WDB: ${response.status}`);
-            }
-
-            const buffer = await response.arrayBuffer();
-            const wdbParser = new WdbParser(buffer);
-            const wdbData = wdbParser.parse();
+            const { wdbParser, wdbData } = await getWdb();
 
             if (wdbData.globalParts) {
                 globalPartsMap = buildGlobalPartsMap(wdbData.globalParts);
@@ -99,18 +90,7 @@
                         worldPartsMap = buildPartsMap(wdbParser, world.parts);
                     }
 
-                    // Collect all renderable ROIs (root + children recursively)
-                    const rois = [];
-                    const collectRois = (node) => {
-                        const lods = resolveLods(node, worldPartsMap);
-                        if (lods.length > 0) {
-                            rois.push({ name: node.name, lods });
-                        }
-                        for (const child of node.children || []) {
-                            collectRois(child);
-                        }
-                    };
-                    collectRois(roi);
+                    const rois = collectAllRois(roi, worldPartsMap);
 
                     if (rois.length > 0) {
                         vModelsMap.set(modelKey, rois);
@@ -303,37 +283,22 @@
     }
 </script>
 
-<EditorTooltip text="Click to customize based on your current character. Navigate between all 66 game actors using the arrows. Changes are automatically saved." onResetCamera={() => renderer?.resetView()}>
-    <div class="preview-container">
-        <canvas
-            bind:this={canvas}
-            width="190"
-            height="190"
-            class:hidden={loading || error}
-            onclick={handleCanvasClick}
-            role="button"
-            tabindex="0"
-            aria-label="Customize actor"
-        ></canvas>
-
-        {#if loading}
-            <div class="preview-overlay">
-                <div class="spinner"></div>
-            </div>
-        {:else if error}
-            <div class="preview-overlay error">{error}</div>
-        {/if}
-    </div>
-
-    <div class="part-nav-wrapper">
-        <div class="part-nav">
-            <NavButton direction="left" onclick={prevActor} />
-            <div class="part-info">
-                <span class="nav-index">{actorIndex + 1} / {ActorInfoInit.length}</span>
-                <span class="nav-name">{actorName}</span>
-            </div>
-            <NavButton direction="right" onclick={nextActor} />
-        </div>
+<EditorPreview
+    tooltipText="Click to customize based on your current character. Navigate between all 66 game actors using the arrows. Changes are automatically saved."
+    onResetCamera={() => renderer?.resetView()}
+    onCanvasReady={(el) => canvas = el}
+    {loading}
+    {error}
+    onCanvasClick={handleCanvasClick}
+    canvasLabel="Customize actor"
+    onPrev={prevActor}
+    onNext={nextActor}
+    indexDisplay="{actorIndex + 1} / {ActorInfoInit.length}"
+    nameDisplay={actorName}
+    showReset={!isDefault && !loading && !error}
+    onReset={resetActor}
+>
+    <svelte:fragment slot="side-buttons">
         {#if vehicleInfo}
             <button
                 type="button"
@@ -347,12 +312,6 @@
                 </svg>
             </button>
         {/if}
-    </div>
-
-    <div class="reset-container">
-        {#if !isDefault && !loading && !error}
-            <ResetButton onclick={resetActor} />
-        {/if}
-    </div>
-</EditorTooltip>
+    </svelte:fragment>
+</EditorPreview>
 

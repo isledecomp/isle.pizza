@@ -1,7 +1,8 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import { BuildingRenderer } from '../../core/rendering/BuildingRenderer.js';
-    import { WdbParser, buildPartsMap, buildGlobalPartsMap, resolveLods } from '../../core/formats/WdbParser.js';
+    import { buildPartsMap, collectAllRois } from '../../core/formats/WdbParser.js';
+    import { getWdb } from '../../core/wdbCache.js';
     import {
         BuildingInfoInit, BuildingDisplayNames, BuildingVariants,
         BUILDING_COUNT, MAX_SOUND, MAX_MOVE, MAX_MOOD, MAX_VARIANT,
@@ -10,10 +11,7 @@
     } from '../../core/savegame/buildingConstants.js';
     import { Actor } from '../../core/savegame/constants.js';
     import { createSoundPlayer } from '../../core/audio.js';
-    import NavButton from '../NavButton.svelte';
-    import ResetButton from '../ResetButton.svelte';
-    import EditorTooltip from '../EditorTooltip.svelte';
-    import './editor-common.css';
+    import EditorPreview from './EditorPreview.svelte';
 
     export let slot;
     export let onUpdate = () => {};
@@ -61,14 +59,7 @@
 
     onMount(async () => {
         try {
-            const response = await fetch('/LEGO/data/WORLD.WDB');
-            if (!response.ok) {
-                throw new Error(`Failed to load WORLD.WDB: ${response.status}`);
-            }
-
-            const buffer = await response.arrayBuffer();
-            const wdbParser = new WdbParser(buffer);
-            const wdbData = wdbParser.parse();
+            const { wdbParser, wdbData } = await getWdb();
 
             // Collect all building model names we need
             const neededModels = new Set();
@@ -104,18 +95,7 @@
                         worldPartsMap = buildPartsMap(wdbParser, world.parts);
                     }
 
-                    // Collect all renderable ROIs (root + children recursively)
-                    const rois = [];
-                    const collectRois = (node) => {
-                        const lods = resolveLods(node, worldPartsMap);
-                        if (lods.length > 0) {
-                            rois.push({ name: node.name, lods });
-                        }
-                        for (const child of node.children || []) {
-                            collectRois(child);
-                        }
-                    };
-                    collectRois(roi);
+                    const rois = collectAllRois(roi, worldPartsMap);
 
                     if (rois.length > 0) {
                         // Merge model-specific textures with globals
@@ -306,42 +286,18 @@
     }
 </script>
 
-<EditorTooltip text="Click to customize based on your current character. Navigate between all 16 buildings using the arrows. Changes are automatically saved." onResetCamera={() => renderer?.resetView()}>
-    <div class="preview-container">
-        <canvas
-            bind:this={canvas}
-            width="190"
-            height="190"
-            class:hidden={loading || error}
-            onclick={handleCanvasClick}
-            role="button"
-            tabindex="0"
-            aria-label="Customize building"
-        ></canvas>
-
-        {#if loading}
-            <div class="preview-overlay">
-                <div class="spinner"></div>
-            </div>
-        {:else if error}
-            <div class="preview-overlay error">{error}</div>
-        {/if}
-    </div>
-
-    <div class="part-nav-wrapper">
-        <div class="part-nav">
-            <NavButton direction="left" onclick={prevBuilding} />
-            <div class="part-info">
-                <span class="nav-index">{buildingIndex + 1} / {BUILDING_COUNT}</span>
-                <span class="nav-name">{displayName}{variantLabel ? ` (${variantLabel})` : ''}</span>
-            </div>
-            <NavButton direction="right" onclick={nextBuilding} />
-        </div>
-    </div>
-
-    <div class="reset-container">
-        {#if !isDefault && !loading && !error}
-            <ResetButton onclick={resetBuilding} />
-        {/if}
-    </div>
-</EditorTooltip>
+<EditorPreview
+    tooltipText="Click to customize based on your current character. Navigate between all 16 buildings using the arrows. Changes are automatically saved."
+    onResetCamera={() => renderer?.resetView()}
+    onCanvasReady={(el) => canvas = el}
+    {loading}
+    {error}
+    onCanvasClick={handleCanvasClick}
+    canvasLabel="Customize building"
+    onPrev={prevBuilding}
+    onNext={nextBuilding}
+    indexDisplay="{buildingIndex + 1} / {BUILDING_COUNT}"
+    nameDisplay="{displayName}{variantLabel ? ` (${variantLabel})` : ''}"
+    showReset={!isDefault && !loading && !error}
+    onReset={resetBuilding}
+/>

@@ -210,7 +210,13 @@ export async function saveSaveSlot(slotNumber, buffer, silent = false) {
     }
 
     const fileName = getSaveFileName(slotNumber);
-    return await writeBinaryFile(fileName, buffer, silent, 'Save updated');
+    const success = await writeBinaryFile(fileName, buffer, silent, 'Save updated');
+    if (success) {
+        window.dispatchEvent(new CustomEvent('opfs-save-slot-written', {
+            detail: { slot: slotNumber }
+        }));
+    }
+    return success;
 }
 
 /**
@@ -377,6 +383,9 @@ export async function updatePlayerName(playerIndex, newName) {
     if (success) {
         // Clear cache so next load gets fresh data
         clearPlayersCache();
+        window.dispatchEvent(new CustomEvent('opfs-save-file-written', {
+            detail: { filename: PLAYERS_FILE }
+        }));
     }
 
     return success;
