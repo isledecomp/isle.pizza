@@ -72,6 +72,7 @@
             }
         }
         if (anyCount) parts.push(anyCount === 1 ? '1 more player' : `${anyCount} more players`);
+        if (!parts.length) return 'Starting...';
         return `Waiting for ${parts.join(', ')}...`;
     }
 
