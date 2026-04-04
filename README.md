@@ -95,7 +95,7 @@ Alternatively, a [Docker image that bundles the runtime with this frontend](http
 ## Tech Stack
 
 - [Svelte 5](https://svelte.dev/) - UI framework
-- [OGL](https://ogl.dev/) - 3D rendering for save editor previews
+- [OGL](https://github.com/oframe/ogl) - 3D rendering for save editor previews
 - [Vite](https://vitejs.dev/) - Build tool and dev server
 - [Workbox](https://developer.chrome.com/docs/workbox/) - Service worker and offline support
 - [Hono](https://hono.dev/) - Backend API framework (Cloudflare Workers)
