@@ -100,6 +100,7 @@ export async function initCloudSync() {
     window.addEventListener('opfs-save-slot-written', (e) => {
         trackWrite(getSaveFileName(e.detail.slot));
         trackWrite(HISTORY_FILE);
+        trackWrite(PLAYERS_FILE);
     });
 
     window.addEventListener('opfs-save-state-changed', () => {

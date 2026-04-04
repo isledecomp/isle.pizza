@@ -126,14 +126,8 @@ export async function listSaveSlots() {
                     // The playerId in the save file corresponds to an index in Players.gsi
                     // Actually, we need to match by looking at order - player names are stored
                     // in order of most recently played, so we just use the index
-                    if (playersCache && playersCache.players.length > 0) {
-                        // Find player by matching the slot with Players.gsi order
-                        // For now, just use the first player if available
-                        // In reality, we'd need to match by player_id
-                        const playerIndex = i < playersCache.players.length ? i : 0;
-                        if (playersCache.players[playerIndex]) {
-                            slot.playerName = playersCache.players[playerIndex].name;
-                        }
+                    if (playersCache && i < playersCache.players.length && playersCache.players[i]) {
+                        slot.playerName = playersCache.players[i].name;
                     }
                 }
             } catch (e) {
@@ -168,12 +162,8 @@ export async function loadSaveSlot(slotNumber) {
     const players = await loadPlayers();
 
     let playerName = null;
-    if (players && players.players.length > 0) {
-        // Use slot index as a simple mapping
-        const playerIndex = slotNumber < players.players.length ? slotNumber : 0;
-        if (players.players[playerIndex]) {
-            playerName = players.players[playerIndex].name;
-        }
+    if (players && slotNumber < players.players.length && players.players[slotNumber]) {
+        playerName = players.players[slotNumber].name;
     }
 
     return {

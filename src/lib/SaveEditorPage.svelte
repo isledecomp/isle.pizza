@@ -311,7 +311,7 @@
         { id: Actor.LAURA, name: ActorNames[Actor.LAURA] }
     ];
 
-    $: existingSlots = slots.filter(s => s.exists);
+    $: existingSlots = slots.filter(s => s.exists && s.playerName);
     $: currentSlot = slots.find(s => s.slotNumber === selectedSlot);
 
     // Update local state when currentSlot changes
