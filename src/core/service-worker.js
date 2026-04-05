@@ -77,8 +77,9 @@ export function checkCacheStatus() {
     const hdMusic = document.getElementById('check-hd-music');
     const widescreenBgs = document.getElementById('check-widescreen-bgs');
     const badEnding = document.getElementById('check-ending');
+    const rabbits = document.getElementById('check-rabbits');
 
-    const siFiles = getSiFilesForCache(hdMusic, widescreenBgs, badEnding);
+    const siFiles = getSiFilesForCache(hdMusic, widescreenBgs, badEnding, rabbits);
 
     navigator.serviceWorker.controller.postMessage({
         action: 'check_cache_status',
@@ -88,11 +89,12 @@ export function checkCacheStatus() {
     });
 }
 
-export function getSiFilesForCache(hdMusic, widescreenBgs, badEnding) {
+export function getSiFilesForCache(hdMusic, widescreenBgs, badEnding, rabbits) {
     const siFiles = [];
     if (hdMusic?.checked) siFiles.push('/LEGO/extra/hdmusic.si');
     if (widescreenBgs?.checked) siFiles.push('/LEGO/extra/widescreen.si');
     if (badEnding?.checked) siFiles.push('/LEGO/extra/badend.si');
+    if (rabbits?.checked) siFiles.push('/LEGO/extra/rabbits.si');
     return siFiles;
 }
 

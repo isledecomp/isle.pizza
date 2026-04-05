@@ -219,9 +219,11 @@ function applyConfigToForm(form, config) {
             const hdMusic = elements["HD Music"];
             const widescreenBgs = elements["Widescreen Backgrounds"];
             const badEnding = elements["Extended Bad Ending FMV"];
+            const rabbits = elements["Rabbits"];
             if (hdMusic) hdMusic.checked = config[key].includes("hdmusic.si");
             if (widescreenBgs) widescreenBgs.checked = config[key].includes("widescreen.si");
             if (badEnding) badEnding.checked = config[key].includes("badend.si");
+            if (rabbits) rabbits.checked = config[key].includes("rabbits.si");
             continue;
         }
 
@@ -338,7 +340,8 @@ export async function saveConfigFromDOM(multiplayer = null) {
         const hdMusic = document.getElementById('check-hd-music');
         const widescreenBgs = document.getElementById('check-widescreen-bgs');
         const badEnding = document.getElementById('check-ending');
-        return getSiFilesForCache(hdMusic, widescreenBgs, badEnding);
+        const rabbits = document.getElementById('check-rabbits');
+        return getSiFilesForCache(hdMusic, widescreenBgs, badEnding, rabbits);
     };
     return saveConfig(form, getSiFiles, true, multiplayer);
 }

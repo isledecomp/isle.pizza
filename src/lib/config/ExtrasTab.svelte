@@ -38,6 +38,10 @@
                     <span class="tooltip-trigger">?<span class="tooltip-content">Plays the extended / "uncut" Bad Ending animation as found in beta versions of the game upon failing to catch the Brickster.</span></span>
                 </div>
                 <div class="toggle-switch">
+                    <label><input type="checkbox" id="check-rabbits" name="Rabbits" data-not-ini="true" disabled={opfsDisabled} onchange={handleExtensionChange}><span class="toggle-slider"></span><span class="toggle-label">Rabbits <span class="toggle-badge">+3MB</span></span></label>
+                    <span class="tooltip-trigger">?<span class="tooltip-content">Adds two rabbits that hop around on the mountain top, visiting and nibbling on plants.</span></span>
+                </div>
+                <div class="toggle-switch">
                     <label><input type="checkbox" id="check-third-person-camera" name="Third Person Camera" data-not-ini="true" disabled={opfsDisabled} onchange={handleExtensionChange}><span class="toggle-slider"></span><span class="toggle-label">Third-person Camera <span class="toggle-badge-experimental"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3L12 14L15 3"/><path d="M6 3H18"/><path d="M5 21H19L17 8H7L5 21Z"/></svg> Experimental</span></span></label>
                     <span class="tooltip-trigger">?<span class="tooltip-content">Switches to a third-person camera that follows your character around LEGO Island.</span></span>
                 </div>

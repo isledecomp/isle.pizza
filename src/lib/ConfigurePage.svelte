@@ -123,7 +123,8 @@
         const hdMusic = document.getElementById('check-hd-music');
         const widescreenBgs = document.getElementById('check-widescreen-bgs');
         const badEnding = document.getElementById('check-ending');
-        return getSiFilesForCache(hdMusic, widescreenBgs, badEnding);
+        const rabbits = document.getElementById('check-rabbits');
+        return getSiFilesForCache(hdMusic, widescreenBgs, badEnding, rabbits);
     }
 
     function handleFormChange() {
