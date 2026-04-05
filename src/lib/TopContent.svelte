@@ -90,3 +90,25 @@
         >
     </button>
 </div>
+
+<style>
+/* Pizza celebration animation for OGEL mode */
+:global(.pizza-slice) {
+    position: fixed;
+    font-size: 32px;
+    pointer-events: none;
+    z-index: 10000;
+    animation: pizza-fly 1.5s ease-out forwards;
+}
+
+@keyframes pizza-fly {
+    0% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.5);
+    }
+}
+</style>

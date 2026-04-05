@@ -1,28 +1,8 @@
 <script>
-    import { onDestroy } from 'svelte';
     import { debugUIVisible } from '../stores.js';
+    import { keepVisible } from '../core/keep-visible.js';
 
     let debugPanelOpen = false;
-    let debugUIElement;
-    let observer = null;
-
-    // Set up MutationObserver when the element becomes available
-    $: if (debugUIElement && !observer) {
-        observer = new MutationObserver(() => {
-            if (debugUIElement && debugUIElement.style.display === 'none') {
-                debugUIElement.style.setProperty('display', 'block', 'important');
-            }
-        });
-        observer.observe(debugUIElement, { attributes: true, attributeFilter: ['style'] });
-    }
-
-    // Clean up observer when component is destroyed
-    onDestroy(() => {
-        if (observer) {
-            observer.disconnect();
-            observer = null;
-        }
-    });
 
     let debugModeActive = false;
     let selectedLocation = '';
@@ -305,7 +285,7 @@
 </script>
 
 {#if $debugUIVisible}
-    <div id="debug-ui" bind:this={debugUIElement}>
+    <div id="debug-ui" use:keepVisible>
         <button id="debug-toggle" title="Debug Options" class:active={debugPanelOpen} onclick={() => debugPanelOpen = !debugPanelOpen}>⚙</button>
 
         {#if debugPanelOpen}
@@ -384,5 +364,195 @@
 {/if}
 
 <style>
-    /* Styles moved to app.css for #debug-ui */
+/* Debug UI Panel */
+#debug-ui {
+    display: none;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+#debug-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: auto;
+}
+
+#debug-toggle:hover {
+    background-color: rgba(255, 215, 0, 0.2);
+    transform: rotate(90deg);
+}
+
+#debug-toggle.active {
+    background-color: var(--color-primary);
+    color: #000;
+}
+
+#debug-panel {
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 280px;
+    max-height: calc(100dvh - 70px);
+    overflow-y: auto;
+    background-color: rgba(24, 24, 24, 0.95);
+    border: 1px solid var(--color-border-medium);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+#debug-panel.open {
+    display: block;
+}
+
+.debug-header {
+    padding: 12px 15px;
+    background-color: var(--color-primary);
+    color: #000;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 7px 7px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.debug-section {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-border-dark);
+}
+
+.debug-section:last-child {
+    border-bottom: none;
+}
+
+.debug-section-title {
+    color: var(--color-primary);
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+#debug-panel button {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 4px;
+    background-color: var(--color-bg-panel);
+    border: 1px solid var(--color-border-medium);
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+}
+
+#debug-panel button:last-child {
+    margin-bottom: 0;
+}
+
+#debug-panel button:hover {
+    background-color: #3a3a3a;
+    border-color: var(--color-primary);
+}
+
+#debug-panel button:active {
+    background-color: var(--color-primary);
+    color: #000;
+}
+
+#debug-panel button.debug-password {
+    background-color: #3d2a00;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+#debug-panel button.debug-password:hover {
+    background-color: var(--color-primary);
+    color: #000;
+}
+
+#debug-panel button.debug-password.active {
+    background-color: #00aa00;
+    border-color: #00ff00;
+    color: #fff;
+}
+
+#debug-panel button.requires-debug {
+    opacity: 0.5;
+}
+
+#debug-panel button.requires-debug.enabled {
+    opacity: 1;
+}
+
+/* Scrollbar styling for debug panel */
+#debug-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+#debug-panel::-webkit-scrollbar-track {
+    background: var(--color-bg-dark);
+}
+
+#debug-panel::-webkit-scrollbar-thumb {
+    background: var(--color-border-light);
+    border-radius: 3px;
+}
+
+#debug-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
+}
+
+#debug-animation-select,
+#debug-location-select {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    background-color: var(--color-bg-panel);
+    border: 1px solid var(--color-border-medium);
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+#debug-animation-select:hover,
+#debug-location-select:hover {
+    border-color: var(--color-primary);
+}
+
+#debug-animation-select:focus,
+#debug-location-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+#debug-animation-select option,
+#debug-location-select option {
+    background-color: var(--color-bg-panel);
+    color: #e0e0e0;
+    padding: 4px;
+}
+
 </style>

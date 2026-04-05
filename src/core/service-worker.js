@@ -100,7 +100,7 @@ export async function startInstall(missingFiles, language) {
     await requestPersistentStorage();
 
     if (downloaderWorker) downloaderWorker.terminate();
-    downloaderWorker = new Worker('/downloader.js');
+    downloaderWorker = new Worker(new URL('./downloader.worker.js', import.meta.url));
     downloaderWorker.onmessage = handleWorkerMessage;
 
     installState.update(state => ({
@@ -123,13 +123,16 @@ export function startUninstall(language) {
     });
 }
 
-async function requestPersistentStorage() {
-    if (navigator.storage && navigator.storage.persist) {
-        const isPersisted = await navigator.storage.persisted();
-        if (!isPersisted) {
-            const wasGranted = await navigator.storage.persist();
-            console.log(wasGranted ? 'Persistent storage was granted.' : 'Persistent storage request was denied.');
+export async function requestPersistentStorage() {
+    try {
+        if (navigator.storage && navigator.storage.persist) {
+            const isPersisted = await navigator.storage.persisted();
+            if (!isPersisted) {
+                await navigator.storage.persist();
+            }
         }
+    } catch (e) {
+        console.warn('Failed to request persistent storage:', e);
     }
 }
 

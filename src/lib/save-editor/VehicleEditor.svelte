@@ -1,7 +1,8 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import { VehiclePartRenderer } from '../../core/rendering/VehiclePartRenderer.js';
-    import { WdbParser, findRoi, buildPartsMap } from '../../core/formats/WdbParser.js';
+    import { findRoi, buildPartsMap } from '../../core/formats/WdbParser.js';
+    import { getWdb } from '../../core/wdbCache.js';
     import {
         LegoColorNames,
         VehicleWorlds,
@@ -14,11 +15,8 @@
     import { squareTexture } from '../../core/savegame/imageQuantizer.js';
     import { parseTex } from '../../core/formats/TexParser.js';
     import { fetchTexture } from '../../core/assetLoader.js';
-    import NavButton from '../NavButton.svelte';
-    import ResetButton from '../ResetButton.svelte';
-    import EditorTooltip from '../EditorTooltip.svelte';
+    import EditorPreview from './EditorPreview.svelte';
     import TexturePickerModal from './TexturePickerModal.svelte';
-    import './editor-common.css';
 
     export let slot;
     export let onUpdate = () => {};
@@ -78,15 +76,9 @@
 
     onMount(async () => {
         try {
-            // Load and parse WDB once
-            const response = await fetch('/LEGO/data/WORLD.WDB');
-            if (!response.ok) {
-                throw new Error(`Failed to load WORLD.WDB: ${response.status}`);
-            }
-
-            const buffer = await response.arrayBuffer();
-            wdbParser = new WdbParser(buffer);
-            wdbData = wdbParser.parse();
+            const result = await getWdb();
+            wdbParser = result.wdbParser;
+            wdbData = result.wdbData;
 
             // Initialize renderer
             renderer = new VehiclePartRenderer(canvas);
@@ -324,41 +316,23 @@
 
 </script>
 
-<EditorTooltip text="Click on the part to cycle through colors. Use the texture button to customize textures on supported parts (vehicle must be fully built first). Changes are automatically saved." onResetCamera={() => renderer?.resetView()}>
-    <!-- 3D Preview (clickable to cycle color) -->
-    <div class="preview-container">
-        <canvas
-            bind:this={canvas}
-            width="190"
-            height="190"
-            class:hidden={loading || error}
-            onclick={cycleColor}
-            role="button"
-            tabindex="0"
-            aria-label="Click to change color"
-        ></canvas>
-
-        {#if loading}
-            <div class="preview-overlay">
-                <div class="spinner"></div>
-            </div>
-        {:else if error}
-            <div class="preview-overlay error">{error}</div>
-        {:else if partError}
-            <div class="preview-overlay error">{partError}</div>
-        {/if}
-    </div>
-
-    <!-- Part navigation below canvas -->
-    <div class="part-nav-wrapper">
-        <div class="part-nav">
-            <NavButton direction="left" onclick={prevPart} />
-            <div class="part-info">
-                <span class="nav-index">{VehicleNames[vehicle]}</span>
-                <span class="nav-name">{currentPart?.label || 'Unknown'}</span>
-            </div>
-            <NavButton direction="right" onclick={nextPart} />
-        </div>
+<EditorPreview
+    tooltipText="Click on the part to cycle through colors. Use the texture button to customize textures on supported parts (vehicle must be fully built first). Changes are automatically saved."
+    onResetCamera={() => renderer?.resetView()}
+    onCanvasReady={(el) => canvas = el}
+    {loading}
+    {error}
+    secondaryError={partError}
+    onCanvasClick={cycleColor}
+    canvasLabel="Click to change color"
+    onPrev={prevPart}
+    onNext={nextPart}
+    indexDisplay={VehicleNames[vehicle]}
+    nameDisplay={currentPart?.label || 'Unknown'}
+    showReset={(!isDefaultColor || !isDefaultTexture) && !loading && !error && !partError}
+    onReset={resetColor}
+>
+    <svelte:fragment slot="side-buttons">
         {#if textureInfo}
             <button
                 type="button"
@@ -373,14 +347,8 @@
                 </svg>
             </button>
         {/if}
-    </div>
-
-    <div class="reset-container">
-        {#if (!isDefaultColor || !isDefaultTexture) && !loading && !error && !partError}
-            <ResetButton onclick={resetColor} />
-        {/if}
-    </div>
-</EditorTooltip>
+    </svelte:fragment>
+</EditorPreview>
 
 {#if showTextureModal && textureInfo}
     <TexturePickerModal

@@ -55,7 +55,6 @@
         border: none;
         padding: 0;
         cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
     }
 
     /* Expand touch target on mobile */

@@ -1,0 +1,38 @@
+name = "isle-pizza-share"
+main = "src/index.ts"
+compatibility_date = "2026-03-01"
+
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "isle"
+
+[vars]
+API_URL = "http://localhost:8788"
+
+[env.production]
+name = "isle-share"
+workers_dev = false
+preview_urls = false
+
+[[env.production.r2_buckets]]
+binding = "ASSETS"
+bucket_name = "isle"
+
+[env.production.vars]
+API_URL = "https://api.isle.pizza"
+
+[[env.production.routes]]
+pattern = "isle.pizza/memory/*"
+zone_name = "isle.pizza"
+
+[[env.production.routes]]
+pattern = "isle.pizza/scene/*"
+zone_name = "isle.pizza"
+
+[[env.production.routes]]
+pattern = "dev.isle.pizza/memory/*"
+zone_name = "isle.pizza"
+
+[[env.production.routes]]
+pattern = "dev.isle.pizza/scene/*"
+zone_name = "isle.pizza"

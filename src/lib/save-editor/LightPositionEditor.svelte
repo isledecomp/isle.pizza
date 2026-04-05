@@ -106,7 +106,6 @@
         width: 48px;
         height: 48px;
         display: block;
-        image-rendering: pixelated;
     }
 
     @media (max-width: 400px) {

@@ -1,11 +1,9 @@
 <script>
     import { showGoodbyePopup } from '../stores.js';
-    import { startGame } from '../core/emscripten.js';
-    import { pauseInstallAudio } from '../core/audio.js';
+    import { launchGame } from '../core/emscripten.js';
     import { navigateTo } from '../core/navigation.js';
+    import { saveConfigFromDOM } from '../core/opfs.js';
     import ImageButton from './ImageButton.svelte';
-
-    let rendererValue = "0 0x682656f3 0x0 0x0 0x4000000"; // WebGL default
 
     const buttons = [
         { id: 'run-game-btn', off: 'images/run_game_off.webp', on: 'images/run_game_on.webp', alt: 'Run Game', width: 135, height: 164, action: handleRunGame },
@@ -15,16 +13,9 @@
         { id: 'cancel-btn', off: 'images/cancel_off.webp', on: 'images/cancel_on.webp', alt: 'Cancel', width: 93, height: 145, action: () => showGoodbyePopup.set(true) }
     ];
 
-    function handleRunGame() {
-        pauseInstallAudio();
-
-        // Get current renderer value from select
-        const rendererSelect = document.getElementById('renderer-select');
-        if (rendererSelect) {
-            rendererValue = rendererSelect.value;
-        }
-
-        startGame(rendererValue);
+    async function handleRunGame() {
+        await saveConfigFromDOM();
+        launchGame();
     }
 </script>
 

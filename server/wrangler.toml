@@ -1,0 +1,27 @@
+name = "isle-pizza-api"
+main = "src/index.ts"
+compatibility_date = "2026-03-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "isle-pizza"
+database_id = "local"
+migrations_dir = "migrations"
+
+[vars]
+API_URL = "http://localhost:8788"
+
+[env.production]
+name = "isle-api"
+workers_dev = false
+preview_urls = false
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "isle-pizza"
+database_id = "23b0f585-fa7a-4c35-8684-428aac9b5f89"
+migrations_dir = "migrations"
+
+[env.production.vars]
+API_URL = "https://api.isle.pizza"

@@ -155,7 +155,7 @@
     }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div class="modal-backdrop" onclick={handleBackdropClick}>
@@ -330,7 +330,6 @@
         display: block;
         width: 100%;
         height: auto;
-        image-rendering: pixelated;
     }
 
     .texture-thumb.carousel-item {

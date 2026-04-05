@@ -1,8 +1,8 @@
 // OPFS Config Manager - handles saving/loading configuration via Origin Private File System
-import { configToastVisible, configToastMessage } from '../stores.js';
+import { showToast } from './toast.js';
+import { getSiFilesForCache } from './service-worker.js';
 
-const CONFIG_FILE = 'isle.ini';
-let toastTimeout = null;
+export const CONFIG_FILE = 'isle.ini';
 
 // ============================================================================
 // Core OPFS Operations
@@ -104,7 +104,6 @@ export async function writeBinaryFile(filename, data, silent = false, toastMsg =
         worker.postMessage({ filename, buffer: data });
 
         worker.onmessage = (e) => {
-            console.log(e.data.message);
             URL.revokeObjectURL(workerUrl);
             worker.terminate();
 
@@ -164,51 +163,53 @@ export async function listFiles(pattern) {
     }
 }
 
-/**
- * Show a toast notification
- * @param {string} message - Message to display
- */
-function showToast(message) {
-    if (toastTimeout) {
-        clearTimeout(toastTimeout);
-    }
-    configToastMessage.set(message);
-    configToastVisible.set(true);
-    toastTimeout = setTimeout(() => configToastVisible.set(false), 2000);
-}
-
 // ============================================================================
 // Config File Operations
 // ============================================================================
 
-export async function loadConfig(form) {
-    const handle = await getFileHandle(CONFIG_FILE, true);
-    if (!handle) return null;
-
+/**
+ * Read the Language value from the INI config file.
+ * @returns {Promise<string>} Language code (e.g. 'en', 'de'), defaults to 'en'
+ */
+export async function getConfigLanguage() {
     try {
+        const handle = await getFileHandle(CONFIG_FILE, false);
+        if (!handle) return 'en';
         const file = await handle.getFile();
         const text = await file.text();
-        if (!text) {
-            console.log('No existing config file found, using defaults.');
-            return null;
-        }
-
-        const config = {};
-        const lines = text.split('\n');
-        for (const line of lines) {
+        if (!text) return 'en';
+        for (const line of text.split('\n')) {
             if (line.startsWith('[') || !line.includes('=')) continue;
             const [key, ...valueParts] = line.split('=');
-            const value = valueParts.join('=').trim();
-            config[key.trim()] = value;
+            if (key.trim().toLowerCase() === 'language') return valueParts.join('=').trim() || 'en';
         }
+        return 'en';
+    } catch {
+        return 'en';
+    }
+}
 
-        applyConfigToForm(form, config);
-        console.log('Config loaded from', CONFIG_FILE);
-        return config;
-    } catch (e) {
-        console.error('Failed to load config:', e);
+export async function loadConfig(form) {
+    const handle = await getFileHandle(CONFIG_FILE, false);
+    if (!handle) return null;
+
+    const file = await handle.getFile();
+    const text = await file.text();
+    if (!text) {
         return null;
     }
+
+    const config = {};
+    const lines = text.split('\n');
+    for (const line of lines) {
+        if (line.startsWith('[') || !line.includes('=')) continue;
+        const [key, ...valueParts] = line.split('=');
+        const value = valueParts.join('=').trim();
+        config[key.trim()] = value;
+    }
+
+    applyConfigToForm(form, config);
+    return config;
 }
 
 function applyConfigToForm(form, config) {
@@ -250,7 +251,7 @@ function applyConfigToForm(form, config) {
     }
 }
 
-export async function saveConfig(form, getSiFiles, silent = false) {
+export async function saveConfig(form, getSiFiles, silent = false, multiplayer = null) {
     let iniContent = '[isle]\n';
     const elements = form.elements;
 
@@ -281,6 +282,9 @@ export async function saveConfig(form, getSiFiles, silent = false) {
         iniContent += "[extensions]\n";
         const value = hdTextures.checked ? 'YES' : 'NO';
         iniContent += `${hdTextures.name}=${value}\n`;
+        iniContent += `Multiplayer=${multiplayer ? 'YES' : 'NO'}\n`;
+        const thirdPersonCamera = elements["Third Person Camera"];
+        iniContent += `Third Person Camera=${thirdPersonCamera && thirdPersonCamera.checked ? 'YES' : 'NO'}\n`;
     }
 
     const siFiles = getSiFiles();
@@ -309,5 +313,32 @@ export async function saveConfig(form, getSiFiles, silent = false) {
         iniContent += `directives=${directives.join(",\\\n")}\n`;
     }
 
-    return writeTextFile(CONFIG_FILE, iniContent, silent);
+    if (multiplayer) {
+        iniContent += "[multiplayer]\n";
+        iniContent += `relay url=${multiplayer.relayUrl}\n`;
+        iniContent += `room=${multiplayer.room}\n`;
+        if (multiplayer.actor) {
+            iniContent += `actor=${multiplayer.actor}\n`;
+        }
+    }
+
+    const result = await writeTextFile(CONFIG_FILE, iniContent, silent);
+    if (result) {
+        window.dispatchEvent(new CustomEvent('opfs-config-written', {
+            detail: { iniText: iniContent }
+        }));
+    }
+    return result;
+}
+
+export async function saveConfigFromDOM(multiplayer = null) {
+    const form = document.getElementById('config-form');
+    if (!form) return false;
+    const getSiFiles = () => {
+        const hdMusic = document.getElementById('check-hd-music');
+        const widescreenBgs = document.getElementById('check-widescreen-bgs');
+        const badEnding = document.getElementById('check-ending');
+        return getSiFilesForCache(hdMusic, widescreenBgs, badEnding);
+    };
+    return saveConfig(form, getSiFiles, true, multiplayer);
 }

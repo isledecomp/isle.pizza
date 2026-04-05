@@ -1,29 +1,37 @@
-import * as THREE from 'three';
+import { Mesh } from 'ogl';
+import { Vec3 } from 'ogl/src/math/Vec3.js';
+import { Quat } from 'ogl/src/math/Quat.js';
+import { Mat4 } from 'ogl/src/math/Mat4.js';
+import { Raycast } from 'ogl/src/extras/Raycast.js';
 import { parseAnimation } from '../formats/AnimationParser.js';
 import { fetchAnimation } from '../assetLoader.js';
 import { BaseRenderer } from './BaseRenderer.js';
+import {
+    SimpleAnimationMixer, AnimationClip,
+    QuaternionTrack, LoopOnce,
+} from './AnimationMixer.js';
+import {
+    evaluateRotation, evaluateTranslation, evaluateScale,
+    evaluateLocalTransform,
+} from '../animation/keyframeEval.js';
 
 /**
  * Intermediate renderer for LEGO models with animation support.
- * Extends BaseRenderer with clock-driven animation loop, AnimationMixer
- * management, animation caching, raycasting, and shared keyframe utilities.
+ * Extends BaseRenderer with animation caching, raycasting, and keyframe utilities.
  */
 export class AnimatedRenderer extends BaseRenderer {
-    constructor(canvas) {
-        super(canvas);
-        this.clock = new THREE.Clock();
+    constructor(canvas, rendererOptions) {
+        super(canvas, rendererOptions);
+        this._lastTime = 0;
         this.mixer = null;
         this.currentAction = null;
         this.animationCache = new Map();
-        this.raycaster = new THREE.Raycaster();
+        this.raycaster = new Raycast();
         this._queuedClickAnim = null;
     }
 
     // ─── Animation Utilities ─────────────────────────────────────────
 
-    /**
-     * Fetch and parse an animation file by name, with caching.
-     */
     async fetchAnimationByName(animName) {
         if (this.animationCache.has(animName)) {
             return this.animationCache.get(animName);
@@ -62,97 +70,30 @@ export class AnimatedRenderer extends BaseRenderer {
 
     /**
      * Evaluate rotation keyframes at a given time.
-     * Handles slerp interpolation between keyframes with flag-based control.
-     * Coordinate conversion: game (w,x,y,z) -> Three.js with X negated.
+     * Delegates to the shared keyframe evaluation module.
+     * @returns {Mat4} Rotation matrix
      */
     evaluateRotation(keys, time) {
-        const { before, after } = this.getBeforeAndAfter(keys, time);
-        const toQuat = (key) => new THREE.Quaternion(-key.x, key.y, key.z, key.w);
-
-        if (!after) {
-            if (before.flags & 0x01) {
-                return new THREE.Matrix4().makeRotationFromQuaternion(toQuat(before));
-            }
-            return new THREE.Matrix4();
-        }
-
-        if ((before.flags & 0x01) || (after.flags & 0x01)) {
-            const beforeQ = toQuat(before);
-
-            // Flag 0x04: skip interpolation, use before value
-            if (after.flags & 0x04) {
-                return new THREE.Matrix4().makeRotationFromQuaternion(beforeQ);
-            }
-
-            let afterQ = toQuat(after);
-            // Flag 0x02: negate the after quaternion before slerp
-            if (after.flags & 0x02) {
-                afterQ.set(-afterQ.x, -afterQ.y, -afterQ.z, -afterQ.w);
-            }
-
-            const t = (time - before.time) / (after.time - before.time);
-            const result = new THREE.Quaternion().slerpQuaternions(beforeQ, afterQ, t);
-            return new THREE.Matrix4().makeRotationFromQuaternion(result);
-        }
-
-        return new THREE.Matrix4();
+        return evaluateRotation(keys, time);
     }
 
     /**
      * Interpolate translation or scale keyframes at a given time.
-     * For translation: negates X for coordinate system conversion.
-     * For scale: no negation.
+     * Delegates to the shared keyframe evaluation module.
+     * @returns {Vec3|null}
      */
     interpolateVertex(keys, time, isTranslation) {
-        const { before, after } = this.getBeforeAndAfter(keys, time);
-
-        const toVec = (key) => isTranslation
-            ? new THREE.Vector3(-key.x, key.y, key.z)
-            : new THREE.Vector3(key.x, key.y, key.z);
-
-        if (!after) {
-            if (isTranslation && !(before.flags & 0x01)) {
-                if (Math.abs(before.x) < 1e-5 && Math.abs(before.y) < 1e-5 && Math.abs(before.z) < 1e-5) {
-                    return null;
-                }
-            }
-            return toVec(before);
-        }
-
-        if (isTranslation && !(before.flags & 0x01) && !(after.flags & 0x01)) {
-            const bNonZero = Math.abs(before.x) > 1e-5 || Math.abs(before.y) > 1e-5 || Math.abs(before.z) > 1e-5;
-            const aNonZero = Math.abs(after.x) > 1e-5 || Math.abs(after.y) > 1e-5 || Math.abs(after.z) > 1e-5;
-            if (!bNonZero && !aNonZero) return null;
-        }
-
-        const t = (time - before.time) / (after.time - before.time);
-        return new THREE.Vector3().lerpVectors(toVec(before), toVec(after), t);
-    }
-
-    /**
-     * Find the keyframes immediately before and after the given time.
-     */
-    getBeforeAndAfter(keys, time) {
-        let idx = keys.findIndex(k => k.time > time);
-        if (idx < 0) idx = keys.length;
-        const before = keys[Math.max(0, idx - 1)];
-        return { before, after: keys[idx] || null };
+        return isTranslation
+            ? evaluateTranslation(keys, time)
+            : evaluateScale(keys, time);
     }
 
     // ─── Click Animation ─────────────────────────────────────────────
 
-    /**
-     * Queue a click animation by name. Subclasses may override to
-     * accept domain-specific arguments and construct the name.
-     * @param {string} animName - Animation asset name
-     */
     queueClickAnimation(animName) {
         this._queuedClickAnim = animName;
     }
 
-    /**
-     * Play the queued click animation (one-shot), then resume auto-rotate.
-     */
     async playQueuedAnimation() {
         if (!this._queuedClickAnim || !this.modelGroup) return;
 
@@ -168,17 +109,17 @@ export class AnimatedRenderer extends BaseRenderer {
 
             this.stopAnimation();
 
-            const clip = new THREE.AnimationClip('clickAnim', -1, tracks);
-            this.mixer = new THREE.AnimationMixer(this.modelGroup);
+            const clip = new AnimationClip('clickAnim', -1, tracks);
+            this.mixer = new SimpleAnimationMixer(this.modelGroup);
             const action = this.mixer.clipAction(clip);
-            action.setLoop(THREE.LoopOnce);
+            action.setLoop(LoopOnce);
             action.clampWhenFinished = false;
             this.currentAction = action;
             action.play();
 
             this.mixer.addEventListener('finished', () => {
                 this.stopAnimation();
-                this.controls.autoRotate = true;
+                if (this.controls) this.controls.autoRotate = true;
             });
         } catch (e) {
             // Animation unavailable — ignore
@@ -187,36 +128,28 @@ export class AnimatedRenderer extends BaseRenderer {
 
     // ─── Raycast Hit Testing ─────────────────────────────────────────
 
-    /**
-     * Check if any mesh in the model was clicked.
-     * @returns {boolean} True if any mesh was hit
-     */
     getClickedMesh(mouseEvent) {
         if (!this.modelGroup) return false;
 
         const rect = this.canvas.getBoundingClientRect();
-        const mouse = new THREE.Vector2(
+        const mouse = [
             ((mouseEvent.clientX - rect.left) / rect.width) * 2 - 1,
-            -((mouseEvent.clientY - rect.top) / rect.height) * 2 + 1
-        );
+            -(((mouseEvent.clientY - rect.top) / rect.height) * 2 - 1),
+        ];
 
-        this.raycaster.setFromCamera(mouse, this.camera);
+        this.raycaster.castMouse(this.camera, mouse);
 
         const meshes = [];
         this.modelGroup.traverse((child) => {
-            if (child instanceof THREE.Mesh) meshes.push(child);
+            if (child instanceof Mesh) meshes.push(child);
         });
 
-        return this.raycaster.intersectObjects(meshes).length > 0;
+        const hits = this.raycaster.intersectMeshes(meshes, { cullFace: false });
+        return hits.length > 0;
     }
 
     // ─── Simple Animation Tree Utilities ─────────────────────────────
 
-    /**
-     * Build rotation-only keyframe tracks by finding the deepest animated
-     * node and evaluating the composed transform chain at each keyframe time.
-     * Used by plant and building animations (single-group models).
-     */
     buildRotationTracks(animData) {
         const duration = animData.duration;
         const timesSet = new Set([0]);
@@ -231,23 +164,20 @@ export class AnimatedRenderer extends BaseRenderer {
 
         for (const time of times) {
             const mat = this.evaluateNodeChain(animData.rootNode, targetNode, time);
-            const position = new THREE.Vector3();
-            const quaternion = new THREE.Quaternion();
-            const scale = new THREE.Vector3();
-            mat.decompose(position, quaternion, scale);
+            const position = new Vec3();
+            const quaternion = new Quat();
+            const scale = new Vec3();
+            mat.decompose(quaternion, position, scale);
 
             timesSec.push(time / 1000);
-            quatValues.push(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+            quatValues.push(quaternion[0], quaternion[1], quaternion[2], quaternion[3]);
         }
 
         return [
-            new THREE.QuaternionKeyframeTrack('.quaternion', timesSec, quatValues)
+            QuaternionTrack('.quaternion', timesSec, quatValues)
         ];
     }
 
-    /**
-     * Find the deepest node in the animation tree that has keyframe data.
-     */
     findAnimatedNode(node) {
         for (const child of node.children) {
             const found = this.findAnimatedNode(child);
@@ -260,16 +190,13 @@ export class AnimatedRenderer extends BaseRenderer {
         return null;
     }
 
-    /**
-     * Evaluate the composed transform matrix from root down to targetNode.
-     */
     evaluateNodeChain(node, targetNode, time) {
         const path = [];
         if (!this.findNodePath(node, targetNode, path)) {
-            return new THREE.Matrix4();
+            return new Mat4();
         }
 
-        let mat = new THREE.Matrix4();
+        let mat = new Mat4();
         for (const n of path) {
             const local = this.evaluateLocalTransform(n.data, time);
             mat.multiply(local);
@@ -277,9 +204,6 @@ export class AnimatedRenderer extends BaseRenderer {
         return mat;
     }
 
-    /**
-     * Build the path from current node to target via depth-first search.
-     */
     findNodePath(current, target, path) {
         path.push(current);
         if (current === target) return true;
@@ -290,32 +214,8 @@ export class AnimatedRenderer extends BaseRenderer {
         return false;
     }
 
-    /**
-     * Evaluate the local transform matrix for an animation node at a given time.
-     */
     evaluateLocalTransform(data, time) {
-        let mat = new THREE.Matrix4();
-
-        if (data.scaleKeys.length > 0) {
-            const scale = this.interpolateVertex(data.scaleKeys, time, false);
-            if (scale) mat.scale(scale);
-        }
-
-        if (data.rotationKeys.length > 0) {
-            const rotMat = this.evaluateRotation(data.rotationKeys, time);
-            mat = rotMat.multiply(mat);
-        }
-
-        if (data.translationKeys.length > 0) {
-            const vertex = this.interpolateVertex(data.translationKeys, time, true);
-            if (vertex) {
-                mat.elements[12] += vertex.x;
-                mat.elements[13] += vertex.y;
-                mat.elements[14] += vertex.z;
-            }
-        }
-
-        return mat;
+        return evaluateLocalTransform(data, time);
     }
 
     // ─── Scene Management ────────────────────────────────────────────
@@ -327,12 +227,14 @@ export class AnimatedRenderer extends BaseRenderer {
 
     start() {
         this.animating = true;
-        this.clock.start();
+        this._lastTime = performance.now();
         this.animate();
     }
 
     updateAnimation() {
-        const delta = this.clock.getDelta();
+        const now = performance.now();
+        const delta = (now - this._lastTime) / 1000;
+        this._lastTime = now;
         if (this.mixer) {
             this.mixer.update(delta);
         }

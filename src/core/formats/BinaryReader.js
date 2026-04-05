@@ -82,6 +82,16 @@ export class BinaryReader {
     }
 
     /**
+     * Read 64-bit float (little-endian)
+     * @returns {number}
+     */
+    readF64() {
+        const value = this.view.getFloat64(this.offset, true);
+        this.offset += 8;
+        return value;
+    }
+
+    /**
      * Read ASCII string of specified length
      * @param {number} length - Number of bytes to read
      * @returns {string}
