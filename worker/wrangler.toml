@@ -30,9 +30,17 @@ pattern = "isle.pizza/scene/*"
 zone_name = "isle.pizza"
 
 [[env.production.routes]]
+pattern = "isle.pizza/sitemap.xml"
+zone_name = "isle.pizza"
+
+[[env.production.routes]]
 pattern = "dev.isle.pizza/memory/*"
 zone_name = "isle.pizza"
 
 [[env.production.routes]]
 pattern = "dev.isle.pizza/scene/*"
+zone_name = "isle.pizza"
+
+[[env.production.routes]]
+pattern = "dev.isle.pizza/sitemap.xml"
 zone_name = "isle.pizza"

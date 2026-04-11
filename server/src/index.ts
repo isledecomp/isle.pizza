@@ -26,6 +26,15 @@ app.all("/api/auth/*", async (c) => {
 	return auth.handler(c.req.raw);
 });
 
+// Public endpoint: all memory event IDs for sitemap generation
+app.get("/api/sitemap", async (c) => {
+	const results = await c.env.DB.prepare(
+		"SELECT event_id, MAX(completed_at) AS completed_at FROM memory_completions GROUP BY event_id ORDER BY completed_at DESC"
+	).all<{ event_id: string; completed_at: number }>();
+
+	return c.json({ entries: results.results });
+});
+
 // Public endpoint: look up a memory completion by eventId (no auth needed)
 app.get("/api/memory/:eventId", async (c) => {
 	const eventId = c.req.param("eventId");

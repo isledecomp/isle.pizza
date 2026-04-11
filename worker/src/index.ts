@@ -162,10 +162,61 @@ async function handleScene(encoded: string, request: Request, env: Env): Promise
 	}
 }
 
+async function handleSitemap(request: Request, env: Env): Promise<Response> {
+	const origin = new URL(request.url).origin;
+
+	try {
+		const apiRes = await fetch(`${env.API_URL}/api/sitemap`);
+		if (!apiRes.ok) {
+			return new Response('Failed to fetch sitemap data', { status: 502 });
+		}
+
+		const data = await apiRes.json() as {
+			entries: Array<{ event_id: string; completed_at: number }>;
+		};
+
+		const urls: string[] = [
+			`  <url>`,
+			`    <loc>${escapeHtml(origin)}/</loc>`,
+			`  </url>`,
+		];
+
+		for (const entry of data.entries) {
+			const lastmod = new Date(entry.completed_at * 1000).toISOString().split('T')[0];
+			urls.push(
+				`  <url>`,
+				`    <loc>${escapeHtml(origin)}/memory/${escapeHtml(entry.event_id)}</loc>`,
+				`    <lastmod>${lastmod}</lastmod>`,
+				`  </url>`,
+			);
+		}
+
+		const xml = [
+			`<?xml version="1.0" encoding="UTF-8"?>`,
+			`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
+			...urls,
+			`</urlset>`,
+		].join('\n');
+
+		return new Response(xml, {
+			headers: {
+				'content-type': 'application/xml; charset=utf-8',
+				'cache-control': 'public, max-age=3600',
+			},
+		});
+	} catch {
+		return new Response('Failed to generate sitemap', { status: 500 });
+	}
+}
+
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
 		const path = url.pathname;
+
+		if (path === '/sitemap.xml') {
+			return handleSitemap(request, env);
+		}
 
 		const memoryMatch = path.match(/^\/memory\/([A-Za-z0-9_-]+)$/);
 		if (memoryMatch) {
