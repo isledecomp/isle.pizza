@@ -6,7 +6,7 @@
     import { API_URL } from '../core/config.js';
     import { showToast } from '../core/toast.js';
     import { currentPage } from '../stores.js';
-    import { navigateTo, navigateToMultiplayer } from '../core/navigation.js';
+    import { navigateTo, navigateToMultiplayer, navigateToLatestMemories } from '../core/navigation.js';
     import SignInModal from './SignInModal.svelte';
     import DiscordIcon from './icons/DiscordIcon.svelte';
 
@@ -134,6 +134,10 @@
 <svelte:window onclick={handleClickOutside} onkeydown={handleDeleteKeydown} />
 
 <div class="nav-bar">
+    <button class="nav-circle memories-nav" onclick={navigateToLatestMemories} title="Latest Memories">
+        <img class="memories-nav-img" src="images/nick_closeup.webp" alt="Latest Memories" />
+    </button>
+
     <div class="nav-menu-wrapper">
         <button class="nav-circle" bind:this={navButtonEl} onclick={() => toggleMenu('nav')} title="Menu">
             <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-linecap="round">
@@ -264,6 +268,14 @@
 
     .nav-circle:disabled {
         pointer-events: none;
+    }
+
+    .memories-nav-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        transform: scale(1.6);
     }
 
     .avatar-img {

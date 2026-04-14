@@ -23,6 +23,7 @@
     import ConfigToast from './lib/ConfigToast.svelte';
     import DebugPanel from './lib/DebugPanel.svelte';
     import ScenePlayerPage from './lib/ScenePlayerPage.svelte';
+    import LatestMemoriesPage from './lib/LatestMemoriesPage.svelte';
     import MultiplayerOverlay from './lib/multiplayer/MultiplayerOverlay.svelte';
     import WhatsNewBanner from './lib/WhatsNewBanner.svelte';
     import CanvasWrapper from './lib/CanvasWrapper.svelte';
@@ -207,6 +208,9 @@
     </div>
     <div class="page-wrapper" class:active={$currentPage === 'memories'}>
         <MemoriesPage />
+    </div>
+    <div class="page-wrapper" class:active={$currentPage === 'latest-memories'}>
+        <LatestMemoriesPage />
     </div>
     <div class="page-wrapper" class:active={$currentPage === 'scene-player'}>
         <ScenePlayerPage />

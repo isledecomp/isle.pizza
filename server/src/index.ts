@@ -74,6 +74,37 @@ app.get("/api/memory/:eventId", async (c) => {
 	});
 });
 
+// Public endpoint: latest 10 unique memories for the global feed
+app.get("/api/memories/latest", async (c) => {
+	const results = await c.env.DB.prepare(
+		`SELECT mc.anim_index, mc.event_id, mc.completed_at, mc.participants, mc.language
+		 FROM memory_completions mc
+		 INNER JOIN (
+		     SELECT event_id, MAX(completed_at) AS max_completed_at
+		     FROM memory_completions
+		     GROUP BY event_id
+		     ORDER BY max_completed_at DESC
+		     LIMIT 10
+		 ) latest ON mc.event_id = latest.event_id AND mc.completed_at = latest.max_completed_at
+		 GROUP BY mc.event_id
+		 ORDER BY mc.completed_at DESC`
+	).all<{ anim_index: number; event_id: string; completed_at: number; participants: string; language: string }>();
+
+	const entries = results.results.map((r) => {
+		let participants: unknown[];
+		try { participants = JSON.parse(r.participants || "[]"); } catch { participants = []; }
+		return {
+			animIndex: r.anim_index,
+			eventId: r.event_id,
+			completedAt: r.completed_at,
+			participants,
+			language: r.language,
+		};
+	});
+
+	return c.json({ entries });
+});
+
 // Auth middleware for protected routes
 const authMiddleware = async (c: Context<{ Bindings: Env; Variables: Variables }>, next: Next) => {
 	const auth = createAuth(c.env);
