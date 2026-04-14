@@ -26,6 +26,7 @@ function parseHash(hash) {
 // Match a pathname against /memory/:id or /scene/:encoded path routes.
 // Returns { eventId } or { sceneData } on match, null otherwise.
 export function matchPathRoute(path) {
+    if (path === '/memories') return { latestMemories: true };
     const memoryMatch = path.match(/^\/memory\/([A-Za-z0-9_-]+)$/);
     if (memoryMatch) return { eventId: memoryMatch[1] };
     const sceneMatch = path.match(/^\/scene\/([A-Za-z0-9_-]+)$/);
@@ -37,7 +38,10 @@ export function matchPathRoute(path) {
 export function parseRoute() {
     if (typeof window === 'undefined') return { page: 'main', room: null };
     const match = matchPathRoute(window.location.pathname);
-    if (match) return { page: 'scene-player', room: null, ...match };
+    if (match) {
+        if (match.latestMemories) return { page: 'latest-memories', room: null };
+        return { page: 'scene-player', room: null, ...match };
+    }
     return parseHash(window.location.hash);
 }
 

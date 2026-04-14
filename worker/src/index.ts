@@ -162,6 +162,54 @@ async function handleScene(encoded: string, request: Request, env: Env): Promise
 	}
 }
 
+async function handleLatestMemories(request: Request, env: Env): Promise<Response> {
+	let html = await getIndexHtml(request, env);
+	const url = new URL(request.url);
+
+	html = injectOgTags(
+		html,
+		'Latest Memories',
+		'The most recent animations reenacted by players across all LEGO Islands.',
+		url.href
+	);
+	const origin = url.origin;
+
+	try {
+		const apiRes = await fetch(`${env.API_URL}/api/memories/latest`);
+		if (apiRes.ok) {
+			const data = await apiRes.json() as {
+				entries: Array<{
+					animIndex: number;
+					eventId: string;
+					completedAt: number;
+					participants: Participant[];
+					language: string;
+				}>;
+			};
+
+			const titles = AnimationTitles as Record<string, string>;
+			const items = data.entries.map((entry) => {
+				const title = escapeHtml(titles[String(entry.animIndex)] || `Animation #${entry.animIndex}`);
+				const desc = escapeHtml(buildDescription(entry.participants, entry.completedAt));
+				const url = `${origin}/memory/${escapeHtml(entry.eventId)}`;
+				return `<li><a href="${url}"><strong>${title}</strong><br>${desc}</a></li>`;
+			}).join('\n');
+
+			const ssrBlock = `<div id="ssr-latest-memories" style="display:none" aria-hidden="true"><h1>Latest Memories</h1><p>The most recent animations reenacted by players across all LEGO Islands.</p><ol>${items}</ol></div>`;
+			html = html.replace('</body>', `${ssrBlock}\n</body>`);
+		}
+	} catch {
+		// Fail gracefully — SPA will fetch client-side
+	}
+
+	return new Response(html, {
+		headers: {
+			'content-type': 'text/html; charset=utf-8',
+			'cache-control': 'public, max-age=300',
+		},
+	});
+}
+
 async function handleSitemap(request: Request, env: Env): Promise<Response> {
 	const origin = new URL(request.url).origin;
 
@@ -178,6 +226,9 @@ async function handleSitemap(request: Request, env: Env): Promise<Response> {
 		const urls: string[] = [
 			`  <url>`,
 			`    <loc>${escapeHtml(origin)}/</loc>`,
+			`  </url>`,
+			`  <url>`,
+			`    <loc>${escapeHtml(origin)}/memories</loc>`,
 			`  </url>`,
 		];
 
@@ -216,6 +267,10 @@ export default {
 
 		if (path === '/sitemap.xml') {
 			return handleSitemap(request, env);
+		}
+
+		if (path === '/memories') {
+			return handleLatestMemories(request, env);
 		}
 
 		const memoryMatch = path.match(/^\/memory\/([A-Za-z0-9_-]+)$/);

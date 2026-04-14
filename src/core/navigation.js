@@ -23,6 +23,12 @@ export function navigateToMultiplayer() {
     history.pushState({ page: 'multiplayer', fromApp: true }, '', '#multiplayer');
 }
 
+export function navigateToLatestMemories() {
+    if (get(currentPage) === 'latest-memories') return;
+    currentPage.set('latest-memories');
+    history.pushState({ page: 'latest-memories', fromApp: true }, '', '/memories');
+}
+
 export function navigateToMemory(eventId) {
     scenePlayerEventId.set(eventId);
     scenePlayerData.set(null);

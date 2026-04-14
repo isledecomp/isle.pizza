@@ -22,6 +22,10 @@ bucket_name = "isle"
 API_URL = "https://api.isle.pizza"
 
 [[env.production.routes]]
+pattern = "isle.pizza/memories"
+zone_name = "isle.pizza"
+
+[[env.production.routes]]
 pattern = "isle.pizza/memory/*"
 zone_name = "isle.pizza"
 
@@ -31,6 +35,10 @@ zone_name = "isle.pizza"
 
 [[env.production.routes]]
 pattern = "isle.pizza/sitemap.xml"
+zone_name = "isle.pizza"
+
+[[env.production.routes]]
+pattern = "dev.isle.pizza/memories"
 zone_name = "isle.pizza"
 
 [[env.production.routes]]
