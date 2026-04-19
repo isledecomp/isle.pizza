@@ -25,7 +25,6 @@
     import ScenePlayerPage from './lib/ScenePlayerPage.svelte';
     import LatestMemoriesPage from './lib/LatestMemoriesPage.svelte';
     import MultiplayerOverlay from './lib/multiplayer/MultiplayerOverlay.svelte';
-    import WhatsNewBanner from './lib/WhatsNewBanner.svelte';
     import CanvasWrapper from './lib/CanvasWrapper.svelte';
     import CrashOverlay from './lib/CrashOverlay.svelte';
 
@@ -177,7 +176,6 @@
     <source src="audio/install.mp3" type="audio/mpeg">
 </audio>
 
-<WhatsNewBanner />
 <GoodbyePopup />
 <UpdatePopup />
 <ConfigToast />
