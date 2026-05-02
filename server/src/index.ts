@@ -29,7 +29,7 @@ app.all("/api/auth/*", async (c) => {
 // Public endpoint: all memory event IDs for sitemap generation
 app.get("/api/sitemap", async (c) => {
 	const results = await c.env.DB.prepare(
-		"SELECT event_id, MAX(completed_at) AS completed_at FROM memory_completions GROUP BY event_id ORDER BY completed_at DESC"
+		"SELECT event_id, completed_at FROM memory_events ORDER BY completed_at DESC"
 	).all<{ event_id: string; completed_at: number }>();
 
 	return c.json({ entries: results.results });
@@ -43,7 +43,7 @@ app.get("/api/memory/:eventId", async (c) => {
 	}
 
 	const result = await c.env.DB.prepare(
-		"SELECT anim_index, event_id, completed_at, participants, language FROM memory_completions WHERE event_id = ? LIMIT 1"
+		"SELECT anim_index, event_id, completed_at, participants, language FROM memory_events WHERE event_id = ? LIMIT 1"
 	)
 		.bind(eventId)
 		.first<{
@@ -77,17 +77,7 @@ app.get("/api/memory/:eventId", async (c) => {
 // Public endpoint: latest 10 unique memories for the global feed
 app.get("/api/memories/latest", async (c) => {
 	const results = await c.env.DB.prepare(
-		`SELECT mc.anim_index, mc.event_id, mc.completed_at, mc.participants, mc.language
-		 FROM memory_completions mc
-		 INNER JOIN (
-		     SELECT event_id, MAX(completed_at) AS max_completed_at
-		     FROM memory_completions
-		     GROUP BY event_id
-		     ORDER BY max_completed_at DESC
-		     LIMIT 10
-		 ) latest ON mc.event_id = latest.event_id AND mc.completed_at = latest.max_completed_at
-		 GROUP BY mc.event_id
-		 ORDER BY mc.completed_at DESC`
+		"SELECT anim_index, event_id, completed_at, participants, language FROM memory_events ORDER BY completed_at DESC, event_id DESC LIMIT 10"
 	).all<{ anim_index: number; event_id: string; completed_at: number; participants: string; language: string }>();
 
 	const entries = results.results.map((r) => {
