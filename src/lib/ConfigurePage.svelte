@@ -184,7 +184,9 @@
             document.getElementById('max-allowed-extras').value = '40';
             document.getElementById('check-hd-textures').checked = true;
             document.getElementById('check-hd-music').checked = true;
+            document.getElementById('check-hd-audio').checked = true;
             document.getElementById('check-widescreen-bgs').checked = true;
+            handleHdAudioChange();
         }
         handleFormChange();
         checkCacheStatus();
