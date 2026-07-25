@@ -33,6 +33,10 @@
     ];
 
     const changelogItems = [
+        { id: 'cl10', title: 'July 2026', items: [
+            { type: 'New', text: 'HD Audio extra restores over 950 voice-overs and sound effects from high-quality 1997 pre-release recordings — enable it under Extras on the Configure page (based on the English 1.1 version)' },
+            { type: 'Improved', text: 'HD Music now also upgrades the main theme and the pizza delivery mission music' }
+        ]},
         { id: 'cl0', title: 'April 2026', items: [
             { type: 'New', text: 'Multiplayer mode — create public or private islands and explore LEGO Island together with up to 16 players in real time' },
             { type: 'New', text: 'Scene Player lets you watch over 300 original LEGO Island animations with playback controls and shareable links' },
