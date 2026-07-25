@@ -23,16 +23,17 @@
 
     // Reload config from OPFS when navigating to this page
     $: if ($currentPage === 'configure' && configForm && !$opfsDisabled) {
-        loadConfig(configForm);
+        loadConfig(configForm).then(syncLanguageLock);
     }
 
     // Reload config from OPFS after cloud sync (even if not on config page),
     // so that saveConfigFromDOM() before game launch won't overwrite it with stale form values
     $: if ($configVersion && configForm && !$opfsDisabled) {
-        loadConfig(configForm);
+        loadConfig(configForm).then(syncLanguageLock);
     }
 
     let configForm;
+    let languageLocked = false;
     let msaaSupported = false;
     let afSupported = false;
     let isTouchDevice = false;
@@ -87,6 +88,8 @@
             showOrHideGraphicsOptions();
         }
 
+        syncLanguageLock();
+
         // Check cache status
         checkCacheStatus();
 
@@ -132,6 +135,18 @@
             saveConfig(configForm, getSiFiles);
         }
         showOrHideGraphicsOptions();
+        syncLanguageLock();
+    }
+
+    function syncLanguageLock() {
+        languageLocked = document.getElementById('language-select')?.value === 'eo';
+    }
+
+    function handleHdAudioChange() {
+        const hdAudio = document.getElementById('check-hd-audio');
+        const languageSelect = document.getElementById('language-select');
+        languageSelect.value = hdAudio.checked ? 'eo' : 'en';
+        checkCacheStatus();
     }
 
     function showOrHideGraphicsOptions() {
@@ -230,6 +245,7 @@
                             {afSupported}
                             {showOrHideGraphicsOptions}
                             {checkCacheStatus}
+                            {languageLocked}
                         />
                     </div>
                     <div class:hidden={activeTab !== 'controls'}>
@@ -253,6 +269,7 @@
                             {openSection}
                             {toggleSection}
                             {handleExtensionChange}
+                            {handleHdAudioChange}
                             {handleInstall}
                             {handleUninstall}
                         />

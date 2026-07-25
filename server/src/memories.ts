@@ -20,7 +20,7 @@ interface CompletionRow {
 }
 
 const VALID_LANGUAGES = new Set([
-	"da", "el", "en", "fr", "de", "it", "jp", "ko", "pt", "ru", "es",
+	"da", "el", "en", "eo", "fr", "de", "it", "jp", "ko", "pt", "ru", "es",
 ]);
 
 function isValidLanguage(lang: unknown): lang is string {

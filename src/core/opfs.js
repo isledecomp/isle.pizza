@@ -233,6 +233,11 @@ function applyConfigToForm(form, config) {
             continue;
         }
 
+        if (key === "Language") {
+            const hdAudio = elements["HD Audio"];
+            if (hdAudio) hdAudio.checked = (config[key] === "eo");
+        }
+
         const element = elements[key];
         if (!element) continue;
 

@@ -21,7 +21,7 @@ A custom web frontend for the Emscripten port of [isle-portable](https://github.
    npm install
    ```
 
-3. Obtain the game files (`isle.js` and `isle.wasm`) by building the Emscripten version of [isle-portable](https://github.com/isledecomp/isle-portable), then copy them to the project root.
+3. Obtain the game files (`isle.js` and `isle.wasm`) by building the Emscripten version of [isle-portable](https://github.com/isledecomp/isle-portable), then copy them to the project root. Also copy `isle.wasm.map` if present — the deploy script uploads it so crash reports can be symbolicated.
 
 4. Set up the LEGO Island game assets:
    ```bash
