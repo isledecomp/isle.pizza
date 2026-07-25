@@ -6,6 +6,7 @@
     export let openSection;
     export let toggleSection;
     export let handleExtensionChange;
+    export let handleHdAudioChange;
     export let handleInstall;
     export let handleUninstall;
 
@@ -24,6 +25,10 @@
                 <div class="toggle-switch">
                     <label><input type="checkbox" id="check-hd-music" name="HD Music" data-not-ini="true" disabled={opfsDisabled} onchange={handleExtensionChange}><span class="toggle-slider"></span><span class="toggle-label">HD Music <span class="toggle-badge">+450MB</span></span></label>
                     <span class="tooltip-trigger">?<span class="tooltip-content">Improve the game's music with high-definition audio.</span></span>
+                </div>
+                <div class="toggle-switch">
+                    <label><input type="checkbox" id="check-hd-audio" name="HD Audio" data-not-ini="true" disabled={opfsDisabled} onchange={handleHdAudioChange}><span class="toggle-slider"></span><span class="toggle-label">HD Audio <span class="toggle-badge">+2MB</span></span></label>
+                    <span class="tooltip-trigger">?<span class="tooltip-content">Restores the game's voice-overs and sound effects from high-quality pre-release recordings. Based on the English (1.1) version.</span></span>
                 </div>
                 <div class="toggle-switch">
                     <label><input type="checkbox" id="check-widescreen-bgs" name="Widescreen Backgrounds" data-not-ini="true" disabled={opfsDisabled} onchange={handleExtensionChange}><span class="toggle-slider"></span><span class="toggle-label">Widescreen Backgrounds <span class="toggle-badge">WIP</span></span></label>
@@ -87,6 +92,10 @@
 </div>
 
 <style>
+#config-tab-extras .toggle-group {
+    gap: 7px;
+}
+
 .offline-note {
     font-size: 0.75em;
     color: #666;

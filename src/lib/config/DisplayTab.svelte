@@ -7,6 +7,7 @@
     export let afSupported;
     export let showOrHideGraphicsOptions;
     export let checkCacheStatus;
+    export let languageLocked;
 </script>
 
 <div class="config-tab-panel active" id="config-tab-display">
@@ -15,12 +16,17 @@
         <div class="config-card-content" class:open={openSection === 'game'}>
             <div class="form-grid">
                 <div class="form-group">
-                    <label class="form-group-label" for="language-select">Version</label>
+                    <label class="form-group-label" for="language-select">Version
+                        {#if languageLocked}
+                            <span class="tooltip-trigger">?<span class="tooltip-content">HD Audio always maps to English (1.1). Disable the HD Audio extra to change the version.</span></span>
+                        {/if}
+                    </label>
                     <div class="select-wrapper">
-                        <select id="language-select" name="Language" disabled={opfsDisabled} onchange={() => checkCacheStatus()}>
+                        <select id="language-select" name="Language" disabled={opfsDisabled || languageLocked} onchange={() => checkCacheStatus()}>
                             <option value="da">Danish</option>
                             <option value="el">English (1.0)</option>
                             <option value="en" selected>English (1.1)</option>
+                            <option value="eo" hidden>English (1.1, HD Audio)</option>
                             <option value="fr">French</option>
                             <option value="de">German</option>
                             <option value="it">Italian</option>
