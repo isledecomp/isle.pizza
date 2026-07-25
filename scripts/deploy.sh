@@ -48,7 +48,7 @@ FRONTEND_VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
 WASM_VERSION=""
 if [ -f "$PROJECT_DIR/isle.js" ]; then
-    WASM_VERSION=$(grep -oP 'wasmVersion"\]\s*=\s*"\K[^"]+' "$PROJECT_DIR/isle.js" 2>/dev/null || echo "")
+    WASM_VERSION=$(sed -n 's/.*wasmVersion"\][[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' "$PROJECT_DIR/isle.js" | head -n1)
 fi
 
 echo "Environment:      $ENV"
