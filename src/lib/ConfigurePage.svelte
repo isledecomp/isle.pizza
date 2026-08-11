@@ -153,13 +153,16 @@
         const rendererSelect = document.getElementById('renderer-select');
         const msaaGroup = document.getElementById('msaa-select')?.closest('.form-group');
         const afGroup = document.getElementById('anisotropic-select')?.closest('.form-group');
+        const lightingGroup = document.getElementById('lighting-model-select')?.closest('.form-group');
 
         if (rendererSelect?.value === "0 0x682656f3 0x0 0x0 0x2000000") {
             if (msaaGroup) msaaGroup.style.display = 'none';
             if (afGroup) afGroup.style.display = 'none';
+            if (lightingGroup) lightingGroup.style.display = 'none';
         } else {
             if (msaaGroup && msaaSupported) msaaGroup.style.display = '';
             if (afGroup && afSupported) afGroup.style.display = '';
+            if (lightingGroup) lightingGroup.style.display = '';
         }
     }
 
@@ -174,6 +177,7 @@
             document.getElementById('tex-high').checked = true;
             document.getElementById('max-lod').value = '3.6';
             document.getElementById('max-allowed-extras').value = '20';
+            document.getElementById('lighting-model-select').value = '0';
             document.querySelectorAll('#config-tab-extras .toggle-group input[type="checkbox"]').forEach(cb => cb.checked = false);
         } else if (preset === 'modern') {
             document.getElementById('aspect-wide').checked = true;
@@ -182,6 +186,7 @@
             document.getElementById('tex-high').checked = true;
             document.getElementById('max-lod').value = '6';
             document.getElementById('max-allowed-extras').value = '40';
+            document.getElementById('lighting-model-select').value = '1';
             document.getElementById('check-hd-textures').checked = true;
             document.getElementById('check-hd-music').checked = true;
             document.getElementById('check-hd-audio').checked = true;

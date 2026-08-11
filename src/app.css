@@ -673,6 +673,19 @@ body {
     gap: 20px 30px;
 }
 
+.form-grid-dense {
+    gap: 12px 24px;
+}
+
+.form-grid-dense .form-group-label {
+    font-size: 0.85em;
+    margin-bottom: 7px;
+}
+
+.form-grid-dense select {
+    padding: 7px 12px;
+}
+
 .form-group-label {
     position: relative;
     display: inline-flex;

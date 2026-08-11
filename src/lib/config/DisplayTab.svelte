@@ -155,7 +155,7 @@
     <div class="config-section-card">
         <button type="button" class="config-card-header" onclick={() => toggleSection('graphics')}>Graphics</button>
         <div class="config-card-content" class:open={openSection === 'graphics'}>
-            <div class="form-grid">
+            <div class="form-grid form-grid-dense">
                 <div class="form-group">
                     <label class="form-group-label" for="renderer-select">Renderer</label>
                     <div class="select-wrapper">
@@ -174,6 +174,15 @@
                             <option value="3" selected>Mosaic</option>
                             <option value="4">Wipe Down</option>
                             <option value="5">Windows</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-group-label" for="lighting-model-select">Lighting Model</label>
+                    <div class="select-wrapper">
+                        <select id="lighting-model-select" name="Lighting Model" disabled={opfsDisabled}>
+                            <option value="0" selected>DirectX 5</option>
+                            <option value="1">DirectX 8</option>
                         </select>
                     </div>
                 </div>
