@@ -103,4 +103,19 @@
         padding-top: 10px;
     }
 }
+
+@media (max-height: 520px) {
+    img {
+        height: min(38dvh, 240px);
+        width: auto;
+    }
+
+    .loading-info-text {
+        display: none;
+    }
+
+    .status-message-bar {
+        margin-top: 12px;
+    }
+}
 </style>
