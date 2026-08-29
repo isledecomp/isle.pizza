@@ -145,6 +145,25 @@ body {
     align-items: center;
 }
 
+@media (max-height: 520px) {
+    #loading-gif-overlay {
+        max-width: none;
+        max-height: none;
+        aspect-ratio: auto;
+        justify-content: flex-start;
+        overflow-y: auto;
+        touch-action: pan-y;
+    }
+
+    #loading-gif-overlay > :first-child {
+        margin-top: auto;
+    }
+
+    #loading-gif-overlay > :last-child {
+        margin-bottom: auto;
+    }
+}
+
 #main-container {
     display: flex;
     flex-direction: column;
