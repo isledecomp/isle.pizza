@@ -8,7 +8,7 @@
     import AudioTab from './config/AudioTab.svelte';
     import ExtrasTab from './config/ExtrasTab.svelte';
     import { installState, currentPage, opfsDisabled, configVersion } from '../stores.js';
-    import { loadConfig, saveConfig, getFileHandle } from '../core/opfs.js';
+    import { loadConfig, saveConfig, getOpfsRoot } from '../core/opfs.js';
     import { checkCacheStatus, startInstall, startUninstall, getSiFilesForCache } from '../core/service-worker.js';
     import { getMsaaSamples, getMaxAnisotropy, populateMsaaSelect, populateAfSelect } from '../core/webgl.js';
 
@@ -71,8 +71,8 @@
         }
 
         // Load config from OPFS
-        const handle = await getFileHandle();
-        if (!handle) {
+        const root = await getOpfsRoot();
+        if (!root) {
             opfsDisabled.set(true);
         } else {
             try {
