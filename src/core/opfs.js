@@ -76,6 +76,12 @@ export async function readBinaryFile(filename) {
  * @returns {Promise<boolean>} - True if successful
  */
 export async function writeBinaryFile(filename, data, silent = false, toastMsg = 'Settings saved') {
+    // When OPFS is unavailable altogether (e.g. private browsing), that state
+    // is already known and surfaced — skip the write without an error toast.
+    if (!(await getOpfsRoot())) {
+        return false;
+    }
+
     const workerCode = `
         self.onmessage = async (e) => {
             try {
