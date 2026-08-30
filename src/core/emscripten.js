@@ -146,7 +146,9 @@ export function setupCanvasEvents() {
             fetch(API_URL + '/api/crash', {
                 method: 'POST',
                 body: JSON.stringify({
-                    stack: detail.stack,
+                    stack: detail.consoleTail
+                        ? detail.stack + '\n--- console tail ---\n' + detail.consoleTail.slice(-8000)
+                        : detail.stack,
                     buildVersion: detail.buildVersion,
                     wasmVersion: detail.wasmVersion
                 }),
