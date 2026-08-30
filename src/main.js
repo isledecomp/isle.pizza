@@ -2,10 +2,46 @@ import App from './App.svelte';
 import { mount } from 'svelte';
 import './app.css';
 
+// Ring buffer of recent console output, attached to crash/exit reports so that
+// stackless reports (e.g. "Game exited with code 1") become diagnosable.
+const CONSOLE_TAIL_MAX_LINES = 40;
+const CONSOLE_TAIL_MAX_LINE_LENGTH = 300;
+const consoleTail = [];
+
+(function captureConsole() {
+    try {
+        for (const level of ['log', 'info', 'warn', 'error']) {
+            const original = console[level];
+            if (typeof original !== 'function') {
+                continue;
+            }
+            console[level] = function (...args) {
+                try {
+                    let line = '';
+                    for (const arg of args) {
+                        line += (line ? ' ' : '') + String(arg);
+                        if (line.length >= CONSOLE_TAIL_MAX_LINE_LENGTH) {
+                            break;
+                        }
+                    }
+                    consoleTail.push(line.slice(0, CONSOLE_TAIL_MAX_LINE_LENGTH));
+                    if (consoleTail.length > CONSOLE_TAIL_MAX_LINES) {
+                        consoleTail.shift();
+                    }
+                } catch (e) {
+                    // Never let capture break console output
+                }
+                return original.apply(console, args);
+            };
+        }
+    } catch (e) {}
+})();
+
 function signalCrash(stack) {
     window.dispatchEvent(new CustomEvent('game-crash', {
         detail: {
             stack,
+            consoleTail: consoleTail.join('\n'),
             buildVersion: window.Module.buildVersion || '',
             wasmVersion: window.Module.wasmVersion || ''
         }

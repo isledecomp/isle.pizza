@@ -21,7 +21,7 @@ crashes.post("/", async (c) => {
 		return c.json({ error: "stack is required" }, 400);
 	}
 
-	const stk = stack.slice(0, 8192);
+	const stk = stack.slice(0, 16384);
 	const bv = typeof buildVersion === "string" ? buildVersion.slice(0, 40) : null;
 	const wv = typeof wasmVersion === "string" ? wasmVersion.slice(0, 40) : null;
 	const ua = (c.req.header("user-agent") || "").slice(0, 512);
