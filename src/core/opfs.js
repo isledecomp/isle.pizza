@@ -113,6 +113,8 @@ export async function writeBinaryFile(filename, data, silent = false, toastMsg =
                 }
                 resolve(true);
             } else {
+                console.error(e.data.message);
+                showToast('Failed to save ' + filename, { error: true, duration: 4000 });
                 resolve(false);
             }
         };
@@ -121,6 +123,7 @@ export async function writeBinaryFile(filename, data, silent = false, toastMsg =
             console.error('An error occurred in the file-saving worker:', e.message);
             URL.revokeObjectURL(workerUrl);
             worker.terminate();
+            showToast('Failed to save ' + filename, { error: true, duration: 4000 });
             resolve(false);
         };
     });

@@ -3,12 +3,24 @@ import { gameRunning, debugUIVisible, multiplayerPlayerCount, thirdPersonEnabled
 import { recordCompletion } from './memories.js';
 import { pauseInstallAudio } from './audio.js';
 import { API_URL } from './config.js';
+import { readBinaryFile, CONFIG_FILE } from './opfs.js';
 
 const DEFAULT_RENDERER = "0 0x682656f3 0x0 0x0 0x4000000"; // WebGL default
 let progressUpdates = 0;
 
-export function launchGame() {
+export async function launchGame() {
     pauseInstallAudio();
+
+    // If the config never made it into OPFS (failed write, broken or full
+    // storage), launching with --ini pointing at a missing or empty file makes
+    // the game fail to start. Drop the argument so it boots with defaults.
+    // isle.js captures a reference to the arguments array when it loads, so
+    // truncate it in place rather than replacing it.
+    const iniData = await readBinaryFile(CONFIG_FILE);
+    if (!iniData || iniData.byteLength === 0) {
+        console.warn('No readable config in OPFS; starting with default settings');
+        window.Module.arguments.length = 0;
+    }
 
     const rendererSelect = document.getElementById('renderer-select');
     const rendererValue = rendererSelect ? rendererSelect.value : DEFAULT_RENDERER;
