@@ -31,7 +31,7 @@
                     <span class="tooltip-trigger">?<span class="tooltip-content">Restores the game's voice-overs and sound effects from high-quality pre-release recordings. Based on the English (1.1) version.</span></span>
                 </div>
                 <div class="toggle-switch">
-                    <label><input type="checkbox" id="check-widescreen-bgs" name="Widescreen Backgrounds" data-not-ini="true" disabled={opfsDisabled} onchange={handleExtensionChange}><span class="toggle-slider"></span><span class="toggle-label">Widescreen Backgrounds <span class="toggle-badge">WIP</span></span></label>
+                    <label><input type="checkbox" id="check-widescreen-bgs" name="Widescreen Backgrounds" data-not-ini="true" disabled={opfsDisabled} onchange={handleExtensionChange}><span class="toggle-slider"></span><span class="toggle-label">Widescreen Backgrounds <span class="toggle-badge">+36MB</span></span></label>
                     <span class="tooltip-trigger">?<span class="tooltip-content">Adapts the game's background art for modern widescreen monitors, eliminating unwanted 3D backgrounds on the sides of the screen.</span></span>
                 </div>
                 <div class="toggle-switch">
