@@ -33,6 +33,17 @@
     ];
 
     const changelogItems = [
+        { id: 'cl11', title: 'September 2026', items: [
+            { type: 'Improved', text: 'Widescreen Backgrounds extra now covers every still-image screen and fills widescreen and portrait displays without stretching — no longer marked as work in progress' },
+            { type: 'Improved', text: 'Gamepad controls: button prompts follow your controller\'s layout, Start pauses the game, and cursor speed no longer depends on the frame rate' },
+            { type: 'Improved', text: 'Crash reports now include recent log output to help track down problems faster' },
+            { type: 'Fixed', text: 'Rabbits extra kept reloading its data in the background while on the island, wasting resources and causing stutter or freezes' },
+            { type: 'Fixed', text: 'Extras such as Widescreen Backgrounds and Rabbits sometimes failed to load when starting the game' },
+            { type: 'Fixed', text: 'The game now starts with default settings instead of failing when its saved configuration cannot be read' },
+            { type: 'Fixed', text: 'Several crashes reported through the crash reporter' },
+            { type: 'Fixed', text: 'Loading progress bar cut off on phones in landscape orientation' },
+            { type: 'Fixed', text: 'Browsers that do not allow persistent storage no longer show an error when saving settings' }
+        ]},
         { id: 'cl10', title: 'July 2026', items: [
             { type: 'New', text: 'HD Audio extra restores over 950 voice-overs and sound effects from high-quality 1997 pre-release recordings — enable it under Extras on the Configure page (based on the English 1.1 version)' },
             { type: 'Improved', text: 'HD Music now also upgrades the main theme and the pizza delivery mission music' }
