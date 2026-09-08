@@ -59,6 +59,19 @@ window.Module = {
         window.Module.running = true;
     },
     canvas: null, // Will be set after mount
+    // Route stdout/stderr through the page so the pthread runtime forwards
+    // the game thread's output here and captureConsole sees it (worker
+    // console output never passes through the page's console otherwise).
+    print: function (...args) {
+        try {
+            console.log(...args);
+        } catch (e) {}
+    },
+    printErr: function (...args) {
+        try {
+            console.error(...args);
+        } catch (e) {}
+    },
     onAbort: function (what) {
         signalCrash(String(what || 'Unknown error'));
     },
