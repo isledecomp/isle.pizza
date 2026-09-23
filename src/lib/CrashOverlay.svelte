@@ -11,8 +11,13 @@
     <div class="crash-card">
         <img src="images/callfail.webp" alt="Crash" class="crash-image" width="150" height="187">
         <div class="crash-body">
-            <h2 class="crash-title">Uh oh! The game crashed.</h2>
-            <p class="crash-message">Sorry about that! Something went wrong and LEGO Island had to stop. You can try reloading the page to get back to the action.</p>
+            {#if $gameCrashed.exitCode}
+                <h2 class="crash-title">LEGO Island couldn't start.</h2>
+                <p class="crash-message">Something kept the game from starting, most often a problem downloading the game data. Check your internet connection and try reloading the page.</p>
+            {:else}
+                <h2 class="crash-title">Uh oh! The game crashed.</h2>
+                <p class="crash-message">Sorry about that! Something went wrong and LEGO Island had to stop. You can try reloading the page to get back to the action.</p>
+            {/if}
             <button class="crash-reload-btn" onclick={reload}>Reload Page</button>
             <p class="crash-report">If this keeps happening, please <a href="https://github.com/isledecomp/isle-portable/issues" target="_blank" rel="noopener noreferrer">report the issue</a> so we can fix it.</p>
         </div>
