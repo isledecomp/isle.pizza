@@ -7,7 +7,16 @@ type Variables = {
 
 export const crashes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
+// Crawlers (Googlebot, bingbot, ...) and headless browsers render the page and
+// fail to run the game, which floods the table with reports that aren't from players.
+const BOT_USER_AGENT = /bot\/|crawler|spider|headlesschrome/i;
+
 crashes.post("/", async (c) => {
+	const ua = (c.req.header("user-agent") || "").slice(0, 512);
+	if (BOT_USER_AGENT.test(ua)) {
+		return c.body(null, 204);
+	}
+
 	let body;
 	try {
 		body = await c.req.json();
@@ -24,7 +33,6 @@ crashes.post("/", async (c) => {
 	const stk = stack.slice(0, 16384);
 	const bv = typeof buildVersion === "string" ? buildVersion.slice(0, 40) : null;
 	const wv = typeof wasmVersion === "string" ? wasmVersion.slice(0, 40) : null;
-	const ua = (c.req.header("user-agent") || "").slice(0, 512);
 
 	// Try to get user_id from session (no auth required — crash reports are anonymous by default)
 	let userId: string | null = null;
