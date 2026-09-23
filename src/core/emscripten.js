@@ -149,6 +149,7 @@ export function setupCanvasEvents() {
         var detail = event.detail;
         gameCrashed.set({
             stack: detail.stack,
+            exitCode: detail.exitCode,
             buildVersion: detail.buildVersion,
             wasmVersion: detail.wasmVersion
         });

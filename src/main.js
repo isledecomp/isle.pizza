@@ -37,10 +37,11 @@ const consoleTail = [];
     } catch (e) {}
 })();
 
-function signalCrash(stack) {
+function signalCrash(stack, exitCode = null) {
     window.dispatchEvent(new CustomEvent('game-crash', {
         detail: {
             stack,
+            exitCode,
             consoleTail: consoleTail.join('\n'),
             buildVersion: window.Module.buildVersion || '',
             wasmVersion: window.Module.wasmVersion || ''
@@ -77,7 +78,7 @@ window.Module = {
     },
     onExit: function (code) {
         if (code !== 0) {
-            signalCrash('Game exited with code ' + code);
+            signalCrash('Game exited with code ' + code, code);
         } else {
             window.location.reload();
         }
