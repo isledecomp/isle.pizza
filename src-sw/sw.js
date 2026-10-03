@@ -11,6 +11,7 @@ const { CacheableResponsePlugin } = workbox.cacheableResponse;
 const { RangeRequestsPlugin } = workbox.rangeRequests;
 
 precacheAndRoute(self.__WB_MANIFEST);
+cleanupOutdatedCaches();
 
 const gameFiles = [
     "/LEGO/Scripts/CREDITS.SI", "/LEGO/Scripts/INTRO.SI", "/LEGO/Scripts/NOCD.SI", "/LEGO/Scripts/SNDANIM.SI",
@@ -123,7 +124,6 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', (event) => {
-    cleanupOutdatedCaches();
     event.waitUntil(self.clients.claim());
 });
 
