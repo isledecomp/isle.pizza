@@ -4,7 +4,7 @@ set -euo pipefail
 # ── Configuration ──────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-WRANGLER="$PROJECT_DIR/server/node_modules/.bin/wrangler"
+WRANGLER="${WRANGLER:-$PROJECT_DIR/server/node_modules/.bin/wrangler}"
 R2_BUCKET="${R2_BUCKET:-isle}"
 
 # ── Parse arguments ────────────────────────────────────────────
@@ -83,6 +83,12 @@ if [ ! -d "$PROJECT_DIR/dist" ] || [ ! -f "$PROJECT_DIR/dist/index.html" ]; then
     exit 1
 fi
 
+NEW_PAIR="$(cd "$PROJECT_DIR/dist" && echo isle.*.js isle.*.wasm)"
+if [[ ! "$NEW_PAIR" =~ ^isle\.[0-9a-f]{12}\.js\ isle\.[0-9a-f]{12}\.wasm$ ]]; then
+    echo "Error: dist/ must contain exactly one hashed isle.*.js and isle.*.wasm (found: $NEW_PAIR)."
+    exit 1
+fi
+
 # ── Content-type mapping ──────────────────────────────────────
 get_content_type() {
     case "${1##*.}" in
@@ -119,9 +125,45 @@ find . -type f | sort | while read -r file; do
 
     key="${R2_PREFIX}${file}"
     ct=$(get_content_type "$file")
-    echo "  $key ($ct)"
-    "$WRANGLER" r2 object put "$R2_BUCKET/$key" --file "$PROJECT_DIR/dist/$file" --content-type "$ct" --remote 2>/dev/null
+    case "$file" in
+        isle.*.js|isle.*.wasm) cc="public, max-age=31536000, immutable" ;;
+        *.html|*.js|*.json|*.css) cc="no-cache" ;;
+        *) cc="" ;;
+    esac
+    echo "  $key ($ct${cc:+, $cc})"
+    if [ -n "$cc" ]; then
+        "$WRANGLER" r2 object put "$R2_BUCKET/$key" --file "$PROJECT_DIR/dist/$file" --content-type "$ct" --cache-control "$cc" --remote 2>/dev/null
+    else
+        "$WRANGLER" r2 object put "$R2_BUCKET/$key" --file "$PROJECT_DIR/dist/$file" --content-type "$ct" --remote 2>/dev/null
+    fi
 done
+
+echo ""
+
+MANIFEST_KEY="${R2_PREFIX}isle-versions.txt"
+MANIFEST="$(mktemp)"
+"$WRANGLER" r2 object get "$R2_BUCKET/$MANIFEST_KEY" --file "$MANIFEST" --remote >/dev/null 2>&1 || : > "$MANIFEST"
+[ "$(tail -n 1 "$MANIFEST")" = "$NEW_PAIR" ] || echo "$NEW_PAIR" >> "$MANIFEST"
+TOTAL=$(( $(wc -l < "$MANIFEST") ))
+KEEP="$(tail -n 3 "$MANIFEST")"
+KEEP_NAMES=" $(echo $KEEP) "
+DROP=""
+if [ "$TOTAL" -gt 3 ]; then
+    DROP="$(head -n $((TOTAL - 3)) "$MANIFEST")"
+fi
+for name in $DROP; do
+    case "$KEEP_NAMES" in
+        *" $name "*) ;;
+        *)
+            echo "Pruning: ${R2_PREFIX}$name"
+            "$WRANGLER" r2 object delete "$R2_BUCKET/${R2_PREFIX}$name" --remote 2>/dev/null
+            ;;
+    esac
+done
+echo "$KEEP" > "$MANIFEST"
+echo "Updating version manifest: $MANIFEST_KEY"
+"$WRANGLER" r2 object put "$R2_BUCKET/$MANIFEST_KEY" --file "$MANIFEST" --content-type "text/plain; charset=utf-8" --remote 2>/dev/null
+rm -f "$MANIFEST"
 
 echo ""
 
