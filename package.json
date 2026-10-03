@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && cp isle.js isle.wasm save-editor.bin dist/ && node scripts/workbox-inject.js",
+    "build": "vite build && cp isle.js isle.wasm save-editor.bin dist/ && node scripts/hash-isle.js && node scripts/workbox-inject.js",
     "build:ci": "vite build && node scripts/workbox-inject.js",
     "check": "svelte-check --fail-on-warnings",
     "preview": "vite preview",

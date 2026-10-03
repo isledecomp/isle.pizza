@@ -6,4 +6,5 @@ module.exports = {
     swSrc: 'src-sw/sw.js',
     swDest: 'dist/sw.js',
     maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+    dontCacheBustURLsMatching: /^isle\.[0-9a-f]{12}\.(js|wasm)$/,
 };
