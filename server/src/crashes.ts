@@ -9,7 +9,7 @@ export const crashes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Crawlers (Googlebot, bingbot, ...) and headless browsers render the page and
 // fail to run the game, which floods the table with reports that aren't from players.
-const BOT_USER_AGENT = /bot\/|crawler|spider|headlesschrome/i;
+const BOT_USER_AGENT = /bot\/|crawler|spider|headlesschrome|googleother/i;
 
 crashes.post("/", async (c) => {
 	const ua = (c.req.header("user-agent") || "").slice(0, 512);
