@@ -33,6 +33,19 @@
     ];
 
     const changelogItems = [
+        { id: 'cl12', title: 'October 2026', items: [
+            { type: 'New', text: 'Render Style setting — Pixelated recreates the look of the Software renderer on WebGL (unfiltered textures, no anti-aliasing, 640x480-class resolution) and is now the default and part of Classic Mode; Smooth keeps the filtered look and is part of Modern Mode' },
+            { type: 'Improved', text: 'The Software renderer now uses the same DirectX 5 and DirectX 8 era lighting as WebGL and follows the Lighting Model setting, so lighting no longer shifts as the camera moves' },
+            { type: 'Improved', text: 'Outdated offline data is now cleaned up automatically, freeing storage space' },
+            { type: 'Fixed', text: 'After an update the game could fail to start until the page was reloaded, because the browser mixed old and new game files' },
+            { type: 'Fixed', text: 'Closing the tab while the game was saving could leave a damaged save file' },
+            { type: 'Fixed', text: 'The game could fail to load, or play broken videos, on networks that ignore partial download requests' },
+            { type: 'Fixed', text: 'Crash when pressing Escape during the Brickster chase in Act 2' },
+            { type: 'Fixed', text: 'Crash when switching players in the registration book while Act 3 was paused' },
+            { type: 'Fixed', text: 'Crash when entering the island with certain saved games, and when using Go to Location in the debug menu outside the island' },
+            { type: 'Fixed', text: 'Crashes after switching acts with the debug menu, especially while riding a vehicle' },
+            { type: 'Fixed', text: 'Several long-standing crashes while loading areas, streaming music and videos, starting WebGL, and quitting the game' }
+        ]},
         { id: 'cl11', title: 'September 2026', items: [
             { type: 'Improved', text: 'Widescreen Backgrounds extra now covers every still-image screen and fills widescreen and portrait displays without stretching — no longer marked as work in progress' },
             { type: 'Improved', text: 'Gamepad controls: button prompts follow your controller\'s layout, Start pauses the game, and cursor speed no longer depends on the frame rate' },
