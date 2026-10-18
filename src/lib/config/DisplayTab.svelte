@@ -186,6 +186,20 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="form-group-label" for="render-style-select">
+                        Render Style
+                        <span class="tooltip-trigger">?
+                            <span class="tooltip-content">Pixelated reproduces the look of the Software renderer: unfiltered textures, no anti-aliasing and a 640x480-class resolution. Smooth filters textures and allows anti-aliasing.</span>
+                        </span>
+                    </label>
+                    <div class="select-wrapper">
+                        <select id="render-style-select" name="Render Style" disabled={opfsDisabled}>
+                            <option value="0">Smooth</option>
+                            <option value="1" selected>Pixelated</option>
+                        </select>
+                    </div>
+                </div>
                 {#if msaaSupported}
                     <div class="form-group">
                         <label class="form-group-label" for="msaa-select">Anti-aliasing</label>
