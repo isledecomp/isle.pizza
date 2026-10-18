@@ -33,13 +33,31 @@
     ];
 
     const changelogItems = [
+        { id: 'cl12', title: 'October 2026', items: [
+            { type: 'New', text: 'Render Style setting — Pixelated recreates the look of the Software renderer on WebGL (unfiltered textures, no anti-aliasing, 640x480-class resolution) and is now the default and part of Classic Mode; Smooth keeps the filtered look and is part of Modern Mode' },
+            { type: 'Improved', text: 'The Software renderer now uses the same DirectX 5 and DirectX 8 era lighting as WebGL and follows the Lighting Model setting, so lighting no longer shifts as the camera moves' },
+            { type: 'Improved', text: 'Outdated offline data is now cleaned up automatically, freeing storage space' },
+            { type: 'Fixed', text: 'After an update the game could fail to start until the page was reloaded, because the browser mixed old and new game files' },
+            { type: 'Fixed', text: 'Closing the tab while the game was saving could leave a damaged save file' },
+            { type: 'Fixed', text: 'The game could fail to load, or play broken videos, on networks that ignore partial download requests' },
+            { type: 'Fixed', text: 'Crash when pressing Escape during the Brickster chase in Act 2' },
+            { type: 'Fixed', text: 'Crash when switching players in the registration book while Act 3 was paused' },
+            { type: 'Fixed', text: 'Crash when entering the island with certain saved games, and when using Go to Location in the debug menu outside the island' },
+            { type: 'Fixed', text: 'Crashes after switching acts with the debug menu, especially while riding a vehicle' },
+            { type: 'Fixed', text: 'Several long-standing crashes while loading areas, streaming music and videos, starting WebGL, and quitting the game' }
+        ]},
         { id: 'cl11', title: 'September 2026', items: [
             { type: 'Improved', text: 'Widescreen Backgrounds extra now covers every still-image screen and fills widescreen and portrait displays without stretching — no longer marked as work in progress' },
             { type: 'Improved', text: 'Gamepad controls: button prompts follow your controller\'s layout, Start pauses the game, and cursor speed no longer depends on the frame rate' },
-            { type: 'Improved', text: 'Crash reports now include recent log output to help track down problems faster' },
+            { type: 'Improved', text: 'Crash reports now include recent log output and deeper stack traces to help track down problems faster' },
+            { type: 'Improved', text: 'When the game data cannot be downloaded, a "couldn\'t start" message now suggests checking your connection, instead of a crash screen or a dialog asking you to quit other applications' },
+            { type: 'Improved', text: 'Third Person Camera: characters in animations now look at your player instead of past them' },
+            { type: 'Improved', text: 'Web build updated to Emscripten 6.0.10' },
             { type: 'Fixed', text: 'Rabbits extra kept reloading its data in the background while on the island, wasting resources and causing stutter or freezes' },
             { type: 'Fixed', text: 'Extras such as Widescreen Backgrounds and Rabbits sometimes failed to load when starting the game' },
             { type: 'Fixed', text: 'The game now starts with default settings instead of failing when its saved configuration cannot be read' },
+            { type: 'Fixed', text: 'Crash when the window was resized while the game was still loading' },
+            { type: 'Fixed', text: 'Crashes when quitting the game or closing the tab, and on browsers that lose or lack WebGL support in the game\'s background thread' },
             { type: 'Fixed', text: 'Several crashes reported through the crash reporter' },
             { type: 'Fixed', text: 'Loading progress bar cut off on phones in landscape orientation' },
             { type: 'Fixed', text: 'Browsers that do not allow persistent storage no longer show an error when saving settings' }

@@ -23,13 +23,19 @@
 
     // Reload config from OPFS when navigating to this page
     $: if ($currentPage === 'configure' && configForm && !$opfsDisabled) {
-        loadConfig(configForm).then(syncLanguageLock);
+        loadConfig(configForm).then(() => {
+            syncLanguageLock();
+            showOrHideGraphicsOptions();
+        });
     }
 
     // Reload config from OPFS after cloud sync (even if not on config page),
     // so that saveConfigFromDOM() before game launch won't overwrite it with stale form values
     $: if ($configVersion && configForm && !$opfsDisabled) {
-        loadConfig(configForm).then(syncLanguageLock);
+        loadConfig(configForm).then(() => {
+            syncLanguageLock();
+            showOrHideGraphicsOptions();
+        });
     }
 
     let configForm;
@@ -151,19 +157,18 @@
 
     function showOrHideGraphicsOptions() {
         const rendererSelect = document.getElementById('renderer-select');
+        const renderStyleSelect = document.getElementById('render-style-select');
         const msaaGroup = document.getElementById('msaa-select')?.closest('.form-group');
         const afGroup = document.getElementById('anisotropic-select')?.closest('.form-group');
-        const lightingGroup = document.getElementById('lighting-model-select')?.closest('.form-group');
+        const renderStyleGroup = renderStyleSelect?.closest('.form-group');
 
-        if (rendererSelect?.value === "0 0x682656f3 0x0 0x0 0x2000000") {
-            if (msaaGroup) msaaGroup.style.display = 'none';
-            if (afGroup) afGroup.style.display = 'none';
-            if (lightingGroup) lightingGroup.style.display = 'none';
-        } else {
-            if (msaaGroup && msaaSupported) msaaGroup.style.display = '';
-            if (afGroup && afSupported) afGroup.style.display = '';
-            if (lightingGroup) lightingGroup.style.display = '';
-        }
+        const software = rendererSelect?.value === "0 0x682656f3 0x0 0x0 0x2000000";
+        const pixelated = renderStyleSelect?.value === "1";
+        const filtering = !software && !pixelated;
+
+        if (renderStyleGroup) renderStyleGroup.style.display = software ? 'none' : '';
+        if (msaaGroup) msaaGroup.style.display = filtering && msaaSupported ? '' : 'none';
+        if (afGroup) afGroup.style.display = filtering && afSupported ? '' : 'none';
     }
 
     function applyPreset(preset) {
@@ -178,6 +183,7 @@
             document.getElementById('max-lod').value = '3.6';
             document.getElementById('max-allowed-extras').value = '20';
             document.getElementById('lighting-model-select').value = '0';
+            document.getElementById('render-style-select').value = '1';
             document.querySelectorAll('#config-tab-extras .toggle-group input[type="checkbox"]').forEach(cb => cb.checked = false);
         } else if (preset === 'modern') {
             document.getElementById('aspect-wide').checked = true;
@@ -187,6 +193,7 @@
             document.getElementById('max-lod').value = '6';
             document.getElementById('max-allowed-extras').value = '40';
             document.getElementById('lighting-model-select').value = '1';
+            document.getElementById('render-style-select').value = '0';
             document.getElementById('check-hd-textures').checked = true;
             document.getElementById('check-hd-music').checked = true;
             document.getElementById('check-hd-audio').checked = true;
