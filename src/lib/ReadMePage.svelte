@@ -40,6 +40,7 @@
             { type: 'Fixed', text: 'After an update the game could fail to start until the page was reloaded, because the browser mixed old and new game files' },
             { type: 'Fixed', text: 'Closing the tab while the game was saving could leave a damaged save file' },
             { type: 'Fixed', text: 'The game could fail to load, or play broken videos, on networks that ignore partial download requests' },
+            { type: 'Fixed', text: 'Virtual Gamepad touch controls now work in every direction when dragging from the black bars around the game, and touches in the bars no longer click on things at the edge of the picture — previously the bars above and below only allowed turning, and the bars at the sides only allowed moving forward and back' },
             { type: 'Fixed', text: 'Crash when pressing Escape during the Brickster chase in Act 2' },
             { type: 'Fixed', text: 'Crash when switching players in the registration book while Act 3 was paused' },
             { type: 'Fixed', text: 'Crash when entering the island with certain saved games, and when using Go to Location in the debug menu outside the island' },
