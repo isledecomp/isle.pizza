@@ -10,8 +10,38 @@ const { Strategy } = workbox.strategies;
 const { CacheableResponsePlugin } = workbox.cacheableResponse;
 const { RangeRequestsPlugin } = workbox.rangeRequests;
 
-precacheAndRoute(self.__WB_MANIFEST);
+const precacheManifest = self.__WB_MANIFEST;
+precacheAndRoute(precacheManifest);
 cleanupOutdatedCaches();
+
+const retiredGameFilesCacheName = 'isle-retired-game-files';
+const gameBuildFile = /^\/isle(\.[0-9a-f]{12})?\.(js|wasm)$/;
+
+async function retainPreviousGameFiles() {
+    const current = new Set(precacheManifest.map(entry => new URL(entry.url, self.location.origin).pathname));
+    await caches.delete(retiredGameFilesCacheName);
+    const retired = await caches.open(retiredGameFilesCacheName);
+    for (const cacheName of await caches.keys()) {
+        if (!cacheName.includes('-precache-')) continue;
+        const cache = await caches.open(cacheName);
+        for (const request of await cache.keys()) {
+            const url = new URL(request.url);
+            if (!gameBuildFile.test(url.pathname) || current.has(url.pathname)) continue;
+            const response = await cache.match(request);
+            if (response) {
+                await retired.put(url.origin + url.pathname, response);
+            }
+        }
+    }
+}
+
+registerRoute(
+    ({ url }) => url.origin === self.location.origin && gameBuildFile.test(url.pathname),
+    async ({ request, url }) => {
+        const retired = await caches.open(retiredGameFilesCacheName);
+        return (await retired.match(url.origin + url.pathname)) || fetch(request);
+    }
+);
 
 const gameFiles = [
     "/LEGO/Scripts/CREDITS.SI", "/LEGO/Scripts/INTRO.SI", "/LEGO/Scripts/NOCD.SI", "/LEGO/Scripts/SNDANIM.SI",
@@ -120,6 +150,7 @@ registerRoute(
 );
 
 self.addEventListener('install', event => {
+    event.waitUntil(retainPreviousGameFiles());
     self.skipWaiting();
 });
 
