@@ -143,24 +143,7 @@ echo ""
 MANIFEST_KEY="${R2_PREFIX}isle-versions.txt"
 MANIFEST="$(mktemp)"
 "$WRANGLER" r2 object get "$R2_BUCKET/$MANIFEST_KEY" --file "$MANIFEST" --remote >/dev/null 2>&1 || : > "$MANIFEST"
-[ "$(tail -n 1 "$MANIFEST")" = "$NEW_PAIR" ] || echo "$NEW_PAIR" >> "$MANIFEST"
-TOTAL=$(( $(wc -l < "$MANIFEST") ))
-KEEP="$(tail -n 3 "$MANIFEST")"
-KEEP_NAMES=" $(echo $KEEP) "
-DROP=""
-if [ "$TOTAL" -gt 3 ]; then
-    DROP="$(head -n $((TOTAL - 3)) "$MANIFEST")"
-fi
-for name in $DROP; do
-    case "$KEEP_NAMES" in
-        *" $name "*) ;;
-        *)
-            echo "Pruning: ${R2_PREFIX}$name"
-            "$WRANGLER" r2 object delete "$R2_BUCKET/${R2_PREFIX}$name" --remote 2>/dev/null
-            ;;
-    esac
-done
-echo "$KEEP" > "$MANIFEST"
+grep -qxF "$NEW_PAIR" "$MANIFEST" || echo "$NEW_PAIR" >> "$MANIFEST"
 echo "Updating version manifest: $MANIFEST_KEY"
 "$WRANGLER" r2 object put "$R2_BUCKET/$MANIFEST_KEY" --file "$MANIFEST" --content-type "text/plain; charset=utf-8" --remote 2>/dev/null
 rm -f "$MANIFEST"
