@@ -37,11 +37,11 @@ const consoleTail = [];
     } catch (e) {}
 })();
 
-function signalCrash(stack, exitCode = null) {
+function signalCrash(stack, startFailed = false) {
     window.dispatchEvent(new CustomEvent('game-crash', {
         detail: {
             stack,
-            exitCode,
+            startFailed,
             consoleTail: consoleTail.join('\n'),
             buildVersion: window.Module.buildVersion || '',
             wasmVersion: window.Module.wasmVersion || ''
@@ -78,7 +78,7 @@ window.Module = {
     },
     onExit: function (code) {
         if (code !== 0) {
-            signalCrash('Game exited with code ' + code, code);
+            signalCrash('Game exited with code ' + code, true);
         } else {
             window.location.reload();
         }
@@ -92,10 +92,28 @@ window.addEventListener('unhandledrejection', function (event) {
     }
 });
 
+function describeWorkerFailure(error) {
+    const script = document.querySelector('script[src*="/isle."]')?.src || 'unknown script';
+    let text = 'Game worker failed to start: ' + script;
+    if (error.message) {
+        text += ': ' + error.message;
+    }
+    if (error.filename) {
+        text += ' (' + error.filename + ':' + error.lineno + ')';
+    }
+    return text;
+}
+
 // Catch uncaught errors from worker threads
 window.addEventListener('error', function (event) {
-    if (window.Module.running && event.message?.includes('RuntimeError')) {
+    if (!window.Module.running) {
+        return;
+    }
+    if (event.message?.includes('RuntimeError')) {
         signalCrash(event.error?.stack || event.message || 'Unknown error');
+    }
+    else if (event.error instanceof Event && event.error.target instanceof Worker) {
+        signalCrash(describeWorkerFailure(event.error), true);
     }
 });
 
