@@ -150,6 +150,7 @@ export function setupCanvasEvents() {
         gameCrashed.set({
             stack: detail.stack,
             startFailed: detail.startFailed,
+            rendererFailed: !!detail.startFailed && !!detail.consoleTail?.includes('Failed to create a renderer'),
             buildVersion: detail.buildVersion,
             wasmVersion: detail.wasmVersion
         });

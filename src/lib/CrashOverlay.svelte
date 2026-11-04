@@ -11,7 +11,10 @@
     <div class="crash-card">
         <img src="images/callfail.webp" alt="Crash" class="crash-image" width="150" height="187">
         <div class="crash-body">
-            {#if $gameCrashed.startFailed}
+            {#if $gameCrashed.rendererFailed}
+                <h2 class="crash-title">LEGO Island couldn't start.</h2>
+                <p class="crash-message">Your browser couldn't set up graphics (WebGL) for the game. Restart your browser, then reload the page.</p>
+            {:else if $gameCrashed.startFailed}
                 <h2 class="crash-title">LEGO Island couldn't start.</h2>
                 <p class="crash-message">Something kept the game from starting, most often a problem downloading the game data. Check your internet connection and try reloading the page.</p>
             {:else}
