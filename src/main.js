@@ -70,7 +70,14 @@ window.Module = {
     },
     printErr: function (...args) {
         try {
-            console.error(...args);
+            const text = typeof args[0] === 'string' ? args[0] : '';
+            if (text.startsWith('WARNING:')) {
+                console.warn(...args);
+            } else if (text.startsWith('ERROR:')) {
+                console.error(...args);
+            } else {
+                console.info(...args);
+            }
         } catch (e) {}
     },
     onAbort: function (what) {
