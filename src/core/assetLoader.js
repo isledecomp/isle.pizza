@@ -9,8 +9,18 @@ let bundlePromise = null;
 async function loadBundle() {
   if (!bundlePromise) {
     bundlePromise = fetch('/save-editor.bin').then(async (resp) => {
-      bundleBuffer = await resp.arrayBuffer();
-      const indexLen = new DataView(bundleBuffer).getUint32(0, true);
+      const buffer = await resp.arrayBuffer();
+      const dataView = new DataView(buffer);
+      const indexLen = dataView.getUint32(0, true);
+
+      // If 'save-editor.bin' is not properly configured on the server-side,
+      // then vite will server an HTML document, which means the request appears
+      // to succeed but it doesn't have the data we expect.
+      if (new TextDecoder('utf-8').decode(dataView).startsWith('<!DOCTYPE html>')) {
+        console.error("Unable to fetch '/save-editor.bin' from the server");
+        return;
+      }
+      bundleBuffer = buffer;
       const indexJson = new TextDecoder().decode(new Uint8Array(bundleBuffer, 4, indexLen));
       bundleIndex = JSON.parse(indexJson);
       dataOffset = 4 + indexLen;
@@ -20,6 +30,7 @@ async function loadBundle() {
 }
 
 function getAsset(type, name) {
+  if (!bundleIndex) return null;
   const entry = bundleIndex[`${type}/${name}`];
   if (!entry) return null;
   const [offset, size] = entry;
